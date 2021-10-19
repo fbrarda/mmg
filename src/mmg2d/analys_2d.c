@@ -303,7 +303,7 @@ int MMG2D_singul(MMG5_pMesh mesh, int ref ) {
   /** Singularity identification */
   for (k=1; k<=mesh->nt; k++) {
     pt = &mesh->tria[k];
-    if ( ! MG_EOK(pt) ) continue;
+    if ( !MG_EOK(pt) ) continue;
 
     for (i=0; i<3; i++) {
       ppt = &mesh->point[pt->v[i]];
@@ -522,7 +522,7 @@ int MMG2D_regnor(MMG5_pMesh mesh) {
   /* Allocate a seed to each point */
   for (k=1; k<=mesh->nt; k++) {
     pt = &mesh->tria[k];
-    if ( !MG_EOK(pt) ) continue;
+    if ( !MG_EOK(pt)) continue;
 
     for (i=0; i<3; i++) {
       ppt = &mesh->point[pt->v[i]];

@@ -302,6 +302,8 @@ typedef struct {
   double   qual;   /*Quality of the triangle*/
   int      v[3]; /*!< Vertices of the triangle */
   int      ref; /*!< Reference of the triangle */
+  int      color; /*!< Color assigned by Metis */
+  int      id_task; /*!< id_task */
   int      base;
   int      cc; /*!< used to store the tetra + tetra face indices
                  that allow to access to the tria */
@@ -556,6 +558,7 @@ typedef struct {
   int       ver; /*!< Version of the mesh file */
   int       dim; /*!< Dimension of the mesh */
   int       type; /*!< Type of the mesh */
+  int       ncpu;/*!< Number of CPUs */ 
   int       npi,nti,nai,nei,np,na,nt,ne,npmax,namax,ntmax,nemax,xpmax,xtmax;
   int       nquad,nprism; /* number of quadrangles and prisms */
   int       nsols; /* number of solutions (metric excluded) in the solution file */

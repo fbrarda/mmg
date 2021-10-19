@@ -22,6 +22,11 @@
 */
 #include "mmg2d.h"
 #include "mmg2dexterns.h"
+#include <starpu.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <unistd.h>
+#include "metis_mmg.h"
 
 /**
  * Pack the mesh \a mesh and its associated metric \a met and/or solution \a sol
@@ -161,8 +166,45 @@ void MMG2D_solTruncatureForOptim(MMG5_pMesh mesh, MMG5_pSol met) {
   return;
 }
 
-int MMG2D_mmg2dlib(MMG5_pMesh mesh,MMG5_pSol met)
+
+
+int MMG2D_mmg2dlib(void *buffers[],void *cl_arg)
 {
+
+  //(void)buffers;
+  /* Use cl_arg for constant arguments */
+  //(void)cl_arg;
+  MMG5_pMesh mesh;
+  MMG5_pSol met;
+  int color;
+  
+  int nx, nx1, nx2, i;
+  struct starpu_vector_interface *vector, *vector1, *vector2;
+  int *val;
+
+  vector = (struct starpu_vector_interface *) buffers[0];
+  nx = STARPU_VECTOR_GET_NX(vector);
+  val = (int *)STARPU_VECTOR_GET_PTR(vector);
+
+        for (i = 0; i < nx; i++)
+              fprintf(stdout, "V[%d] = %d\n", i, val[i]);
+                       
+  vector1 = (struct starpu_vector_interface *) buffers[1];
+  nx1 = STARPU_VECTOR_GET_NX(vector1);
+  mesh = (MMG5_pSol *)STARPU_VECTOR_GET_PTR(vector1);
+  
+  vector2 = (struct starpu_vector_interface *) buffers[2];
+  nx2 = STARPU_VECTOR_GET_NX(vector2);
+  met = ( MMG5_pSol *)STARPU_VECTOR_GET_PTR(vector2);
+
+
+
+ starpu_codelet_unpack_args(cl_arg, &color);
+ fprintf(stdout, "Hello, Metis Color is %d,\n \n \n", color);
+  
+  
+  /**************************************/
+
   MMG5_pSol sol=NULL; // unused
   mytime    ctim[TIMEMAX];
   char      stim[32];
@@ -326,7 +368,7 @@ int MMG2D_mmg2dlib(MMG5_pMesh mesh,MMG5_pSol met)
     fprintf(stdout,"\n  -- PHASE 2 : %s MESHING\n",met->size < 3 ? "ISOTROPIC" : "ANISOTROPIC");
 
   /* Mesh improvement */
-  if ( !MMG2D_mmg2d1n(mesh,met) ) {
+  if ( !MMG2D_mmg2d1n(buffers,cl_arg,mesh,met,color) ) {
     if ( !MMG5_unscaleMesh(mesh,met,NULL) )  _LIBMMG5_RETURN(mesh,met,sol,MMG5_STRONGFAILURE);
     MMG2D_RETURN_AND_PACK(mesh,met,sol,MMG5_LOWFAILURE);
   }
@@ -410,7 +452,18 @@ int MMG2D_restart(MMG5_pMesh mesh){
 }
 
 
-int MMG2D_mmg2dmesh(MMG5_pMesh mesh,MMG5_pSol met) {
+int MMG2D_mmg2dmesh(void *buffers[],void *cl_arg) {
+
+
+  (void)buffers;
+  MMG5_pMesh mesh;
+  MMG5_pSol met;
+  int color;
+
+  starpu_codelet_unpack_args(cl_arg, &color, &mesh, &met );
+  fprintf(stdout, "Hello, the colorrr is %d,\n \n \n", color);
+  
+  
   MMG5_pSol sol=NULL; // unused
   mytime    ctim[TIMEMAX];
   char      stim[32];
@@ -591,7 +644,7 @@ int MMG2D_mmg2dmesh(MMG5_pMesh mesh,MMG5_pSol met) {
     fprintf(stdout,"\n  -- PHASE 3 : MESH IMPROVEMENT (%s)\n",
             met->size < 3 ? "ISOTROPIC" : "ANISOTROPIC");
 
-  if ( !MMG2D_mmg2d1n(mesh,met) ) {
+  if ( !MMG2D_mmg2d1n(buffers,cl_arg,mesh,met,color) ) {
     if ( !MMG5_unscaleMesh(mesh,met,NULL) )  _LIBMMG5_RETURN(mesh,met,sol,MMG5_STRONGFAILURE);
     MMG2D_RETURN_AND_PACK(mesh,met,sol,MMG5_LOWFAILURE);
   }
@@ -633,8 +686,18 @@ int MMG2D_mmg2dmesh(MMG5_pMesh mesh,MMG5_pSol met) {
 
 }
 
-int MMG2D_mmg2dls(MMG5_pMesh mesh,MMG5_pSol sol,MMG5_pSol umet)
+int MMG2D_mmg2dls(void *buffers[],void *cl_arg)
 {
+  (void)buffers;
+  MMG5_pMesh mesh;
+  MMG5_pSol sol;
+  MMG5_pSol umet;
+  int color;
+
+  starpu_codelet_unpack_args(cl_arg, &color, &mesh, &sol, &umet);
+  fprintf(stdout, "----------Hello, metis color is %d,\n \n \n", color);
+  
+  
   MMG5_pSol met=NULL;
   mytime    ctim[TIMEMAX];
   char      stim[32];
@@ -865,7 +928,7 @@ int MMG2D_mmg2dls(MMG5_pMesh mesh,MMG5_pSol sol,MMG5_pSol umet)
     fprintf(stdout,"\n  -- PHASE 3 : MESH IMPROVEMENT\n");
   }
 
-  if ( (!mesh->info.noinsert) && !MMG2D_mmg2d1n(mesh,met) ) {
+  if ( (!mesh->info.noinsert) && !MMG2D_mmg2d1n(buffers,cl_arg,mesh,met,color) ) {
     if ( mettofree ) {
       MMG5_DEL_MEM(mesh,met->m);
       MMG5_SAFE_FREE (met);
@@ -924,7 +987,18 @@ int MMG2D_mmg2dls(MMG5_pMesh mesh,MMG5_pSol sol,MMG5_pSol umet)
 
 }
 
-int MMG2D_mmg2dmov(MMG5_pMesh mesh,MMG5_pSol met,MMG5_pSol disp) {
+int MMG2D_mmg2dmov(void *buffers[],void *cl_arg) {
+  
+  (void)buffers;
+  MMG5_pMesh mesh;
+  MMG5_pSol met;
+  int color;
+  MMG5_pSol disp;
+
+  starpu_codelet_unpack_args(cl_arg, &color, &mesh, &met, &disp );
+  fprintf(stdout, "Hello, the colorrr is %d,\n \n \n", color);  
+  
+  
   mytime    ctim[TIMEMAX];
   char      stim[32];
   int       ier;
@@ -1095,7 +1169,7 @@ int MMG2D_mmg2dmov(MMG5_pMesh mesh,MMG5_pSol met,MMG5_pSol disp) {
       fprintf(stdout,"\n  -- PHASE 3 : MESH IMPROVEMENT\n");
     }
 
-    if ( !MMG2D_mmg2d1n(mesh,met) ) {
+    if ( !MMG2D_mmg2d1n(buffers,cl_arg,mesh,met,color) ) {
       if ( !MMG5_unscaleMesh(mesh,met,NULL) )  _LIBMMG5_RETURN(mesh,met,disp,MMG5_STRONGFAILURE);
       MMG2D_RETURN_AND_PACK(mesh,met,disp,MMG5_LOWFAILURE);
     }

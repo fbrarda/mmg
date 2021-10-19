@@ -44,6 +44,10 @@
 #include "libmmg2d.h"
 #include "mmgcommon.h"
 
+int color=3;
+void *buffers[1];
+void *cl_arg;
+
 /**
  * See \ref MMG2D_mmg2dlib function in \ref mmg2d/libmmg2d.h file.
  */
@@ -51,7 +55,7 @@ FORTRAN_NAME(MMG2D_MMG2DLIB,mmg2d_mmg2dlib,(MMG5_pMesh *mesh,MMG5_pSol *met
                                             ,int* retval),(mesh,met
                                                            ,retval)){
 
-  *retval = MMG2D_mmg2dlib(*mesh,*met);
+  *retval = MMG2D_mmg2dlib(buffers,cl_arg);
 
   return;
 }
@@ -62,7 +66,7 @@ FORTRAN_NAME(MMG2D_MMG2DMESH,mmg2d_mmg2dmesh,(MMG5_pMesh *mesh,MMG5_pSol *met
                                               ,int* retval),(mesh,met
                                                              ,retval)){
 
-  *retval = MMG2D_mmg2dmesh(*mesh,*met);
+  *retval = MMG2D_mmg2dmesh(buffers,cl_arg);
 
   return;
 }
@@ -74,10 +78,10 @@ FORTRAN_NAME(MMG2D_MMG2DLS,mmg2d_mmg2dls,(MMG5_pMesh *mesh,MMG5_pSol *sol,
              (mesh,sol,met,retval)){
 
   if ( met ) {
-    *retval = MMG2D_mmg2dls(*mesh,*sol,*met);
+    *retval = MMG2D_mmg2dls(buffers,cl_arg);
   }
   else {
-    *retval = MMG2D_mmg2dls(*mesh,*sol,NULL);
+    *retval = MMG2D_mmg2dls(buffers,cl_arg);
   }
 
   return;
@@ -89,7 +93,7 @@ FORTRAN_NAME(MMG2D_MMG2DMOV,mmg2d_mmg2dmov,(MMG5_pMesh *mesh,MMG5_pSol *met,MMG5
                                             ,int* retval),(mesh,met,disp
                                                            ,retval)){
 
-  *retval = MMG2D_mmg2dmov(*mesh,*met,*disp);
+  *retval = MMG2D_mmg2dmov(buffers,cl_arg);
 
   return;
 }

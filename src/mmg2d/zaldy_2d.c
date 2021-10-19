@@ -93,6 +93,7 @@ int MMG2D_newElt(MMG5_pMesh mesh) {
   mesh->nenil = mesh->tria[curiel].v[2];
   mesh->tria[curiel].v[2] = 0;
   mesh->tria[curiel].ref = 0;
+  mesh->tria[curiel].color = 0;
   mesh->tria[curiel].base = 0;
   mesh->tria[curiel].edg[0] = 0;
   mesh->tria[curiel].edg[1] = 0;

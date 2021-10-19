@@ -20,7 +20,7 @@
 ##  use this copy of the mmg distribution only if you accept them.
 ## =============================================================================
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.0)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
 
 # if PROJECT_NAME is defined, mmg is a subproject
 if(DEFINED PROJECT_NAME)
@@ -190,6 +190,13 @@ IF ( BUILD_MMG3D OR BUILD_MMGS )
 ELSE ()
   SET(BUILD_MMGS3D OFF)
 ENDIF()
+
+# Explicitly set the DNDEBUG flag in case the user or a parent project overrides
+# it.
+if (NOT CMAKE_BUILD_TYPE MATCHES Debug)
+    add_definitions(-DNDEBUG)
+endif()
+
 ############################################################################
 #####
 #####         Fortran header: libmmgtypesf.h
@@ -229,6 +236,55 @@ ENDIF()
 
 # add point map?
 OPTION ( USE_POINTMAP "Use map for point tracking" OFF )
+
+############################################################################
+#####
+#####         StarPU
+#####
+############################################################################
+# Find STARPU library?
+SET(STARPU_DIR "" CACHE PATH "Installation directory for StarPU")
+LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
+
+# add Starpu library?
+OPTION ( USE_STARPU "Use STARPU TOOL for SCEDULING" ON )
+
+IF ( USE_STARPU )
+    FIND_PACKAGE(STARPU)
+    
+    IF ( NOT STARPU_FOUND )
+       MESSAGE ( WARNING "StarPU library not found:"
+      "If you have already installed StarPU and want to use it, "
+      "please set the CMake variable or environment variable StarPU_DIR "
+      "to your StarPU directory.")
+  ENDIF ( )
+
+ENDIF ( ) 
+
+############################################################################
+#####
+#####        Metis 
+#####
+############################################################################
+
+# Find METIS library?
+SET(METIS_DIR "" CACHE PATH "Installation directory for METIS")
+LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
+
+# add METIS library?
+OPTION ( USE_METIS "Use METIS TOOL for PARTITIONING" ON )
+
+IF ( USE_METIS )
+    FIND_PACKAGE(METIS)
+    
+    IF ( NOT METIS_FOUND )
+       MESSAGE ( WARNING "Metis library not found:"
+      "If you have already installed METIS and want to use it, "
+      "please set the CMake variable or environment variable METIS_DIR "
+      "to your METIS directory.")
+  ENDIF ( )
+
+ENDIF ( ) 
 
 ############################################################################
 #####
@@ -311,6 +367,9 @@ ENDFUNCTION()
 
 OPTION(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 INVERT_BOOL("BUILD_STATIC_LIBS" ${BUILD_SHARED_LIBS})
+IF ( (${BUILD_STATIC_LIBS} EQUAL ON) AND NOT CMAKE_POSITION_INDEPENDENT_CODE)
+  SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
+ENDIF()
 
 #------------------------------- mmg2d
 CMAKE_DEPENDENT_OPTION ( LIBMMG2D_STATIC "Compile the mmg2d static library" ${BUILD_STATIC_LIBS}
@@ -384,6 +443,22 @@ IF( SCOTCH_FOUND )
   SET( LIBRARIES ${SCOTCH_LIBRARIES} ${LIBRARIES})
 ENDIF()
 
+IF( STARPU_FOUND )
+  SET(CMAKE_C_FLAGS "-DUSE_STARPU ${CMAKE_C_FLAGS}")
+
+  MESSAGE(STATUS
+    "Compilation with starpu: ${STARPU_LIBRARIES}")
+  SET( LIBRARIES ${STARPU_LIBRARIES} ${LIBRARIES})
+ENDIF()
+
+IF( METIS_FOUND )
+  SET(CMAKE_C_FLAGS "-DUSE_METIS ${CMAKE_C_FLAGS}")
+
+  MESSAGE(STATUS
+    "Compilation with Metis: ${METIS_LIBRARIES}")
+  SET( LIBRARIES ${METIS_LIBRARIES} ${LIBRARIES})
+ENDIF()
+
 
 IF ( VTK_FOUND )
   ADD_DEFINITIONS(-DUSE_VTK)
@@ -425,6 +500,17 @@ CMAKE_DEPENDENT_OPTION(
 ###############################################################################
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
+# CTEST_OUTPUT_DIR MUST BE SETTED HERE TO AVOID UNINITIALIZATION FOR LIBRARY
+# TESTS DEFS
+OPTION ( BUILD_TESTING "Enable/Disable continuous integration" OFF )
+
+IF( BUILD_TESTING )
+  SET ( CTEST_OUTPUT_DIR ${PROJECT_BINARY_DIR}/TEST_OUTPUTS
+    CACHE PATH "Path toward the tests outputs" )
+  MARK_AS_ADVANCED ( CTEST_OUTPUT_DIR )
+  FILE ( MAKE_DIRECTORY  ${CTEST_OUTPUT_DIR} )
+ENDIF ( )
+
 IF ( BUILD_MMG2D )
   INCLUDE(cmake/modules/mmg2d.cmake)
 ENDIF ( )
@@ -443,7 +529,17 @@ ENDIF ( )
 
 IF( SCOTCH_FOUND )
   # Include Scotch Dir here to ensure that Mmg doesn't search it's own headers in /usr/local
-  INCLUDE_DIRECTORIES(PUBLIC ${SCOTCH_INCLUDE_DIRS})
+  INCLUDE_DIRECTORIES(${SCOTCH_INCLUDE_DIRS})
+ENDIF()
+
+IF( STARPU_FOUND )
+  # Include Starpu Dir here to ensure that Mmg doesn't search it's own headers in /usr/local
+  INCLUDE_DIRECTORIES(PUBLIC ${STARPU_INCLUDE_DIRS})
+ENDIF()
+
+IF( METIS_FOUND )
+  # Include Metis Dir here to ensure that Mmg doesn't search it's own headers in /usr/local
+  INCLUDE_DIRECTORIES(PUBLIC ${METIS_INCLUDE_DIRS})
 ENDIF()
 
 IF ( MmgTargetsExported )
@@ -463,6 +559,8 @@ IF ( MmgTargetsExported )
 
   install(FILES
     ${PROJECT_SOURCE_DIR}/cmake/modules/FindSCOTCH.cmake
+    ${PROJECT_SOURCE_DIR}/cmake/modules/FindSTARPU.cmake
+    ${PROJECT_SOURCE_DIR}/cmake/modules/FindMETIS.cmake
     ${PROJECT_SOURCE_DIR}/cmake/modules/FindElas.cmake
     DESTINATION ${MMG_CMAKE_INSTALL_DIR} )
 ENDIF()
@@ -472,8 +570,6 @@ ENDIF()
 #####         Continuous integration
 #####
 ###############################################################################
-
-OPTION ( BUILD_TESTING "Enable/Disable continuous integration" OFF )
 
 CMAKE_DEPENDENT_OPTION (
   ONLY_VERY_SHORT_TESTS "Enable/Disable very short tests" OFF
@@ -490,18 +586,12 @@ CMAKE_DEPENDENT_OPTION ( COVERAGE "Watch code coverage (Linux only)" OFF
 
 IF( BUILD_TESTING )
 
-  SET ( CTEST_OUTPUT_DIR ${PROJECT_BINARY_DIR}/TEST_OUTPUTS
-    CACHE PATH "Path toward the tests outputs" )
-  MARK_AS_ADVANCED ( CTEST_OUTPUT_DIR )
-
-  FILE ( MAKE_DIRECTORY  ${CTEST_OUTPUT_DIR} )
-
   IF ( NOT ONLY_VERY_SHORT_TESTS )
     ##-------------------------------------------------------------------##
     ##------- Get the continuous integration tests ----------------------##
     ##-------------------------------------------------------------------##
     INCLUDE(cmake/modules/LoadCiTests.cmake)
-ENDIF ( )
+  ENDIF ( )
 
   ##-------------------------------------------------------------------##
   ##------- Set the continuous integration options --------------------##
@@ -555,18 +645,22 @@ ENDIF ( )
     SET(LISTEXEC_MMG ${LISTEXEC_MMGS} ${LISTEXEC_MMG3D})
     SET(EXECUT_MMG ${EXECUT_MMGS} ${EXECUT_MMG3D})
 
-    # Change authorisations for some files...
-    IF ( EXISTS ${CTEST_OUTPUT_DIR}/LeakCheck_AbnormalEnd7/unreadable.meshb)
-      FILE(REMOVE ${CTEST_OUTPUT_DIR}/LeakCheck_AbnormalEnd7/unwrittable.meshb)
+    # Make some files not openable
+    IF ( EXISTS ${CTEST_OUTPUT_DIR}/unwrittable7.meshb
+        AND NOT IS_DIRECTORY ${CTEST_OUTPUT_DIR}/unwrittable7.meshb )
+      FILE ( REMOVE ${CTEST_OUTPUT_DIR}/unwrittable7.meshb )
+    ENDIF ()
+    IF ( NOT EXISTS ${CTEST_OUTPUT_DIR}/unwrittable7.meshb)
+      FILE(MAKE_DIRECTORY ${CTEST_OUTPUT_DIR}/unwrittable7.meshb)
     ENDIF()
-    FILE(COPY ${MMG_CI_TESTS}/LeakCheck_AbnormalEnd7/dout.mesh
-      DESTINATION ${CTEST_OUTPUT_DIR}/AbnormalEnd7/unwrittable.meshb)
 
-    IF ( EXISTS ${CTEST_OUTPUT_DIR}/LeakCheck_AbnormalEnd8/unwrittable.sol)
-      FILE(REMOVE ${CTEST_OUTPUT_DIR}/LeakCheck_AbnormalEnd8/unwrittable.sol)
+    IF ( EXISTS ${CTEST_OUTPUT_DIR}/unwrittable8.sol
+        AND NOT IS_DIRECTORY ${CTEST_OUTPUT_DIR}/unwrittable8.sol )
+      FILE ( REMOVE ${CTEST_OUTPUT_DIR}/unwrittable8.sol )
+    ENDIF ()
+    IF ( NOT EXISTS ${CTEST_OUTPUT_DIR}/unwrittable8.sol)
+      FILE(MAKE_DIRECTORY ${CTEST_OUTPUT_DIR}/unwrittable8.sol)
     ENDIF()
-    FILE(COPY ${MMG_CI_TESTS}/LeakCheck_AbnormalEnd8/dsol.sol
-      DESTINATION ${CTEST_OUTPUT_DIR}/AbnormalEnd8/unwrittable.sol)
 
     # Add common tests for mmgs/3d appli
     INCLUDE( ${PROJECT_SOURCE_DIR}/cmake/testing/mmg_tests.cmake )

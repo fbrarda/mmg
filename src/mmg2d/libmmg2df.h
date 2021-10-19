@@ -1293,7 +1293,7 @@ END INTERFACE
 !  *
 !  */
 
-! int MMG2D_mmg2dmesh(MMG5_pMesh mesh,MMG5_pSol sol);
+! int MMG2D_mmg2dmesh(MMG5_pMesh mesh,MMG5_pSol sol, int color);
 
 ! /**
 !  * \param mesh pointer toward the mesh structure.
@@ -1338,7 +1338,7 @@ END INTERFACE
 !  *
 !  */
 
-! int MMG2D_mmg2dmov(MMG5_pMesh mesh,MMG5_pSol met,MMG5_pSol disp);
+! int MMG2D_mmg2dmov(void *buffers[],void *cl_arg);
 
 ! /* Tools for the library */
 ! // void (*MMG2D_callbackinsert) (int ,int ,int ,int, int);

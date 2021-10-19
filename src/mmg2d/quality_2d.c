@@ -212,7 +212,7 @@ int MMG2D_outqua(MMG5_pMesh mesh,MMG5_pSol met) {
   }
 
 #ifndef DEBUG
-  fprintf(stdout,"\n  -- MESH QUALITY   %d\n",mesh->nt - nex);
+  fprintf(stdout,"\n  -- MESHHHHHHH QUALITY   %d\n",mesh->nt - nex);
   fprintf(stdout,"     BEST   %8.6f  AVRG.   %8.6f  WRST.   %8.6f (%d)\n",
           rapmax,rapavg / (mesh->nt-nex),rapmin,iel);
 #else
@@ -221,6 +221,8 @@ int MMG2D_outqua(MMG5_pMesh mesh,MMG5_pSol met) {
           MMG5_indPt(mesh,mesh->tria[iel].v[0]),MMG5_indPt(mesh,mesh->tria[iel].v[1]),
           MMG5_indPt(mesh,mesh->tria[iel].v[2]));
 #endif
+  int nbelements=mesh->nt -nex;
+  fprintf(stdout,"\n  -- Nbr elements:   %d\n",nbelements);
 
   /* print histo */
   fprintf(stdout,"     HISTOGRAMM:");

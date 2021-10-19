@@ -227,7 +227,7 @@ int MMG2D_findTria(MMG5_pMesh mesh,int ip) {
     mvDir[0] = mvDir[1] = mvDir[2] = 0;
     iter++;
     pt = &mesh->tria[iel];
-    if ( !MG_EOK(pt) )  {
+    if ( !MG_EOK(pt))  {
       iel++;
       if ( iel > mesh->nt ) return 0;
       continue;

@@ -121,7 +121,7 @@ int MMG2D_bezierCurv(MMG5_pMesh mesh,int k,int8_t i,double s,double *o,double *n
   int8_t             i1,i2;
 
   pt = &mesh->tria[k];
-  if ( !MG_EOK(pt) ) return 0;
+  if ( !MG_EOK(pt)) return 0;
 
   i1 = MMG5_inxt2[i];
   i2 = MMG5_iprv2[i];
