@@ -76,65 +76,6 @@ void scal_cpu_func(void *buffers[], void *cl_arg)
 
 }
 
-void hello_cpu_func(void *buffers[], void *cl_arg)
-{
-        (void)buffers;
-        int partition;
-
-        starpu_codelet_unpack_args(cl_arg, &partition);
-        fprintf(stdout, "Hello world, the id_task is %d\n \n \n", partition);
-}
-
-struct starpu_codelet hello_codelet =
-{
-        .cpu_funcs = {hello_cpu_func},
-        .cpu_funcs_name = {"hello_cpu_func"},
-        .nbuffers = 0,
-        .name = "hello"
-};
-
-struct starpu_codelet mmg2dlib_codelet =
-{
-        .cpu_funcs = {MMG2D_mmg2dlib},
-        .cpu_funcs_name = {"MMG2D_mmg2dlib"},
-        .nbuffers = 3,
-        .modes = {STARPU_RW, STARPU_RW, STARPU_RW}, 
-        .specific_nodes = 1,
-        .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU,
-         //STARPU_SPECIFIC_NODE_LOCAL},
-         STARPU_SPECIFIC_NODE_CPU},
-        .where = STARPU_CPU,
-        .name = "MMG2D_mmg2dlib"
-};
-
-struct starpu_codelet mmg2dmov_codelet =
-{
-        .cpu_funcs = {MMG2D_mmg2dmov},
-        .cpu_funcs_name = {"MMG2D_mmg2dmov"},
-        .nbuffers = 0,
-        .where = STARPU_CPU,
-        .name = "MMG2D_mmg2dmov"
-};
-
-
-struct starpu_codelet mmg2dls_codelet =
-{
-        .cpu_funcs = {MMG2D_mmg2dls},
-        .cpu_funcs_name = {"MMG2D_mmg2dls"},
-        .nbuffers = 0,
-        .where = STARPU_CPU,
-        .name = "MMMG2D_mmg2dls"
-};
-
-
-struct starpu_codelet mmg2dmesh_codelet =
-{
-        .cpu_funcs = {MMG2D_mmg2dmesh},
-        .cpu_funcs_name = {"MMG2D_mmg2dmesh"},
-        .nbuffers = 0,
-        .where = STARPU_CPU,
-        .name = "MMG2D_mmg2dmesh"
-};
 
 
 /***********************************************************************************/
@@ -588,10 +529,10 @@ int parsar(int argc,char *argv[],MMG5_pMesh mesh,MMG5_pSol met,MMG5_pSol sol) {
         }
         break;
       case 'n':
-	 if ( !strcmp(argv[i],"-ncpu") ) {
+	 if ( !strcmp(argv[i],"-ncolors") ) {
              if ( ++i < argc && isdigit(argv[i][0]) )
 	     {  
-		 mesh->ncpu=atoi(argv[i]);   
+		 mesh->ncolors=atoi(argv[i]);   
 	     }
 	  else {
             fprintf(stderr,"Missing argument option %c\n",argv[i-1][1]);
@@ -958,13 +899,12 @@ int main(int argc,char *argv[]) {
 /***************************************************************************************/
 
    /** Call metis for partionning */
-  fprintf(stdout,"  -- Call Metis for partioning  \n");
+  /*fprintf(stdout,"  -- Call Metis for partioning  \n");
 
   idx_t *part;
  
   int color;
-
-  /** Allocate the table part */
+  
   MMG5_SAFE_CALLOC(part,mesh->nt,idx_t,return 0);
   int status, i;
 
@@ -973,7 +913,7 @@ int main(int argc,char *argv[]) {
 
   MMG5_pTria pt;
 
-  status=MMG_part_meshElts2metis( mesh, part, (idx_t)mesh->ncpu );
+  status=MMG_part_meshElts2metis( mesh, part, (idx_t)mesh->ncolors );
 
   for (i=0; i< mesh->nt; i++)
   {
@@ -988,21 +928,18 @@ int main(int argc,char *argv[]) {
   }
 
   fprintf(stdout,"  --END Call Metis \n");
-
+*/
    /*save result*/
-  if ( MMG2D_saveMesh(mesh, "metis.mesh") != 1 )
-    exit(EXIT_FAILURE);
+ // if ( MMG2D_saveMesh(mesh, "metis.mesh") != 1 )
+   // exit(EXIT_FAILURE);
    
-  //return 0;
 
 /***************************************************************************************/
 
 
-  //int size= NX;
-  int ret,l;
-  //int vector[NX];
-  int vect_color[mesh->ncpu];
-  int vect_color1[mesh->ncpu];
+  int ret,l,i;
+  int vect_color[mesh->ncolors];
+  int vect_color1[mesh->ncolors];
   int worker;
 
   int answer=3;
@@ -1032,75 +969,33 @@ int main(int argc,char *argv[]) {
 
   starpu_data_handle_t vector_handle, vector_handle1, vector_handle2;
 
-  for (i=0; i< mesh->ncpu; i++)
+  for (i=0; i< mesh->ncolors; i++)
       {
         vect_color[i]=i;
-
-        //fprintf(stdout,"--partition%d \n", vect_color[i]); 
-
        }
-
-  starpu_vector_data_register(&vector_handle, STARPU_MAIN_RAM, (uintptr_t)vect_color, (mesh->ncpu), sizeof(vect_color[0]));
-  starpu_vector_data_register(&vector_handle1, STARPU_MAIN_RAM, (MMG5_pMesh)mesh, sizeof(MMG5_Mesh), sizeof(mesh));
-  starpu_vector_data_register(&vector_handle2, STARPU_MAIN_RAM, (MMG5_pSol)met, sizeof(MMG5_Sol), sizeof(met));
-
-  
-  /*
-			  
-  STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit");
-
-  ret = starpu_task_insert(&display_codelet,
-                                 STARPU_R, vector_handle,
-                                 0);*/
 
 
   fprintf(stdout,"--number of workers= %d \n",starpu_worker_get_count());
-
+  
 
 /**********************************************************/
 
-
-  if ( mesh->mark ) {
+if ( mesh->mark ) {
     /* Save a local parameters file containing the default parameters */
     ier = MMG2D_defaultOption(mesh,met,disp);
     MMG2D_RETURN_AND_FREE(mesh,met,ls,disp,ier);
   }
   /* Lagrangian mode */
   else if ( mesh->info.lag > -1 ) {
-    //ier = MMG2D_mmg2dmov(0,&vect_color[0],mesh,met,disp,color);
-    
-       ret = starpu_task_insert(&mmg2dmov_codelet,
-		  STARPU_VALUE, &color, sizeof(color), 
-		  STARPU_VALUE, &mesh, sizeof(mesh),
-		  STARPU_VALUE, &met, sizeof(met),
-		  STARPU_VALUE, &disp, sizeof(disp),
-		  0);
-   STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit");
-   
+    ier = MMG2D_mmg2dmov(mesh,met,disp);
   }
   /* Level Set mode */
   else if ( mesh->info.iso ) {
-    //ier = MMG2D_mmg2dls(0,&vect_color[0],mesh,ls,met,color);
-    
-    ret = starpu_task_insert(&mmg2dls_codelet,
-		  STARPU_VALUE, &color, sizeof(color), 
-		  STARPU_VALUE, &mesh, sizeof(mesh),
-		  STARPU_VALUE, &ls, sizeof(ls),
-		  STARPU_VALUE, &met, sizeof(met),
-		  0);
-   STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit");
+    ier = MMG2D_mmg2dls(mesh,ls,met);
   }
   /* Mesh generation mode */
   else if ( !mesh->nt ) {
-    //ier = MMG2D_mmg2dmesh(0,&vect_color[0],mesh,met,color);
-    
-   ret = starpu_task_insert(&mmg2dmesh_codelet,
-		  STARPU_VALUE, &color, sizeof(color), 
-		  STARPU_VALUE, &mesh, sizeof(mesh),
-		  STARPU_VALUE, &met, sizeof(met),
-		  0);
-   STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit");
-
+    ier = MMG2D_mmg2dmesh(mesh,met);
   }
   /* Remeshing mode */
   else {
@@ -1109,36 +1004,11 @@ int main(int argc,char *argv[]) {
               " AND A SOLUTION IN ADAPTATION MODE.\n");
       MMG2D_RETURN_AND_FREE(mesh,met,ls,disp,MMG5_STRONGFAILURE);
     }
-
-   for (i = 0; i < mesh->ncpu; i++)
-   {
-   
-   //fprintf(stdout,"----vector_color= %d \n", vect_color[i]);
-   ret = starpu_task_insert(&mmg2dlib_codelet,
-                 STARPU_RW, vector_handle, 
-                 STARPU_RW, vector_handle1, 
-                 STARPU_RW, vector_handle2, 
-                 STARPU_VALUE, &vect_color[i], sizeof(vect_color[0]),  
-		  0);
-   STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit");  
-   
-   /*Tasks are submitted non-blockingly*/
-   /*Wait for all submitted tasks to complete their work*/
-   //starpu_task_wait_for_all ( ) ;
-           
-   }
-   
+                          
+    ier = MMG2D_mmg2dlib(mesh,met);
   }
-      
-   starpu_data_unregister(vector_handle);
-   starpu_data_unregister(vector_handle1);
-   starpu_data_unregister(vector_handle2);
-   
-   /* terminate StarPU */
-   starpu_shutdown();
-  
 
-   if ( ier != MMG5_STRONGFAILURE ) {
+  if ( ier != MMG5_STRONGFAILURE ) {
     chrono(ON,&MMG5_ctim[1]);
     if ( mesh->info.imprim > 0 )
       fprintf(stdout,"\n  -- WRITING DATA FILE %s\n",mesh->nameout);
@@ -1189,7 +1059,7 @@ int main(int argc,char *argv[]) {
 
   /* free mem */
   MMG2D_RETURN_AND_FREE(mesh,met,ls,disp,ier);
-
-
-
+  
+  /* terminate StarPU */
+   starpu_shutdown();
 }

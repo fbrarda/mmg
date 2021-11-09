@@ -558,7 +558,7 @@ typedef struct {
   int       ver; /*!< Version of the mesh file */
   int       dim; /*!< Dimension of the mesh */
   int       type; /*!< Type of the mesh */
-  int       ncpu;/*!< Number of CPUs */ 
+  int       ncolors;/*!< Number of Metis colors */ 
   int       npi,nti,nai,nei,np,na,nt,ne,npmax,namax,ntmax,nemax,xpmax,xtmax;
   int       nquad,nprism; /* number of quadrangles and prisms */
   int       nsols; /* number of solutions (metric excluded) in the solution file */

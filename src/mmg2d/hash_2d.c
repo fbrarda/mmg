@@ -21,6 +21,7 @@
 ** =============================================================================
 */
 #include "mmg2d.h"
+#include <starpu.h>
 
 #define KTA     7
 #define KTB    11
@@ -32,6 +33,30 @@
  * Create adjacency relations between the triangles dein the mesh
  *
  */
+ 
+void MMG2D_starpu_hashTria(void *buffers[], void *cl_arg) {
+
+  int nx_mesh;
+  struct starpu_vector_interface *vect_mesh;
+  
+  MMG5_pMesh mesh;
+  
+  int ret;
+ 
+  vect_mesh = (struct starpu_vector_interface *) buffers[0];
+  nx_mesh = STARPU_VECTOR_GET_NX(vect_mesh);
+  mesh = (MMG5_pMesh)STARPU_VECTOR_GET_PTR(vect_mesh);
+ 
+  ret=MMG2D_hashTria(mesh);
+ 
+  if (ret<0)
+     {
+        fprintf(stdout,"  ## Hashing problem. Exit program.\n");
+     
+     }
+ 
+ 
+ }
 int MMG2D_hashTria(MMG5_pMesh mesh) {
   MMG5_pTria     pt,pt1;
   int            k,kk,pp,l,ll,mins,mins1,maxs,maxs1;
