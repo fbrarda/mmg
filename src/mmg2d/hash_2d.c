@@ -63,6 +63,8 @@ int MMG2D_hashTria(MMG5_pMesh mesh) {
   int            *hcode,*link,inival,hsize,iadr;
   uint8_t        i,ii,i1,i2;
   unsigned int   key;
+  
+  fprintf(stdout," ----------Call hashTria codelet -----------\n");
 
   if ( mesh->adja )  return 1;
   if ( !mesh->nt )  return 0;

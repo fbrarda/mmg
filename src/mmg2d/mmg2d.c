@@ -896,47 +896,6 @@ int main(int argc,char *argv[]) {
   }
 
 
-/***************************************************************************************/
-
-   /** Call metis for partionning */
-  /*fprintf(stdout,"  -- Call Metis for partioning  \n");
-
-  idx_t *part;
- 
-  int color;
-  
-  MMG5_SAFE_CALLOC(part,mesh->nt,idx_t,return 0);
-  int status, i;
-
-
-  int nelt= mesh->nt;
-
-  MMG5_pTria pt;
-
-  status=MMG_part_meshElts2metis( mesh, part, (idx_t)mesh->ncolors );
-
-  for (i=0; i< mesh->nt; i++)
-  {
-
-	  pt= &mesh->tria[i+1];
-          pt->color = part[i];
-          pt->ref = pt->color;
-
-      //fprintf(stdout,"--elt=%d, --color= %d \n",i, pt->color);
-
-
-  }
-
-  fprintf(stdout,"  --END Call Metis \n");
-*/
-   /*save result*/
- // if ( MMG2D_saveMesh(mesh, "metis.mesh") != 1 )
-   // exit(EXIT_FAILURE);
-   
-
-/***************************************************************************************/
-
-
   int ret,l,i;
   int vect_color[mesh->ncolors];
   int vect_color1[mesh->ncolors];
