@@ -934,7 +934,7 @@ int main(int argc,char *argv[]) {
        }
 
 
-  fprintf(stdout,"--number of workers= %d \n",starpu_worker_get_count());
+  fprintf(stdout,"----number of workers= %d \n",starpu_worker_get_count());
   
 
 /**********************************************************/

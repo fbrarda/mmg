@@ -175,7 +175,7 @@ int MMG_part_meshElts2metis( MMG5_pMesh mesh, idx_t* part, idx_t nproc )
 
 	xadj = adjncy = vwgt = adjwgt = NULL;
 
-        fprintf(stdout, "nelet=  %d \n", nelt );
+        fprintf(stdout, "----nbre of elements=  %d \n", nelt );
 
 	METIS_SetDefaultOptions(options);
 	//options[METIS_OPTION_CONTIG] = 1;

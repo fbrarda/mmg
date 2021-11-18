@@ -72,7 +72,7 @@ extern "C" {
 #define MMG2D_NEDMAX  100000
 #define MMG2D_NEMAX   100000
 
-#define MMG2D_EOK(pt,color)       (pt && ((pt)->v[0] > 0) && ((pt)->color==color))  /**< Element OK */
+#define MMG2D_EOK(pt,color1)       (pt && ((pt)->v[0] > 0) && ((pt)->color1==color1))  /**< Element OK */
 
 /** \brief idir[i]: vertices of edge i for a quad */
 static const uint8_t MMG2D_idir_q[4][2] = { {0,1},{0,3},{1,2},{2,3} };

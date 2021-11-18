@@ -127,15 +127,15 @@ struct starpu_codelet hashTria_codelet =
 
 
 /*identifier les triangles qui sont adjacents à un triangle de la tâche, et les inclure dans les boucles des step 2,3,4 */
-static inline
-int8_t MMG2D_ADJEOK( MMG5_pMesh mesh, int k, int color ) {
+/*static inline
+int8_t MMG2D_ADJEOK( MMG5_pMesh mesh, int k, int color1 ) {
   int *adja;
   int8_t isAdja;
   MMG5_pTria pt;
   int i;
   
   /** Step 1: mesh adjacency creation: adja allocation */
-  if ( (!mesh->adja) && (1 != MMG2D_hashTria(mesh) ) ) {
+  /*if ( (!mesh->adja) && (1 != MMG2D_hashTria(mesh) ) ) {
 	  fprintf(stderr,"\n  ## Error: %s: unable to create "
 	  "adjacency table.\n",__func__);
 	  return 0;
@@ -145,15 +145,63 @@ int8_t MMG2D_ADJEOK( MMG5_pMesh mesh, int k, int color ) {
   pt   = &mesh->tria[k];
   isAdja = 0;
   for( i = 0; i < 3; i++ ) {
-    if( MMG2D_EOK( &mesh->tria[(adja[i]/3)], color ) ) {
+    if( MMG2D_EOK( &mesh->tria[(adja[i]/3)], color1 ) ) {
       isAdja = 1;
       break;
     }
   }
 
   return isAdja;
-}
+}*/
 
+
+int MMG2D_overlap(MMG5_pMesh mesh, idx_t* part)
+{
+
+  fprintf(stdout,"  -- Overlapping  \n");
+ 
+  int *adja;
+  int8_t isAdja;
+
+  int status, i,k;
+  int NbAdj;
+  int *nadjcy;
+
+  int nelt= mesh->nt;
+
+  MMG5_pTria pt;
+  MMG5_pTria pt1;
+    
+  for( k = 1; k <= mesh->nt; k++ ) {
+    adja = &mesh->adja[3*(k-1) + 1];
+    pt   = &mesh->tria[k];
+
+    //Test if MG_EOK is valid    
+    if ( MG_EOK(pt) )
+     {
+        for( i = 0; i < 3; i++ ) {  
+          pt1=&mesh->tria[(adja[i]/3)];     
+          
+          if( (pt1->color2) > (pt->color1)) {
+           
+               //fprintf(stdout,"----Elt = %d, color_elt = %d , adja = %d, color_adj= %d \n", k, pt ->color1, (adja[i]/3), pt1->color2 );
+               
+               pt1->color2 = pt->color1;
+               pt->ref = pt->color1;
+               pt1->ref = pt1->color2;
+          
+          }
+              
+       }
+    
+    }
+  
+  }
+
+
+return 1;
+
+}
 /* Mesh adaptation routine for the first stages of the algorithm: intertwine splitting
  based on patterns, collapses and swaps.
    typchk = 1 -> adaptation based on edge lengths
@@ -208,8 +256,9 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int8_t typchk) {
      fprintf(stdout," Begin insert anaelt codelet \n");
      
      //fprintf(stdout," vector_ns_1----------= %d .\n", vect_ns[0]);
-     
-     for (color=0; color< 1; color++)
+
+     //color< mesh->ncolors
+     for (color=0; color< mesh->ncolors; color++)
      {
       ret = starpu_task_insert(&anaelt_codelet,
                      STARPU_RW, vector_mesh, 
@@ -241,7 +290,7 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int8_t typchk) {
       }*/
       
       fprintf(stdout," Begin insert hashtria codelet \n");
-      //for (color=0; color< 1; color++)
+      //for (color=0; color< mesh->ncolors; color++)
       //{
       ret = starpu_task_insert(&hashTria_codelet,
                      STARPU_RW, vector_mesh, 
@@ -262,7 +311,7 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int8_t typchk) {
       
      fprintf(stdout," Begin insert colelt codelet \n");
 
-     for (color=0; color< 1; color++)
+     for (color=0; color< mesh->ncolors; color++)
       {
       ret = starpu_task_insert(&colelt_codelet,
                      STARPU_RW, vector_mesh, 
@@ -300,7 +349,7 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int8_t typchk) {
      
     fprintf(stdout," Begin insert swpmsh codelet \n");
       
-     for (color=0; color< 1; color++)
+     for (color=0; color< mesh->ncolors; color++)
      {
       ret = starpu_task_insert(&swpmsh_codelet,
                      STARPU_RW, vector_mesh, 
@@ -393,7 +442,7 @@ void MMG2D_starpu_anaelt(void *buffers[], void *cl_arg) {
 
 }
 /* Travel triangles and split long edges according to patterns */
-int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met,int typchk,int color) {
+int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met,int typchk,int color1) {
 
   
   MMG5_pTria      pt;
@@ -415,7 +464,7 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met,int typchk,int color) {
   /* Step 1: travel mesh, check edges, and tag those to be split; create the new vertices in hash */
   for (k=1; k<=mesh->nt; k++) {
     pt = &mesh->tria[k];
-    if ( !MMG2D_EOK(pt,color) || (pt->ref < 0) ) continue;
+    if ( !MMG2D_EOK(pt,color1) || (pt->ref < 0) ) continue;
     if ( MG_SIN(pt->tag[0]) || MG_SIN(pt->tag[1]) || MG_SIN(pt->tag[2]) )  continue;
 
     /* Check if pt should be cut */
@@ -461,11 +510,18 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met,int typchk,int color) {
 
       /* Geometric attributes of the new point */
       ier = MMG2D_bezierCurv(mesh,k,i,s,o,no);
+      //TODO: afficher la valeur de tag arret: pt->tag[i] et verifier si boundary
+      
+      
       if ( !ier ) {
         MG_CLR(pt->flag,i);
         continue;
       }
-      ip = MMG2D_newPt(mesh,o,pt->tag[i]);
+      
+
+      ip = MMG2D_newPt(mesh,o,pt->tag[i]);  
+      //fprintf(stdout, "TAG = %d  \n", pt->tag[i]);
+
       if ( !ip ) {
         /* reallocation of point table */
         MMG2D_POINT_REALLOC(mesh,met,ip,mesh->gap,
@@ -501,8 +557,8 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met,int typchk,int color) {
   for (k=1; k<=mesh->nt; k++) {
     pt = &mesh->tria[k];
     
-    //if ( !MMG2D_EOK(pt,color) || pt->ref < 0 ) continue;
-    if ( !MMG2D_EOK(pt,color) || pt->ref < 0 || !MMG2D_ADJEOK(mesh,k,color) )
+    //if ( !MMG2D_EOK(pt,color1) || pt->ref < 0 ) continue;
+    if ( !MG_EOK(pt) || pt->ref < 0 )
       continue;
     else if ( pt->flag == 7 ) continue;
     nc = 0;
@@ -535,8 +591,8 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met,int typchk,int color) {
     ni = 0;
     for ( k=1; k<= mesh->nt; k++) {
       pt = &mesh->tria[k];
-      //if ( !MMG2D_EOK(pt,color) || pt->ref < 0 ) continue;
-      if ( !MMG2D_EOK(pt,color) || pt->ref < 0 || !MMG2D_ADJEOK(mesh,k,color) )
+      //if ( !MMG2D_EOK(pt,color1) || pt->ref < 0 ) continue;
+      if ( !MG_EOK(pt) || pt->ref < 0 )
         continue;
       else if ( pt->flag == 0 ) continue;
 
@@ -601,8 +657,8 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met,int typchk,int color) {
   nt = mesh->nt;
   for (k=1; k<=nt; k++) {
     pt = &mesh->tria[k];
-    //if ( !MMG2D_EOK(pt,color) || pt->ref < 0 )  continue;
-    if ( !MMG2D_EOK(pt,color) || pt->ref < 0 || !MMG2D_ADJEOK(mesh,k,color) )
+    //if ( !MMG2D_EOK(pt,color1) || pt->ref < 0 )  continue;
+    if ( !MMG2D_EOK(pt,color1) || pt->ref < 0 )
       continue;
     
     else if ( pt->flag == 0 )  continue;
@@ -764,7 +820,7 @@ void MMG2D_starpu_colelt(void *buffers[], void *cl_arg) {
  }
 
 /* Travel triangles and collapse short edges */
-int MMG2D_colelt(MMG5_pMesh mesh,MMG5_pSol met,int typchk,int color) {
+int MMG2D_colelt(MMG5_pMesh mesh,MMG5_pSol met,int typchk,int color1) {
   MMG5_pTria   pt;
   MMG5_pPoint  p1,p2;
   double       ux,uy,ll,hmin2;
@@ -777,7 +833,7 @@ int MMG2D_colelt(MMG5_pMesh mesh,MMG5_pSol met,int typchk,int color) {
  
   for (k=1; k<=mesh->nt; k++) {
     pt = &mesh->tria[k];
-    if ( !MMG2D_EOK(pt,color) || pt->ref < 0 ) continue;
+    if ( !MMG2D_EOK(pt,color1) || pt->ref < 0 ) continue;
 
     /* Travel 3 edges of the triangle and decide whether to collapse p1->p2, based on length criterion */
     pt->flag = 0; // was here before, but probably serves for nothing
@@ -876,7 +932,7 @@ void MMG2D_starpu_swpmsh(void *buffers[], void *cl_arg) {
   
   }
 
-int MMG2D_swpmsh(MMG5_pMesh mesh,MMG5_pSol met,int typchk, int color) {
+int MMG2D_swpmsh(MMG5_pMesh mesh,MMG5_pSol met,int typchk, int color1) {
 
   MMG5_pTria pt;
   int        it,maxit,ns,nns,k;
@@ -892,7 +948,7 @@ int MMG2D_swpmsh(MMG5_pMesh mesh,MMG5_pSol met,int typchk, int color) {
     ns = 0;
     for (k=1; k<=mesh->nt; k++) {
       pt = &mesh->tria[k];
-      if ( !MMG2D_EOK(pt,color) || pt->ref < 0 ) continue;
+      if ( !MMG2D_EOK(pt,color1) || pt->ref < 0 ) continue;
 
       for (i=0; i<3; i++) {
         if ( MG_SIN(pt->tag[i]) || MG_EDG(pt->tag[i]) ) continue;
@@ -961,7 +1017,7 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
       
      fprintf(stdout," Begin insert adpspl codelet \n");
       
-     for (color=0; color< 1; color++)
+     for (color=0; color< mesh->ncolors; color++)
      {
       ret = starpu_task_insert(&adpspl_codelet,
                 STARPU_RW, vector_mesh, 
@@ -975,7 +1031,7 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
       }
       
       starpu_task_wait_for_all();
-      //fprintf(stdout," vector_ns_222222222222222= %d .\n", vect_ns[0]);
+      //fprintf(stdout," vector_ns = %d .\n", vect_ns[0]);
       
       fprintf(stdout," End insert adpspl codelet \n");
       fprintf(stdout," -------------------------\n");
@@ -992,7 +1048,7 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
       
      fprintf(stdout," Begin insert adpcol codelet \n");
       
-     for (color=0; color< 1; color++)
+     for (color=0; color< mesh->ncolors; color++)
      {
       ret = starpu_task_insert(&adpcol_codelet,
                 STARPU_RW, vector_mesh, 
@@ -1031,7 +1087,7 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
          
     typchk=2;
       
-    for (color=0; color< 1; color++)
+     for (color=0; color< mesh->ncolors; color++)
      {
 
      ret = starpu_task_insert(&swpmsh_codelet,
@@ -1071,7 +1127,7 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
     maxit=1;
     improve=0;
       
-    for (color=0; color< 1; color++)
+     for (color=0; color< mesh->ncolors; color++)
      {
       ret = starpu_task_insert(&movtri_codelet,
                 STARPU_RW, vector_mesh, 
@@ -1122,7 +1178,7 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
     
    fprintf(stdout," Begin insert movtri2 codelet \n"); 
      
-   for (color=0; color< 1; color++)
+     for (color=0; color< mesh->ncolors; color++)
      {
     ret = starpu_task_insert(&movtri_codelet,
                 STARPU_RW, vector_mesh, 
@@ -1212,7 +1268,7 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
   
 
  }
-int MMG2D_adpspl(MMG5_pMesh mesh,MMG5_pSol met, int color) {
+int MMG2D_adpspl(MMG5_pMesh mesh,MMG5_pSol met, int color1) {
   MMG5_pTria         pt;
   double             lmax,len;
   int                k,ns,nt,ip,ier;
@@ -1226,7 +1282,7 @@ int MMG2D_adpspl(MMG5_pMesh mesh,MMG5_pSol met, int color) {
   nt = mesh->nt;
   for (k=1; k<=nt; k++) {
     pt = &mesh->tria[k];
-    if ( !MMG2D_EOK(pt,color) || pt->ref < 0 ) continue;
+    if ( !MMG2D_EOK(pt,color1) || pt->ref < 0 ) continue;
 
     imax = -1;
     lmax = -1.0;
@@ -1303,7 +1359,7 @@ void MMG2D_starpu_adpcol(void *buffers[], void *cl_arg) {
  }
 
 /* Analysis and collapse routine for edges in the final step of the algorithm */
-int MMG2D_adpcol(MMG5_pMesh mesh,MMG5_pSol met, int color) {
+int MMG2D_adpcol(MMG5_pMesh mesh,MMG5_pSol met, int color1) {
   MMG5_pTria        pt;
   MMG5_pPoint       p1,p2;
   double            len;
@@ -1314,7 +1370,7 @@ int MMG2D_adpcol(MMG5_pMesh mesh,MMG5_pSol met, int color) {
   nc = 0;
   for (k=1; k<=mesh->nt; k++) {
     pt = &mesh->tria[k];
-    if ( !MMG2D_EOK(pt,color) || pt->ref < 0 ) continue;
+    if ( !MMG2D_EOK(pt,color1) || pt->ref < 0 ) continue;
 
     /* Check edge length, and attempt collapse */
     pt->flag = 0;
@@ -1395,7 +1451,7 @@ void MMG2D_starpu_movtri(void *buffers[], void *cl_arg) {
   
 }
 
-int MMG2D_movtri(MMG5_pMesh mesh,MMG5_pSol met,int maxit,int8_t improve, int color) {
+int MMG2D_movtri(MMG5_pMesh mesh,MMG5_pSol met,int maxit,int8_t improve, int color1) {
   MMG5_pTria           pt;
   MMG5_pPoint          p0;
   int                  base,k,nnm,nm,ns,it,ilist,list[MMG2D_LONMAX+2];
@@ -1414,7 +1470,7 @@ int MMG2D_movtri(MMG5_pMesh mesh,MMG5_pSol met,int maxit,int8_t improve, int col
     nm = ns = 0;
     for (k=1; k<=mesh->nt; k++) {
       pt = &mesh->tria[k];
-      if ( !MMG2D_EOK(pt,color) || pt->ref < 0 ) continue;
+      if ( !MMG2D_EOK(pt,color1) || pt->ref < 0 ) continue;
 
       for (i=0; i<3; i++) {
         p0 = &mesh->point[pt->v[i]];
@@ -1466,11 +1522,12 @@ int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
 
   idx_t *part;
  
-  int color;
+  //int color1;
 
   /** Allocate the table part */
   MMG5_SAFE_CALLOC(part,mesh->nt,idx_t,return 0);
   int status, i;
+  int status1;
 
 
   int nelt= mesh->nt;
@@ -1485,18 +1542,24 @@ int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
   {
 
 	  pt= &mesh->tria[i+1];
-          pt->color = part[i];
-          pt->ref = pt->color;
+          pt->color1 = part[i];
+          pt->color2 = pt->color1;
+          pt->ref = pt->color1;
 
-          //fprintf(stdout,"----nbelts= %d, --color= %d \n",i, pt->color);
-
-
+          //fprintf(stdout,"----nbelts= %d, --color1= %d \n",i, pt->color1);
   }
 
   fprintf(stdout,"  --END Call Metis------ \n");
-
+  
    /*save result*/
   if ( MMG2D_saveMesh(mesh, "metis.mesh") != 1 )
+    exit(EXIT_FAILURE);
+    
+    
+  status1=MMG2D_overlap(mesh, part);
+  
+    /*save result*/
+  if ( MMG2D_saveMesh(mesh, "metise.mesh") != 1 )
     exit(EXIT_FAILURE);
    
  /*************************************/
