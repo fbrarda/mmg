@@ -33,6 +33,7 @@
  */
 
 #include "mmgcommon.h"
+#include <starpu.h>
 
 /**
  * \param mesh pointer toward the mesh structure.
@@ -47,6 +48,8 @@
  * \remark the ph->s field computation is useless in mmgs.
  *
  */
+ 
+   pthread_mutex_t count_mutex;
 int MMG5_mmgHashTria(MMG5_pMesh mesh, int *adjt, MMG5_Hash *hash, int chkISO) {
   MMG5_pTria     pt,pt1;
   MMG5_hedge    *ph;
@@ -222,6 +225,8 @@ int MMG5_hashEdge(MMG5_pMesh mesh,MMG5_Hash *hash, int a,int b,int k) {
   ib  = MG_MAX(a,b);
   key = (MMG5_KA*ia + MMG5_KB*ib) % hash->siz;
   ph  = &hash->item[key];
+ 
+  //fprintf(stdout,"111111111111111111111111111 worker_id= %d , hash_address= %p \n",starpu_worker_get_id(), hash );
 
   if ( ph->a == ia && ph->b == ib )
     return 1;
@@ -232,7 +237,6 @@ int MMG5_hashEdge(MMG5_pMesh mesh,MMG5_Hash *hash, int a,int b,int k) {
     }
     ph->nxt   = hash->nxt;
     ph        = &hash->item[hash->nxt];
-
     if ( hash->nxt >= hash->max-1 ) {
       if ( mesh->info.ddebug )
         fprintf(stderr,"\n  ## Warning: %s: memory alloc problem (edge):"
@@ -370,6 +374,7 @@ int MMG5_hashGet(MMG5_Hash *hash,int a,int b) {
   ia  = MG_MIN(a,b);
   ib  = MG_MAX(a,b);
   key = (MMG5_KA*ia + MMG5_KB*ib) % hash->siz;
+  
   ph  = &hash->item[key];
 
   if ( !ph->a )  return 0;
@@ -401,10 +406,10 @@ int MMG5_hashNew(MMG5_pMesh mesh,MMG5_Hash *hash,int hsiz,int hmax) {
 
   MMG5_ADD_MEM(mesh,(hash->max+1)*sizeof(MMG5_hedge),"hash table",
                 return 0);
+  fprintf(stdout,"hash.C,, worker_id= %d \n",starpu_worker_get_id() );
   MMG5_SAFE_CALLOC(hash->item,(hash->max+1),MMG5_hedge,return 0);
 
   for (k=hash->siz; k<hash->max; k++)
     hash->item[k].nxt = k+1;
-
   return 1;
 }

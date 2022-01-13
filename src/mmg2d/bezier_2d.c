@@ -51,6 +51,7 @@ int MMG2D_chkedg(MMG5_pMesh mesh, int k) {
     /* Long edges should be split */
     if ( ll > hmax*hmax ) {
       MG_SET(pt->flag,i);
+      //fprintf(stdout,"----Eltttt_check111 = %d, color_elt = %d, i= %d , i1= %d , i2= %d, flag =%d  \n", k, pt ->color1, i, i1,i2, pt->flag );
       continue;
     }
     /* Do not split very short edges */
@@ -59,6 +60,7 @@ int MMG2D_chkedg(MMG5_pMesh mesh, int k) {
     /* Split non geometric edges connecting two parts of the border */
     else if ( !MG_EDG(pt->tag[i]) && p1->tag > MG_NOTAG && p2->tag > MG_NOTAG ) {
       MG_SET(pt->flag,i);
+      //fprintf(stdout,"----Eltt_check222 = %d, color_elt = %d, i= %d , i1= %d , i2= %d, flag =%d  \n", k, pt ->color1, i, i1,i2, pt->flag );
       continue;
     }
 

@@ -547,6 +547,9 @@ typedef struct {
   MMG5_hedge  *item;
 } MMG5_Hash;
 
+typedef MMG5_Hash * MMG5_pHash;
+
+
 /**
  * \struct MMG5_Mesh
  * \brief MMG mesh structure.
@@ -600,6 +603,7 @@ typedef struct {
   MMG5_pQuad     quadra; /*!< Pointer toward the \ref MMG5_Quad structure */
   MMG5_pEdge     edge; /*!< Pointer toward the \ref MMG5_Edge structure */
   MMG5_HGeom     htab; /*!< \ref MMG5_HGeom structure */
+  MMG5_pHash     hash; /*Pointer toward the \ref MMG5_Hash structure*/
   MMG5_Info      info; /*!< \ref MMG5_Info structure */
   char           *namein; /*!< Input mesh name */
   char           *nameout; /*!< Output mesh name */
