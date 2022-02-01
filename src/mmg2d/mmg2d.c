@@ -688,20 +688,18 @@ int parsar(int argc,char *argv[],MMG5_pMesh mesh,MMG5_pSol met,MMG5_pSol sol) {
         }
         break;
       case 'n':
-	 if ( !strcmp(argv[i],"-ncolors") ) {
-             if ( ++i < argc && isdigit(argv[i][0]) )
-	     {  
-		 mesh->ncolors=atoi(argv[i]);   
-	     }
-	  else {
+        if ( !strcmp(argv[i],"-ncolors") ) {
+          if ( ++i < argc && isdigit(argv[i][0]) )
+          {
+            mesh->ncolors=atoi(argv[i]);
+          }
+          else {
             fprintf(stderr,"Missing argument option %c\n",argv[i-1][1]);
             MMG2D_usage(argv[0]);
             return 0;
           }
-
         }
-
-	else if ( !strcmp(argv[i],"-nreg") ) {
+        else if ( !strcmp(argv[i],"-nreg") ) {
           if ( !MMG2D_Set_iparameter(mesh,met,MMG2D_IPARAM_nreg,1) )
             return 0;
         }

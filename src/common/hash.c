@@ -48,8 +48,7 @@
  * \remark the ph->s field computation is useless in mmgs.
  *
  */
- 
-   pthread_mutex_t count_mutex;
+pthread_mutex_t count_mutex;
 int MMG5_mmgHashTria(MMG5_pMesh mesh, int *adjt, MMG5_Hash *hash, int chkISO) {
   MMG5_pTria     pt,pt1;
   MMG5_hedge    *ph;
@@ -406,7 +405,6 @@ int MMG5_hashNew(MMG5_pMesh mesh,MMG5_Hash *hash,int hsiz,int hmax) {
 
   MMG5_ADD_MEM(mesh,(hash->max+1)*sizeof(MMG5_hedge),"hash table",
                 return 0);
-  fprintf(stdout,"hash.C,, worker_id= %d \n",starpu_worker_get_id() );
   MMG5_SAFE_CALLOC(hash->item,(hash->max+1),MMG5_hedge,return 0);
 
   for (k=hash->siz; k<hash->max; k++)

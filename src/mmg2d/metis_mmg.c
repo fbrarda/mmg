@@ -107,7 +107,6 @@ int MMG_graph_meshElts2metis( MMG5_pMesh mesh,MMG5_pSol met,
 
 	}
 
-	fprintf(stdout, "******************************* \n");
 	/** 2) List the adjacent of each elts in adjncy */
 	ier = 1;
 	++(*nadjncy);
@@ -142,9 +141,6 @@ int MMG_graph_meshElts2metis( MMG5_pMesh mesh,MMG5_pSol met,
 
          }
 
-	fprintf(stdout, "******************************* \n");
-  
-
 	return ier;
 }
 
@@ -174,8 +170,6 @@ int MMG_part_meshElts2metis( MMG5_pMesh mesh, idx_t* part, idx_t nproc )
 	int        status = 1;
 
 	xadj = adjncy = vwgt = adjwgt = NULL;
-
-        fprintf(stdout, "----nbre of elements=  %d \n", nelt );
 
 	METIS_SetDefaultOptions(options);
 	//options[METIS_OPTION_CONTIG] = 1;
