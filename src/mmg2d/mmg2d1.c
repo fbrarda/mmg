@@ -463,7 +463,6 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int8_t typchk) {
   starpu_data_unregister(handle_nc);
   starpu_data_unregister(handle_nsw);
 
-puts("plop");
   return 1;
 }
 
@@ -1101,7 +1100,6 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
   starpu_data_acquire(handle_nm,  STARPU_W);
 
   do {
-
     if ( !mesh->info.noinsert ) {
       //ns = MMG2D_adpspl(mesh,met,color);
 
@@ -1140,7 +1138,6 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
       //nc = MMG2D_adpcol(mesh,met,color);
 
       nc = 0;
-
       starpu_data_release(handle_nc);
 
       for (color=0; color< mesh->ncolors; color++)
@@ -1196,7 +1193,6 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
         STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit");
 
       }
-
       starpu_data_acquire(handle_nsw,STARPU_RW);
 
       /* fprintf(stdout," End insert swpmsh1 codelet \n"); */
@@ -1237,6 +1233,7 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
         STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit");
 
       }
+
       starpu_data_acquire(handle_nm,STARPU_RW);
 
       /* fprintf(stdout," End insert movtri1 codelet \n"); */
