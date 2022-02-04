@@ -59,27 +59,27 @@ pthread_mutex_t mutex;
 
 struct Cell {
 
-   int val;
-   struct Cell * suivant;  // pointeur vers la cellule suivante
+  int val;
+  struct Cell * suivant;  // pointeur vers la cellule suivante
 
 };
 typedef struct Cell cellule;
 
 cellule * cree_liste_vide()
 {
-	return NULL;	
+	return NULL;
 }
 
 cellule * ajout_debut(cellule * liste, int e)
 {
 	cellule * premiercellule;
-	
+
 	/* Creation d'un cellule (la nouvelle tete de liste) */
-	premiercellule = (cellule *) malloc(size+1 * sizeof(cellule)); 
+	premiercellule = (cellule *) malloc(size+1 * sizeof(cellule));
 	premiercellule->val = e;
 	premiercellule->suivant = liste;
-	
-	return premiercellule; 
+
+	return premiercellule;
 }
 
 void afficher(cellule * liste)
@@ -90,7 +90,7 @@ void afficher(cellule * liste)
 	while(ptr != NULL)
 	{
 		printf("%d ", ptr->val);
-	
+
 		ptr = ptr->suivant;
 	}
 	printf("\n");
@@ -106,7 +106,7 @@ int taille(cellule * liste)
 		ptr = ptr->suivant;
 		i++;
 	}
-	
+
 	return i;
 }
 
@@ -115,7 +115,7 @@ int jieme(cellule * liste, int j)
 {
 	cellule * ptr = liste;
 	int i;
-	
+
 	/* avance jusqu'a arriver en jieme position */
 	for (i=1; i<j;i++)
 	{
@@ -132,17 +132,17 @@ cellule* ajout_jieme(cellule* liste, int j, int e)
 	cellule* ptr = liste;
 	cellule* nouveaucellule;
 	int i;
-	
+
 	/* Insertion en tete => appeler la fonction */
 	if (j==1) return ajout_debut(liste,e);
-	
+
 	/* verification de l'indice */
 	if (j>taille(liste)+1 || j<1)
 	{       max=2*size;
 		//printf("Mauvais indice\n");
 		return liste;
 	}
-	
+
 	/* Sinon avance jusqu'a arriver en (j - 1)eme position */
 	for (i=1; i<j-1;i++)
 	{
@@ -154,24 +154,24 @@ cellule* ajout_jieme(cellule* liste, int j, int e)
 	nouveaucellule->val= e;
 	nouveaucellule->suivant = ptr->suivant;
 	ptr->suivant = nouveaucellule;
-	
-	return liste; 
+
+	return liste;
 
 }
 
 cellule * supprime_debut(cellule * liste)
 {
 	cellule * premiercellule;
-	
+
 	/* On sauvegarde l'adresse du premier cellule */
 	premiercellule = liste;
 	/* on change la tete de la liste */
 	liste = premiercellule->suivant;
 	/* on libere la memoire occupee par le premier cellule supprime */
 	free(premiercellule);
-	
+
 	/* on retourne la nouvelle liste */
-	return liste; 
+	return liste;
 }
 
 cellule * supprime_jieme(cellule * liste, int j)
@@ -179,10 +179,10 @@ cellule * supprime_jieme(cellule * liste, int j)
 	cellule * ptr = liste;
 	cellule * anciencellule;
 	int i;
-	
+
 	/* Suppression en tete => appeler la fonction */
 	if (j==1) return supprime_debut(liste);
-	
+
 	/* verification de l'indice */
 	//if (j>taille(liste) || j<1)
 	if (j<1)
@@ -204,35 +204,35 @@ cellule * supprime_jieme(cellule * liste, int j)
 	ptr->suivant = ptr->suivant->suivant;
 	/* on libere la memoire */
 	free(anciencellule);
-		
-	return liste; 
+
+	return liste;
 
 }
 
 void *Insert_thread(void *threadid){
-   long tid;
-   int c;
-   int key;
-   
-  
-   tid = (long)threadid;  
-   cellule * maliste;
+  long tid;
+  int c;
+  int key;
 
-   //printf("Hello World!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!It's me, thread #%ld!\n", tid); 
-    
-   for (c=0;c<NBR;c++)
-   {   
-     key=rand() % 100;
-      
-     //pthread_mutex_lock(&mutex);
 
-     maliste = ajout_jieme(maliste, size+1, key);
-  
-     //pthread_mutex_unlock(&mutex);
-   
-   }
-   pthread_exit(NULL);
-   
+  tid = (long)threadid;
+  cellule * maliste;
+
+  //printf("Hello World!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!It's me, thread #%ld!\n", tid);
+
+  for (c=0;c<NBR;c++)
+  {
+    key=rand() % 100;
+
+    //pthread_mutex_lock(&mutex);
+
+    maliste = ajout_jieme(maliste, size+1, key);
+
+    //pthread_mutex_unlock(&mutex);
+
+  }
+  pthread_exit(NULL);
+
 }
 /**************************************************************************************************/
 
@@ -321,7 +321,7 @@ int MMG2D_countLocalParamAtEdg( MMG5_pMesh mesh,MMG5_iNode **bdyRefs) {
   ier = MMG5_Add_inode( mesh, bdyRefs, k );
   if ( ier < 0 ) {
     fprintf(stderr,"\n  ## Error: %s: unable to allocate the first boundary"
-           " reference node.\n",__func__);
+            " reference node.\n",__func__);
     return 0;
   }
   else {
@@ -354,7 +354,7 @@ int MMG2D_countLocalParamAtEdg( MMG5_pMesh mesh,MMG5_iNode **bdyRefs) {
  */
 static inline
 int MMG2D_writeLocalParamAtEdg( MMG5_pMesh mesh, MMG5_iNode *bdryRefs,
-                                 FILE *out ) {
+                                FILE *out ) {
   MMG5_iNode *cur;
 
   cur = bdryRefs;
@@ -516,8 +516,8 @@ int MMG2D_defaultOption(MMG5_pMesh mesh,MMG5_pSol met,MMG5_pSol sol) {
   }
   if ( mesh->info.hsiz > 0. ) {
     if ( !MMG5_Compute_constantSize(mesh,met,&hsiz) ) {
-     if ( !MMG5_unscaleMesh(mesh,met,sol) ) _LIBMMG5_RETURN(mesh,met,sol,MMG5_STRONGFAILURE);
-     _LIBMMG5_RETURN(mesh,met,sol,MMG5_STRONGFAILURE);
+      if ( !MMG5_unscaleMesh(mesh,met,sol) ) _LIBMMG5_RETURN(mesh,met,sol,MMG5_STRONGFAILURE);
+      _LIBMMG5_RETURN(mesh,met,sol,MMG5_STRONGFAILURE);
     }
   }
 
@@ -529,7 +529,7 @@ int MMG2D_defaultOption(MMG5_pMesh mesh,MMG5_pSol met,MMG5_pSol sol) {
   if ( !MMG2D_writeLocalParam(mesh) ) {
     fprintf(stderr,"\n  ## Error: %s: Unable to save the local parameters file.\n"
             "            Exit program.\n",__func__);
-     _LIBMMG5_RETURN(mesh,met,sol,MMG5_LOWFAILURE);
+    _LIBMMG5_RETURN(mesh,met,sol,MMG5_LOWFAILURE);
   }
 
   _LIBMMG5_RETURN(mesh,met,sol,MMG5_SUCCESS);
@@ -909,10 +909,10 @@ int main(int argc,char *argv[]) {
   ret = starpu_initialize(&conf, &argc, &argv);
   if (ret == -ENODEV) return 0;
   STARPU_CHECK_RETURN_VALUE(ret, "starpu_init");
-  
+
   /*ret = starpu_init(NULL);
-  if (ret == -ENODEV) return 77;
-  STARPU_CHECK_RETURN_VALUE(ret, "starpu_init");*/
+    if (ret == -ENODEV) return 77;
+    STARPU_CHECK_RETURN_VALUE(ret, "starpu_init");*/
 
   starpu_profiling_status_set(STARPU_PROFILING_ENABLE);
 
@@ -920,13 +920,13 @@ int main(int argc,char *argv[]) {
   setenv("STARPU_PROFILING", "1", 1);
   setenv("STARPU_FXT_TRACE", "1", 1);
   setenv("STARPU_GENERATE_TRACE", "1", 1);
- 
+
   //fprintf(stdout,"----number of workers= %d \n",starpu_worker_get_count());
-  
+
 
 /**********************************************************/
 
-  //int size=np+1; 
+  //int size=np+1;
   int j,k;
   cellule * maliste;
 
@@ -934,9 +934,9 @@ int main(int argc,char *argv[]) {
 
   for (j=1; j<size+1;j++)
   {
-  maliste = ajout_debut(maliste,1);
-  
- }
+    maliste = ajout_debut(maliste,1);
+
+  }
 
   afficher(maliste);
 
@@ -946,53 +946,53 @@ int main(int argc,char *argv[]) {
 
   for (j=0; j<10;j++)
   {
-  
+
     pthread_mutex_lock(&mutex);
-     for (k=0; k<1000;k++)
-     {
+    for (k=0; k<1000;k++)
+    {
       int value=rand() % 50;
       int key=rand() % 100;
       maliste = ajout_jieme(maliste, key, value);
-      
-      }
-   pthread_mutex_unlock(&mutex);
-  
-    for (i=size+1; i<100;i++)
-     {
-      supprime_jieme(maliste, i);
-     }
- 
-     
-  }
-   tp= clock();
-   printf("%ld micro seconde\n",tp-ta);
-   printf("durée= %lf sec\n",(double)(tp-ta)/(double)CLOCKS_PER_SEC);
-   
 
- 
+    }
+    pthread_mutex_unlock(&mutex);
+
+    for (i=size+1; i<100;i++)
+    {
+      supprime_jieme(maliste, i);
+    }
+
+
+  }
+  tp= clock();
+  printf("%ld micro seconde\n",tp-ta);
+  printf("durée= %lf sec\n",(double)(tp-ta)/(double)CLOCKS_PER_SEC);
+
+
+
   /* pthread_t threadid;
-  for (j=0;j<10;j++)
-   {   
-  
+     for (j=0;j<10;j++)
+     {
+
      printf("Before Thread\n");
-     
+
      pthread_create(&threadid, NULL, Insert_thread, NULL);
      pthread_join(threadid, NULL);
-     
+
      printf("After Thread\n");
-    
-     
-   
-   } */
+
+
+
+     } */
 
   //afficher(maliste);
-  
+
   //printf("Taille de la liste : %d\n\n",taille(maliste));
 
- 
+
   //exit (0);
 
-   
+
   /****************************************/
   MMG5_pMesh    mesh;
   MMG5_pSol     sol,met,disp,ls;
@@ -1150,7 +1150,7 @@ int main(int argc,char *argv[]) {
   }
 
 
- if ( mesh->mark ) {
+  if ( mesh->mark ) {
     /* Save a local parameters file containing the default parameters */
     ier = MMG2D_defaultOption(mesh,met,disp);
     MMG2D_RETURN_AND_FREE(mesh,met,ls,disp,ier);
@@ -1174,9 +1174,9 @@ int main(int argc,char *argv[]) {
               " AND A SOLUTION IN ADAPTATION MODE.\n");
       MMG2D_RETURN_AND_FREE(mesh,met,ls,disp,MMG5_STRONGFAILURE);
     }
-                          
+
     ier = MMG2D_mmg2dlib(mesh,met);
-   
+
   }
 
   if ( ier != MMG5_STRONGFAILURE ) {
@@ -1230,7 +1230,7 @@ int main(int argc,char *argv[]) {
 
   /* free mem */
   MMG2D_RETURN_AND_FREE(mesh,met,ls,disp,ier);
-  
+
   /* terminate StarPU */
-   starpu_shutdown();
+  starpu_shutdown();
 }

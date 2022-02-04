@@ -1624,10 +1624,8 @@ int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
 
   status=MMG_part_meshElts2metis( mesh, part, (idx_t)mesh->info.ncolors );
 
-  for (i=0; i< mesh->nt; i++)
-  {
-
-	  pt= &mesh->tria[i+1];
+  for (i=0; i< mesh->nt; i++) {
+    pt= &mesh->tria[i+1];
     pt->color1 = part[i];
     pt->color2 = pt->color1;
     //pt->ref = pt->color1;
