@@ -272,7 +272,7 @@ int MMG2D_overlap(MMG5_pMesh mesh, idx_t* part)
    based on patterns, collapses and swaps.
    typchk = 1 -> adaptation based on edge lengths
    typchk = 2 -> adaptation based on lengths calculated in metric met */
-int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int8_t typchk) {
+int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
   MMG5_Hash hash;
   int       it,maxit,ns,nc,nsw,nns,nnc,nnsw;
   int       ret;
@@ -476,7 +476,7 @@ void MMG2D_starpu_anaelt(void *buffers[], void *cl_arg) {
   MMG5_pMesh mesh;
   MMG5_pSol met;
 
-  int8_t typchk;
+  int typchk;
   int color;
   int *ns;
   MMG5_Hash *hash;
@@ -902,7 +902,7 @@ void MMG2D_starpu_colelt(void *buffers[], void *cl_arg) {
   MMG5_pMesh mesh;
   MMG5_pSol met;
 
-  int8_t typchk;
+  int typchk;
   int color;
 
   int *nc;
@@ -1007,7 +1007,7 @@ void MMG2D_starpu_swpmsh(void *buffers[], void *cl_arg) {
   MMG5_pMesh mesh;
   MMG5_pSol met;
 
-  int8_t typchk;
+  int typchk;
   int color;
 
   int *nsw;
@@ -1069,10 +1069,10 @@ int MMG2D_swpmsh(MMG5_pMesh mesh,MMG5_pSol met,int typchk, int color1) {
 int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
 
   int it,nns,ns,nnc,nc,nnsw,nsw,nnm,nm;
-  int typchk;
   int color;
   int ret, i;
   int maxit;
+  int typchk;
   int8_t improve;
 
   //fprintf(stdout," Mesh Adaptation: Hello adptri function-----------\n");
