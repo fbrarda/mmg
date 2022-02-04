@@ -321,7 +321,7 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
       ns = 0;
       starpu_data_release(handle_ns);
 
-      for (color=0; color< mesh->ncolors; color++)
+      for (color=0; color< mesh->info.ncolors; color++)
       {
         ret = starpu_task_insert(&anaelt_codelet,
                                  STARPU_RW, vector_mesh,
@@ -374,7 +374,7 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
       nc = 0;
       starpu_data_release(handle_nc);
 
-      for (color=0; color< mesh->ncolors; color++)
+      for (color=0; color< mesh->info.ncolors; color++)
       {
         ret = starpu_task_insert(&colelt_codelet,
                                  STARPU_RW, vector_mesh,
@@ -412,7 +412,7 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
       nsw = 0;
       starpu_data_release(handle_nsw);
 
-      for (color=0; color< mesh->ncolors; color++)
+      for (color=0; color< mesh->info.ncolors; color++)
       {
         ret = starpu_task_insert(&swpmsh_codelet,
                                  STARPU_RW, vector_mesh,
@@ -1108,7 +1108,7 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
       ns = 0;
       starpu_data_release(handle_ns);
 
-      for (color=0; color< mesh->ncolors; color++)
+      for (color=0; color< mesh->info.ncolors; color++)
       {
         ret = starpu_task_insert(&adpspl_codelet,
                                  STARPU_RW, vector_mesh,
@@ -1140,7 +1140,7 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
       nc = 0;
       starpu_data_release(handle_nc);
 
-      for (color=0; color< mesh->ncolors; color++)
+      for (color=0; color< mesh->info.ncolors; color++)
       {
         ret = starpu_task_insert(&adpcol_codelet,
                                  STARPU_RW, vector_mesh,
@@ -1179,7 +1179,7 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
       nsw = 0;
       starpu_data_release(handle_nsw);
 
-      for (color=0; color< mesh->ncolors; color++)
+      for (color=0; color< mesh->info.ncolors; color++)
       {
 
         ret = starpu_task_insert(&swpmsh_codelet,
@@ -1219,7 +1219,7 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
       nm = 0;
       starpu_data_release(handle_nm);
 
-      for (color=0; color< mesh->ncolors; color++)
+      for (color=0; color< mesh->info.ncolors; color++)
       {
         ret = starpu_task_insert(&movtri_codelet,
                                  STARPU_RW, vector_mesh,
@@ -1272,7 +1272,7 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
     nm = 0;
     starpu_data_release(handle_nm);
 
-    for (color=0; color< mesh->ncolors; color++)
+    for (color=0; color< mesh->info.ncolors; color++)
     {
       ret = starpu_task_insert(&movtri_codelet,
                                STARPU_RW, vector_mesh,
@@ -1622,7 +1622,7 @@ int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
 
   //fprintf(stdout,"  --Begin Call Metis---- \n");
 
-  status=MMG_part_meshElts2metis( mesh, part, (idx_t)mesh->ncolors );
+  status=MMG_part_meshElts2metis( mesh, part, (idx_t)mesh->info.ncolors );
 
   for (i=0; i< mesh->nt; i++)
   {

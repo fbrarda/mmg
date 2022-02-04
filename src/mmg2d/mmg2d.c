@@ -218,7 +218,6 @@ void *Insert_thread(void *threadid){
    tid = (long)threadid;  
    cellule * maliste;
 
-   
    //printf("Hello World!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!It's me, thread #%ld!\n", tid); 
     
    for (c=0;c<NBR;c++)
@@ -691,7 +690,7 @@ int parsar(int argc,char *argv[],MMG5_pMesh mesh,MMG5_pSol met,MMG5_pSol sol) {
         if ( !strcmp(argv[i],"-ncolors") ) {
           if ( ++i < argc && isdigit(argv[i][0]) )
           {
-            mesh->ncolors=atoi(argv[i]);
+            mesh->info.ncolors=atoi(argv[i]);
           }
           else {
             fprintf(stderr,"Missing argument option %c\n",argv[i-1][1]);
