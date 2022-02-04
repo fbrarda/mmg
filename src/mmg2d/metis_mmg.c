@@ -47,7 +47,7 @@ int MMG_graph_meshElts2metis( MMG5_pMesh mesh,idx_t **xadj,idx_t **adjncy ) {
   MMG5_pTria pt;
   idx_t      nadjncy;
   int        *adja;
-  int        j,k,iadr,jel,count,nbAdj,ier, i, iel;
+  int        j,k,iadr,jel,count,nbAdj,ier;
 
   /** Step 1: mesh adjacency creation */
   /*if ( (!mesh->adja) && (1 != MMG2D_hashTria(mesh) ) ) {
