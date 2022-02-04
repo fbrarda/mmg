@@ -45,101 +45,101 @@
  */
 int MMG_graph_meshElts2metis( MMG5_pMesh mesh,idx_t **xadj,idx_t **adjncy,
                               idx_t **adjwgt ) {
-	MMG5_pTria pt;
+  MMG5_pTria pt;
   idx_t      nadjncy;
-	int        *adja;
-	int        j,k,iadr,jel,count,nbAdj,ier, i, iel;
+  int        *adja;
+  int        j,k,iadr,jel,count,nbAdj,ier, i, iel;
 
-	/** Step 1: mesh adjacency creation */
-	/*if ( (!mesh->adja) && (1 != MMG2D_hashTria(mesh) ) ) {
-	  fprintf(stderr,"\n  ## Error: %s: unable to create "
-	  "adjacency table.\n",__func__);
-	  return 0;
-	  }*/
+  /** Step 1: mesh adjacency creation */
+  /*if ( (!mesh->adja) && (1 != MMG2D_hashTria(mesh) ) ) {
+    fprintf(stderr,"\n  ## Error: %s: unable to create "
+    "adjacency table.\n",__func__);
+    return 0;
+    }*/
 
-	/* create tria adjacency */
-	if ( !MMG2D_hashTria(mesh) ) {
-		fprintf(stderr,"\n  ## Error: %s: hashing problem (1). Exit program.\n",
-				__func__);
-		return 0;
-	}
-
-
-	/** Step 2: build the metis graph */
-
-	/* allocate xadj */
-
-	MMG5_SAFE_CALLOC((*xadj),mesh->nt+1,idx_t,return 0);
+  /* create tria adjacency */
+  if ( !MMG2D_hashTria(mesh) ) {
+    fprintf(stderr,"\n  ## Error: %s: hashing problem (1). Exit program.\n",
+            __func__);
+    return 0;
+  }
 
 
-	/** 1) Count the number of adjacent of each elements and fill xadj */
+  /** Step 2: build the metis graph */
 
-	(*xadj)[0] = 0;
-	nadjncy = 0;
-	//fprintf(stdout, "hellooooo \n");
-	for( k = 1; k <= mesh->nt; k++ ) {
-		nbAdj = 0;
+  /* allocate xadj */
 
-		adja = &mesh->adja[3*(k-1) + 1];
-
-		for( j = 0; j < 3; j++ )
-		{
-			//fprintf(stdout, "adja/3= %d , adja%3= %d \n", adja[j]/3, adja[j]%3);
-
-			if ((adja[j]))
-
-			   nbAdj++;
-
-		}
-
-		//fprintf(stdout, "nbAdj %d \n", nbAdj);
-
-		nadjncy+= nbAdj;
-
-		//fprintf(stdout, "nadjncy %d \n", nadjncy);
-
-		(*xadj)[k] = nadjncy;
-
-		//fprintf(stdout, "xadj %d \n", (*xadj)[k]);
+  MMG5_SAFE_CALLOC((*xadj),mesh->nt+1,idx_t,return 0);
 
 
-	}
+  /** 1) Count the number of adjacent of each elements and fill xadj */
 
-	/** 2) List the adjacent of each elts in adjncy */
-	ier = 1;
-	++nadjncy;
-	MMG5_SAFE_CALLOC((*adjncy), nadjncy, idx_t, ier=0;);
-	if( !ier ) {
-		MMG5_DEL_MEM(mesh, (*xadj) );
-                MMG5_DEL_MEM(mesh, (*adjncy));
-		return ier;
-	}
+  (*xadj)[0] = 0;
+  nadjncy = 0;
+  //fprintf(stdout, "hellooooo \n");
+  for( k = 1; k <= mesh->nt; k++ ) {
+    nbAdj = 0;
 
-	count = 0;
-	for( k = 1; k <= mesh->nt; k++ ) {
-		iadr = 3*(k-1) + 1;
-		adja = &mesh->adja[3*(k-1) + 1];
-		pt   = &mesh->tria[k];
-		for ( j = 0; j < 3; j++ ) {
-			jel = adja[j] / 3;
-			if ( !jel ) continue;
+    adja = &mesh->adja[3*(k-1) + 1];
 
-			if (adja[j]/3)
-			{  
-				(*adjncy)[count]   = (adja[j]/3)-1;
-				//fprintf(stdout, "adjncy %d \n", (*adjncy)[count]);
-				count++;
-                        }
+    for( j = 0; j < 3; j++ )
+    {
+      //fprintf(stdout, "adja/3= %d , adja%3= %d \n", adja[j]/3, adja[j]%3);
 
-                        /*(*adjncy)[count++]   = jel-1;
-                        }
-                  assert( count == ( (*xadj)[k] ) );*/
+      if ((adja[j]))
 
-               }
+        nbAdj++;
 
-         }
+    }
 
-	return ier;
+    //fprintf(stdout, "nbAdj %d \n", nbAdj);
+
+    nadjncy+= nbAdj;
+
+    //fprintf(stdout, "nadjncy %d \n", nadjncy);
+
+    (*xadj)[k] = nadjncy;
+
+    //fprintf(stdout, "xadj %d \n", (*xadj)[k]);
+
+
+  }
+
+  /** 2) List the adjacent of each elts in adjncy */
+  ier = 1;
+  ++nadjncy;
+  MMG5_SAFE_CALLOC((*adjncy), nadjncy, idx_t, ier=0;);
+  if( !ier ) {
+    MMG5_DEL_MEM(mesh, (*xadj) );
+    MMG5_DEL_MEM(mesh, (*adjncy));
+    return ier;
+  }
+
+  count = 0;
+  for( k = 1; k <= mesh->nt; k++ ) {
+    iadr = 3*(k-1) + 1;
+    adja = &mesh->adja[3*(k-1) + 1];
+    pt   = &mesh->tria[k];
+    for ( j = 0; j < 3; j++ ) {
+      jel = adja[j] / 3;
+      if ( !jel ) continue;
+
+      if (adja[j]/3)
+      {
+        (*adjncy)[count]   = (adja[j]/3)-1;
+        //fprintf(stdout, "adjncy %d \n", (*adjncy)[count]);
+        count++;
+      }
+
+      /*(*adjncy)[count++]   = jel-1;
+        }
+        assert( count == ( (*xadj)[k] ) );*/
+
+    }
+
+  }
+
+  return ier;
 }
 
 /**
@@ -154,73 +154,73 @@ int MMG_graph_meshElts2metis( MMG5_pMesh mesh,idx_t **xadj,idx_t **adjncy,
  */
 int MMG_part_meshElts2metis( MMG5_pMesh mesh, idx_t* part, idx_t nproc )
 {
-	idx_t      *xadj,*adjncy,*vwgt,*adjwgt;
-	idx_t      nelt = mesh->nt;
-	idx_t      ncon = 1; // number of balancing constraint
-	idx_t      options[METIS_NOPTIONS];
-	idx_t      objval = 0;
-	int        ier = 0;
-	int        status = 1;
+  idx_t      *xadj,*adjncy,*vwgt,*adjwgt;
+  idx_t      nelt = mesh->nt;
+  idx_t      ncon = 1; // number of balancing constraint
+  idx_t      options[METIS_NOPTIONS];
+  idx_t      objval = 0;
+  int        ier = 0;
+  int        status = 1;
 
-	xadj = adjncy = vwgt = adjwgt = NULL;
+  xadj = adjncy = vwgt = adjwgt = NULL;
 
-	METIS_SetDefaultOptions(options);
-	//options[METIS_OPTION_CONTIG] = 1;
-
-
-	/** Build the graph */
-	if ( !MMG_graph_meshElts2metis(mesh,&xadj,&adjncy,&adjwgt) )
-		return 0;
-
-         /*for ( i = 0; i < sizeof(adjncy); i++ )
-         {
-        fprintf(stdout, "adjncy %d \n", (adjncy)[i]);
-
-         }*/
+  METIS_SetDefaultOptions(options);
+  //options[METIS_OPTION_CONTIG] = 1;
 
 
-        /*for (i=0; i<mesh->nt+1; i++)
-         {
-        fprintf(stdout, "xadj %d \n", (xadj)[i]);
+  /** Build the graph */
+  if ( !MMG_graph_meshElts2metis(mesh,&xadj,&adjncy,&adjwgt) )
+    return 0;
 
-         }*/
+  /*for ( i = 0; i < sizeof(adjncy); i++ )
+    {
+    fprintf(stdout, "adjncy %d \n", (adjncy)[i]);
 
-	/** Call metis and get the partition array */
-	if( nproc >= 8 ) {
-		options[METIS_OPTION_CONTIG] = 1;
-		ier = METIS_PartGraphKway( &nelt,&ncon,xadj,adjncy,NULL,NULL, NULL,&nproc,
-				NULL,NULL,NULL,&objval, part );
-	}
-	else
-	{
-		ier = METIS_PartGraphRecursive( &nelt,&ncon,xadj,adjncy,NULL,NULL, NULL,&nproc,
-				NULL,NULL,NULL,&objval, part );
-	}
-
-	if ( ier != METIS_OK ) {
-		switch ( ier ) {
-			case METIS_ERROR_INPUT:
-				fprintf(stderr, "METIS_ERROR_INPUT: input data error\n" );
-				break;
-			case METIS_ERROR_MEMORY:
-				fprintf(stderr, "METIS_ERROR_MEMORY: could not allocate memory error\n" );
-				break;
-			case METIS_ERROR:
-				fprintf(stderr, "METIS_ERROR: generic error\n" );
-				break;
-			default:
-				fprintf(stderr, "METIS_ERROR: update your METIS error handling\n" );
-				break;
-		}
-		status = 0;
-	}
+    }*/
 
 
-        /*deallocate xadj et adjncy */
-	MMG5_DEL_MEM(mesh, adjncy);
-	MMG5_DEL_MEM(mesh, xadj);
+  /*for (i=0; i<mesh->nt+1; i++)
+    {
+    fprintf(stdout, "xadj %d \n", (xadj)[i]);
 
-	return status;
+    }*/
+
+  /** Call metis and get the partition array */
+  if( nproc >= 8 ) {
+    options[METIS_OPTION_CONTIG] = 1;
+    ier = METIS_PartGraphKway( &nelt,&ncon,xadj,adjncy,NULL,NULL, NULL,&nproc,
+                               NULL,NULL,NULL,&objval, part );
+  }
+  else
+  {
+    ier = METIS_PartGraphRecursive( &nelt,&ncon,xadj,adjncy,NULL,NULL, NULL,&nproc,
+                                    NULL,NULL,NULL,&objval, part );
+  }
+
+  if ( ier != METIS_OK ) {
+    switch ( ier ) {
+    case METIS_ERROR_INPUT:
+      fprintf(stderr, "METIS_ERROR_INPUT: input data error\n" );
+      break;
+    case METIS_ERROR_MEMORY:
+      fprintf(stderr, "METIS_ERROR_MEMORY: could not allocate memory error\n" );
+      break;
+    case METIS_ERROR:
+      fprintf(stderr, "METIS_ERROR: generic error\n" );
+      break;
+    default:
+      fprintf(stderr, "METIS_ERROR: update your METIS error handling\n" );
+      break;
+    }
+    status = 0;
+  }
+
+
+  /*deallocate xadj et adjncy */
+  MMG5_DEL_MEM(mesh, adjncy);
+  MMG5_DEL_MEM(mesh, xadj);
+
+  return status;
 }
 
 
