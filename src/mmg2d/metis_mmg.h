@@ -39,9 +39,7 @@
 
 
 
-int MMG_graph_meshElts2metis( MMG5_pMesh mesh,MMG5_pSol sol,
-                               idx_t **xadj,idx_t **adjncy,idx_t **adjwgt,
-                               idx_t *nadjncy );
+int MMG_graph_meshElts2metis( MMG5_pMesh mesh,idx_t **,idx_t **,idx_t **);
 
 int MMG_part_meshElts2metis( MMG5_pMesh mesh, idx_t* part, idx_t nproc );
 

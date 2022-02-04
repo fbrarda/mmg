@@ -35,7 +35,6 @@
  * \param mesh pointer toward a MMG5 mesh structure
  * \param xadj pointer toward the position of the elt adjtcents in adjncy
  * \param adjncy pointer toward the list of the adjtcent of each elt
- * \param nadjncy number of data in adjncy array
  *
  * \return  1 if success, 0 if fail
  *
@@ -44,13 +43,12 @@
  * \warning the mesh must be packed
  *
  */
-int MMG_graph_meshElts2metis( MMG5_pMesh mesh,MMG5_pSol met,
-		idx_t **xadj,idx_t **adjncy,idx_t **adjwgt,
-		idx_t *nadjncy ) {
+int MMG_graph_meshElts2metis( MMG5_pMesh mesh,idx_t **xadj,idx_t **adjncy,
+                              idx_t **adjwgt ) {
 	MMG5_pTria pt;
-	//MMG5_pxTetra pxt;
-	int          *adja;
-	int          j,k,iadr,jel,count,nbAdj,ier, i, iel;
+  idx_t      nadjncy;
+	int        *adja;
+	int        j,k,iadr,jel,count,nbAdj,ier, i, iel;
 
 	/** Step 1: mesh adjacency creation */
 	/*if ( (!mesh->adja) && (1 != MMG2D_hashTria(mesh) ) ) {
@@ -77,7 +75,7 @@ int MMG_graph_meshElts2metis( MMG5_pMesh mesh,MMG5_pSol met,
 	/** 1) Count the number of adjacent of each elements and fill xadj */
 
 	(*xadj)[0] = 0;
-	(*nadjncy) = 0;
+	nadjncy = 0;
 	//fprintf(stdout, "hellooooo \n");
 	for( k = 1; k <= mesh->nt; k++ ) {
 		nbAdj = 0;
@@ -96,11 +94,11 @@ int MMG_graph_meshElts2metis( MMG5_pMesh mesh,MMG5_pSol met,
 
 		//fprintf(stdout, "nbAdj %d \n", nbAdj);
 
-		(*nadjncy)+= nbAdj;
+		nadjncy+= nbAdj;
 
-		//fprintf(stdout, "nadjncy %d \n", (*nadjncy));
+		//fprintf(stdout, "nadjncy %d \n", nadjncy);
 
-		(*xadj)[k] = (*nadjncy);
+		(*xadj)[k] = nadjncy;
 
 		//fprintf(stdout, "xadj %d \n", (*xadj)[k]);
 
@@ -109,8 +107,8 @@ int MMG_graph_meshElts2metis( MMG5_pMesh mesh,MMG5_pSol met,
 
 	/** 2) List the adjacent of each elts in adjncy */
 	ier = 1;
-	++(*nadjncy);
-	MMG5_SAFE_CALLOC((*adjncy), (*nadjncy), idx_t, ier=0;);
+	++nadjncy;
+	MMG5_SAFE_CALLOC((*adjncy), nadjncy, idx_t, ier=0;);
 	if( !ier ) {
 		MMG5_DEL_MEM(mesh, (*xadj) );
                 MMG5_DEL_MEM(mesh, (*adjncy));
@@ -157,16 +155,11 @@ int MMG_graph_meshElts2metis( MMG5_pMesh mesh,MMG5_pSol met,
 int MMG_part_meshElts2metis( MMG5_pMesh mesh, idx_t* part, idx_t nproc )
 {
 	idx_t      *xadj,*adjncy,*vwgt,*adjwgt;
-	idx_t      adjsize;
 	idx_t      nelt = mesh->nt;
 	idx_t      ncon = 1; // number of balancing constraint
 	idx_t      options[METIS_NOPTIONS];
 	idx_t      objval = 0;
-	MMG5_pSol  met;
 	int        ier = 0;
-        int i;
-        char      *filename, *fileout;
-        MMG5_pTria pt;
 	int        status = 1;
 
 	xadj = adjncy = vwgt = adjwgt = NULL;
@@ -176,7 +169,7 @@ int MMG_part_meshElts2metis( MMG5_pMesh mesh, idx_t* part, idx_t nproc )
 
 
 	/** Build the graph */
-	if ( !MMG_graph_meshElts2metis(mesh,met,&xadj,&adjncy,&adjwgt,&adjsize) )
+	if ( !MMG_graph_meshElts2metis(mesh,&xadj,&adjncy,&adjwgt) )
 		return 0;
 
          /*for ( i = 0; i < sizeof(adjncy); i++ )
