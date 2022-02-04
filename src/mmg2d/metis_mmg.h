@@ -39,7 +39,7 @@
 
 
 
-int MMG_graph_meshElts2metis( MMG5_pMesh mesh,idx_t **,idx_t **,idx_t **);
+int MMG_graph_meshElts2metis( MMG5_pMesh mesh,idx_t **,idx_t **);
 
 int MMG_part_meshElts2metis( MMG5_pMesh mesh, idx_t* part, idx_t nproc );
 

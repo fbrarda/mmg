@@ -43,8 +43,7 @@
  * \warning the mesh must be packed
  *
  */
-int MMG_graph_meshElts2metis( MMG5_pMesh mesh,idx_t **xadj,idx_t **adjncy,
-                              idx_t **adjwgt ) {
+int MMG_graph_meshElts2metis( MMG5_pMesh mesh,idx_t **xadj,idx_t **adjncy ) {
   MMG5_pTria pt;
   idx_t      nadjncy;
   int        *adja;
@@ -64,45 +63,25 @@ int MMG_graph_meshElts2metis( MMG5_pMesh mesh,idx_t **xadj,idx_t **adjncy,
     return 0;
   }
 
-
   /** Step 2: build the metis graph */
-
   /* allocate xadj */
-
   MMG5_SAFE_CALLOC((*xadj),mesh->nt+1,idx_t,return 0);
 
-
   /** 1) Count the number of adjacent of each elements and fill xadj */
-
   (*xadj)[0] = 0;
   nadjncy = 0;
-  //fprintf(stdout, "hellooooo \n");
   for( k = 1; k <= mesh->nt; k++ ) {
     nbAdj = 0;
-
     adja = &mesh->adja[3*(k-1) + 1];
 
-    for( j = 0; j < 3; j++ )
-    {
-      //fprintf(stdout, "adja/3= %d , adja%3= %d \n", adja[j]/3, adja[j]%3);
-
-      if ((adja[j]))
-
+    for( j = 0; j < 3; j++ ) {
+      if ( adja[j] ) {
         nbAdj++;
-
+      }
     }
 
-    //fprintf(stdout, "nbAdj %d \n", nbAdj);
-
     nadjncy+= nbAdj;
-
-    //fprintf(stdout, "nadjncy %d \n", nadjncy);
-
     (*xadj)[k] = nadjncy;
-
-    //fprintf(stdout, "xadj %d \n", (*xadj)[k]);
-
-
   }
 
   /** 2) List the adjacent of each elts in adjncy */
@@ -127,16 +106,9 @@ int MMG_graph_meshElts2metis( MMG5_pMesh mesh,idx_t **xadj,idx_t **adjncy,
       if (adja[j]/3)
       {
         (*adjncy)[count]   = (adja[j]/3)-1;
-        //fprintf(stdout, "adjncy %d \n", (*adjncy)[count]);
         count++;
       }
-
-      /*(*adjncy)[count++]   = jel-1;
-        }
-        assert( count == ( (*xadj)[k] ) );*/
-
     }
-
   }
 
   return ier;
@@ -154,7 +126,7 @@ int MMG_graph_meshElts2metis( MMG5_pMesh mesh,idx_t **xadj,idx_t **adjncy,
  */
 int MMG_part_meshElts2metis( MMG5_pMesh mesh, idx_t* part, idx_t nproc )
 {
-  idx_t      *xadj,*adjncy,*vwgt,*adjwgt;
+  idx_t      *xadj,*adjncy,*vwgt;
   idx_t      nelt = mesh->nt;
   idx_t      ncon = 1; // number of balancing constraint
   idx_t      options[METIS_NOPTIONS];
@@ -162,28 +134,14 @@ int MMG_part_meshElts2metis( MMG5_pMesh mesh, idx_t* part, idx_t nproc )
   int        ier = 0;
   int        status = 1;
 
-  xadj = adjncy = vwgt = adjwgt = NULL;
+  xadj = adjncy = vwgt = NULL;
 
   METIS_SetDefaultOptions(options);
   //options[METIS_OPTION_CONTIG] = 1;
 
-
   /** Build the graph */
-  if ( !MMG_graph_meshElts2metis(mesh,&xadj,&adjncy,&adjwgt) )
+  if ( !MMG_graph_meshElts2metis(mesh,&xadj,&adjncy ) )
     return 0;
-
-  /*for ( i = 0; i < sizeof(adjncy); i++ )
-    {
-    fprintf(stdout, "adjncy %d \n", (adjncy)[i]);
-
-    }*/
-
-
-  /*for (i=0; i<mesh->nt+1; i++)
-    {
-    fprintf(stdout, "xadj %d \n", (xadj)[i]);
-
-    }*/
 
   /** Call metis and get the partition array */
   if( nproc >= 8 ) {
@@ -222,5 +180,3 @@ int MMG_part_meshElts2metis( MMG5_pMesh mesh, idx_t* part, idx_t nproc )
 
   return status;
 }
-
-
