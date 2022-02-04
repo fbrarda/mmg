@@ -746,6 +746,16 @@ int MMG2D_pack(MMG5_pMesh mesh,MMG5_pSol sol,MMG5_pSol met) {
     ped->b = mesh->point[ped->b].tmp;
   }
 
+  if ( mesh->info.ddebug ) {
+    fprintf(stdout,"Warning: %s: %d: set metis colors to element references.\n",__func__,__LINE__);
+  }
+  for (k=1; k<=mesh->nt; k++) {
+    pt = &mesh->tria[k];
+    if ( !MG_EOK(pt)) continue;
+
+    pt->ref = pt->color1;
+  }
+
   /** Pack triangles */
   nt  = 0;
   nbl = 1;
