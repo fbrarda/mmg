@@ -924,73 +924,73 @@ int main(int argc,char *argv[]) {
   //fprintf(stdout,"----number of workers= %d \n",starpu_worker_get_count());
 
 
-/**********************************************************/
+  /* /\**********************************************************\/ */
 
-  //int size=np+1;
-  int j,k;
-  cellule * maliste;
+  /* //int size=np+1; */
+  /* int j,k; */
+  /* cellule * maliste; */
 
-  maliste = cree_liste_vide();
+  /* maliste = cree_liste_vide(); */
 
-  for (j=1; j<size+1;j++)
-  {
-    maliste = ajout_debut(maliste,1);
+  /* for (j=1; j<size+1;j++) */
+  /* { */
+  /*   maliste = ajout_debut(maliste,1); */
 
-  }
+  /* } */
 
-  afficher(maliste);
-
-
-  clock_t ta,tp;
-  ta = clock();
-
-  for (j=0; j<10;j++)
-  {
-
-    pthread_mutex_lock(&mutex);
-    for (k=0; k<1000;k++)
-    {
-      int value=rand() % 50;
-      int key=rand() % 100;
-      maliste = ajout_jieme(maliste, key, value);
-
-    }
-    pthread_mutex_unlock(&mutex);
-
-    for (i=size+1; i<100;i++)
-    {
-      supprime_jieme(maliste, i);
-    }
+  /* afficher(maliste); */
 
 
-  }
-  tp= clock();
-  printf("%ld micro seconde\n",tp-ta);
-  printf("durée= %lf sec\n",(double)(tp-ta)/(double)CLOCKS_PER_SEC);
+  /* clock_t ta,tp; */
+  /* ta = clock(); */
+
+  /* for (j=0; j<10;j++) */
+  /* { */
+
+  /*   pthread_mutex_lock(&mutex); */
+  /*   for (k=0; k<1000;k++) */
+  /*   { */
+  /*     int value=rand() % 50; */
+  /*     int key=rand() % 100; */
+  /*     maliste = ajout_jieme(maliste, key, value); */
+
+  /*   } */
+  /*   pthread_mutex_unlock(&mutex); */
+
+  /*   for (i=size+1; i<100;i++) */
+  /*   { */
+  /*     supprime_jieme(maliste, i); */
+  /*   } */
 
 
-
-  /* pthread_t threadid;
-     for (j=0;j<10;j++)
-     {
-
-     printf("Before Thread\n");
-
-     pthread_create(&threadid, NULL, Insert_thread, NULL);
-     pthread_join(threadid, NULL);
-
-     printf("After Thread\n");
+  /* } */
+  /* tp= clock(); */
+  /* printf("%ld micro seconde\n",tp-ta); */
+  /* printf("durée= %lf sec\n",(double)(tp-ta)/(double)CLOCKS_PER_SEC); */
 
 
 
-     } */
+  /* /\* pthread_t threadid; */
+  /*    for (j=0;j<10;j++) */
+  /*    { */
 
-  //afficher(maliste);
+  /*    printf("Before Thread\n"); */
 
-  //printf("Taille de la liste : %d\n\n",taille(maliste));
+  /*    pthread_create(&threadid, NULL, Insert_thread, NULL); */
+  /*    pthread_join(threadid, NULL); */
+
+  /*    printf("After Thread\n"); */
 
 
-  //exit (0);
+
+  /*    } *\/ */
+
+  /* //afficher(maliste); */
+
+  /* //printf("Taille de la liste : %d\n\n",taille(maliste)); */
+
+
+  /* //exit (0); */
 
 
   /****************************************/
