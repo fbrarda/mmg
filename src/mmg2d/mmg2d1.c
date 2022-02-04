@@ -254,8 +254,8 @@ int MMG2D_overlap(MMG5_pMesh mesh, idx_t* part)
           //fprintf(stdout,"----Elt = %d, color_elt = %d , adja = %d, color_adj= %d \n", k, pt ->color1, (adja[i]/3), pt1->color2 );
 
           pt1->color2 = pt->color1;
-          pt->ref = pt->color1;
-          pt1->ref = pt1->color2;
+          //pt->ref = pt->color1;
+          //pt1->ref = pt1->color2;
         }
 
       }
@@ -497,7 +497,7 @@ void MMG2D_starpu_anaelt(void *buffers[], void *cl_arg) {
 
   starpu_codelet_unpack_args(cl_arg, &typchk, &color);
 
-  *ns = MMG2D_anaelt(mesh,met,hash,typchk,color);
+  *ns += MMG2D_anaelt(mesh,met,hash,typchk,color);
 }
 
 /* Travel triangles and split long edges according to patterns */
@@ -920,7 +920,7 @@ void MMG2D_starpu_colelt(void *buffers[], void *cl_arg) {
 
   starpu_codelet_unpack_args(cl_arg, &typchk, &color);
 
-  *nc = MMG2D_colelt(mesh,met,typchk,color);
+  *nc += MMG2D_colelt(mesh,met,typchk,color);
 }
 
 /* Travel triangles and collapse short edges */
@@ -1025,7 +1025,7 @@ void MMG2D_starpu_swpmsh(void *buffers[], void *cl_arg) {
 
   starpu_codelet_unpack_args(cl_arg, &typchk, &color);
 
-  *nsw = MMG2D_swpmsh(mesh,met,typchk,color);
+  *nsw += MMG2D_swpmsh(mesh,met,typchk,color);
 
 }
 
@@ -1358,7 +1358,7 @@ void MMG2D_starpu_adpspl(void *buffers[], void *cl_arg) {
 
   starpu_codelet_unpack_args(cl_arg,&color);
 
-  *ns = MMG2D_adpspl(mesh,met,color);
+  *ns += MMG2D_adpspl(mesh,met,color);
 
 }
 
@@ -1445,8 +1445,7 @@ void MMG2D_starpu_adpcol(void *buffers[], void *cl_arg) {
 
   starpu_codelet_unpack_args(cl_arg,&color);
 
-  *nc = MMG2D_adpspl(mesh,met,color);
-
+  *nc += MMG2D_adpcol(mesh,met,color);
 }
 
 /* Analysis and collapse routine for edges in the final step of the algorithm */
@@ -1535,7 +1534,7 @@ void MMG2D_starpu_movtri(void *buffers[], void *cl_arg) {
 
   starpu_codelet_unpack_args(cl_arg, &maxit, &improve,&color);
 
-  *nm = MMG2D_movtri(mesh,met,maxit,improve,color);
+  *nm += MMG2D_movtri(mesh,met,maxit,improve,color);
 
 }
 
@@ -1631,7 +1630,7 @@ int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
 	  pt= &mesh->tria[i+1];
     pt->color1 = part[i];
     pt->color2 = pt->color1;
-    pt->ref = pt->color1;
+    //pt->ref = pt->color1;
 
     //fprintf(stdout,"----nbelts= %d, --color1= %d \n",i, pt->color1);
   }
