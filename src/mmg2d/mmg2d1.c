@@ -42,99 +42,157 @@
 
 struct starpu_codelet colelt_codelet =
 {
-        .cpu_funcs = {MMG2D_starpu_colelt},
-        .cpu_funcs_name = {"MMG2D_starpu_colelt"},
-        .nbuffers = 3,
-        .modes = {STARPU_RW, STARPU_RW, STARPU_W}, 
-        .specific_nodes = 1,
-        .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
-        .where = STARPU_CPU,
-        .name = "colelt"
+  .cpu_funcs = {MMG2D_starpu_colelt},
+  .cpu_funcs_name = {"MMG2D_starpu_colelt"},
+  .nbuffers = 3,
+  .modes = {STARPU_RW, STARPU_RW, STARPU_REDUX},
+  .specific_nodes = 1,
+  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
+  .where = STARPU_CPU,
+  .name = "colelt"
 };
 
 
 struct starpu_codelet swpmsh_codelet =
 {
-        .cpu_funcs = {MMG2D_starpu_swpmsh},
-        .cpu_funcs_name = {"MMG2D_starpu_swpmsh"},
-        .nbuffers = 3,
-        .modes = {STARPU_RW, STARPU_RW, STARPU_W}, 
-        .specific_nodes = 1,
-        .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
-        .where = STARPU_CPU,
-        .name = "swpmsh"
+  .cpu_funcs = {MMG2D_starpu_swpmsh},
+  .cpu_funcs_name = {"MMG2D_starpu_swpmsh"},
+  .nbuffers = 3,
+  .modes = {STARPU_RW, STARPU_RW, STARPU_REDUX},
+  .specific_nodes = 1,
+  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
+  .where = STARPU_CPU,
+  .name = "swpmsh"
 };
 
 
 struct starpu_codelet anaelt_codelet =
 {
-        .cpu_funcs = {MMG2D_starpu_anaelt},
-        .cpu_funcs_name = {"MMG2D_starpu_anaelt"},
-        .nbuffers = 4,
-        .modes = {STARPU_RW, STARPU_RW, STARPU_RW, STARPU_W}, 
-        .specific_nodes = 1,
-        .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
-        .where = STARPU_CPU,
-        .name = "anaelt"
+  .cpu_funcs = {MMG2D_starpu_anaelt},
+  .cpu_funcs_name = {"MMG2D_starpu_anaelt"},
+  .nbuffers = 4,
+  .modes = {STARPU_RW, STARPU_RW, STARPU_RW, STARPU_REDUX},
+  .specific_nodes = 1,
+  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
+  .where = STARPU_CPU,
+  .name = "anaelt"
 };
 
 struct starpu_codelet movtri_codelet =
 {
-        .cpu_funcs = {MMG2D_starpu_movtri},
-        .cpu_funcs_name = {"MMG2D_starpu_movtri"},
-        .nbuffers = 3,
-        .modes = {STARPU_RW, STARPU_RW, STARPU_W}, 
-        .specific_nodes = 1,
-        .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
-        .where = STARPU_CPU,
-        .name = "movtri"
+  .cpu_funcs = {MMG2D_starpu_movtri},
+  .cpu_funcs_name = {"MMG2D_starpu_movtri"},
+  .nbuffers = 3,
+  .modes = {STARPU_RW, STARPU_RW, STARPU_REDUX},
+  .specific_nodes = 1,
+  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
+  .where = STARPU_CPU,
+  .name = "movtri"
 };
 
 struct starpu_codelet adpspl_codelet =
 {
-        .cpu_funcs = {MMG2D_starpu_adpspl},
-        .cpu_funcs_name = {"MMG2D_starpu_adpspl"},
-        .nbuffers = 3,
-        .modes = {STARPU_RW, STARPU_RW, STARPU_W}, 
-        .specific_nodes = 1,
-        .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
-        .where = STARPU_CPU,
-        .name = "adpspl"
+  .cpu_funcs = {MMG2D_starpu_adpspl},
+  .cpu_funcs_name = {"MMG2D_starpu_adpspl"},
+  .nbuffers = 3,
+  .modes = {STARPU_RW, STARPU_RW, STARPU_REDUX},
+  .specific_nodes = 1,
+  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
+  .where = STARPU_CPU,
+  .name = "adpspl"
 };
 
 struct starpu_codelet adpcol_codelet =
 {
-        .cpu_funcs = {MMG2D_starpu_adpcol},
-        .cpu_funcs_name = {"MMG2D_starpu_adpcol"},
-        .nbuffers = 3,
-        .modes = {STARPU_RW, STARPU_RW, STARPU_W}, 
-        .specific_nodes = 1,
-        .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
-        .where = STARPU_CPU,
-        .name = "adpcol"
+  .cpu_funcs = {MMG2D_starpu_adpcol},
+  .cpu_funcs_name = {"MMG2D_starpu_adpcol"},
+  .nbuffers = 3,
+  .modes = {STARPU_RW, STARPU_RW, STARPU_REDUX},
+  .specific_nodes = 1,
+  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
+  .where = STARPU_CPU,
+  .name = "adpcol"
 };
 
 struct starpu_codelet hashTria_codelet =
 {
-        .cpu_funcs = {MMG2D_starpu_hashTria},
-        .cpu_funcs_name = {"MMG2D_starpu_hashTria"},
-        .nbuffers = 1,
-        .modes = {STARPU_RW}, 
-        .specific_nodes = 1,
-        .nodes = {STARPU_SPECIFIC_NODE_CPU},
-        .where = STARPU_CPU,
-        .name = "hashTria"
+  .cpu_funcs = {MMG2D_starpu_hashTria},
+  .cpu_funcs_name = {"MMG2D_starpu_hashTria"},
+  .nbuffers = 1,
+  .modes = {STARPU_RW},
+  .specific_nodes = 1,
+  .nodes = {STARPU_SPECIFIC_NODE_CPU},
+  .where = STARPU_CPU,
+  .name = "hashTria"
+};
+
+void izero_cpu(void *descr[], void *cl_arg)
+{
+  (void)cl_arg;
+  int *a = (int *)STARPU_VARIABLE_GET_PTR(descr[0]);
+
+  *a = 0;
+}
+
+/*
+ *    Codelet to neutral element initializer
+ */
+static struct starpu_codelet izero_codelet =
+{
+  .cpu_funcs = {izero_cpu},
+  .cpu_funcs_name = {"izero_cpu"},
+  .modes = {STARPU_W},
+  .nbuffers = 1,
+  .name = "izero"
 };
 
 
+void accumulate_cpu(void *descr[], void *cl_arg)
+{
+  (void)cl_arg;
+  int *a = (int *)STARPU_VARIABLE_GET_PTR(descr[0]);
+  int *b = (int *)STARPU_VARIABLE_GET_PTR(descr[1]);
+
+  *a = *a + *b;
+}
+
+/*
+ *    Codelet to perform the reduction of two elements
+ */
+static struct starpu_codelet accumulate_codelet =
+{
+  .cpu_funcs = {accumulate_cpu},
+  .cpu_funcs_name = {"redux_cpu_func"},
+  .modes = {STARPU_RW|STARPU_COMMUTE, STARPU_R},
+  .nbuffers = 2,
+  .name = "redux"
+};
+
+
+void print_cpu(void *descr[], void *cl_arg)
+{
+  (void)cl_arg;
+  int *a = (int *)STARPU_VARIABLE_GET_PTR(descr[0]);
+
+  printf("print *a %d\n",*a);
+}
+/*
+ *    Codelet to perform the reduction of two elements
+ */
+static struct starpu_codelet print_codelet =
+{
+  .cpu_funcs = {print_cpu},
+  .cpu_funcs_name = {"print_cpu_func"},
+  .modes = {STARPU_R},
+  .nbuffers = 1,
+  .name = "redux"
+};
+
 /***********************************************************/
 
-  int nbre=0;
-  
-  static starpu_pthread_mutex_t mutex;
-  pthread_mutex_t count_mutex;
-  pthread_mutex_t count_mutex1;
-  int rett;
+static starpu_pthread_mutex_t mutex;
+pthread_mutex_t count_mutex;
+pthread_mutex_t count_mutex1;
 
 /**************************************************************************************************/
 
@@ -144,16 +202,16 @@ int MMG2D_ADJEOK( MMG5_pMesh mesh, int k, int color1 ) {
   int *adja;
   int isAdja;
   int i;
-  
+
   /** Step 1: mesh adjacency creation: adja allocation */
   /*if ( (!mesh->adja) && (1 != MMG2D_hashTria(mesh) ) ) {
 	  fprintf(stderr,"\n  ## Error: %s: unable to create "
 	  "adjacency table.\n",__func__);
 	  return 0;
     }*/
- 
-    
-   adja = &mesh->adja[3*(k-1) + 1];
+
+
+  adja = &mesh->adja[3*(k-1) + 1];
   //pt   = &mesh->tria[k];
   isAdja = 0;
   for( i = 0; i < 3; i++ ) {
@@ -171,90 +229,81 @@ int MMG2D_overlap(MMG5_pMesh mesh, idx_t* part)
 {
 
   fprintf(stdout,"  -- Overlapping  \n");
- 
+
   int *adja;
 
   int status, i,k;
   int NbAdj;
   int *nadjcy;
 
-  int nelt= mesh->nt;
-
   MMG5_pTria pt;
   MMG5_pTria pt1;
-    
+
   for( k = 1; k <= mesh->nt; k++ ) {
     adja = &mesh->adja[3*(k-1) + 1];
     pt   = &mesh->tria[k];
 
-    //Test if MG_EOK is valid    
+    //Test if MG_EOK is valid
     if ( MG_EOK(pt) )
-     {
-        for( i = 0; i < 3; i++ ) {  
-          pt1=&mesh->tria[(adja[i]/3)];     
-          
-          if( (pt1->color2) > (pt->color1)) {
-           
-               //fprintf(stdout,"----Elt = %d, color_elt = %d , adja = %d, color_adj= %d \n", k, pt ->color1, (adja[i]/3), pt1->color2 );
-               
-               pt1->color2 = pt->color1;
-               pt->ref = pt->color1;
-               pt1->ref = pt1->color2;          
-          }
-              
-       }
-    
+    {
+      for( i = 0; i < 3; i++ ) {
+        pt1=&mesh->tria[(adja[i]/3)];
+
+        if( (pt1->color2) > (pt->color1)) {
+
+          //fprintf(stdout,"----Elt = %d, color_elt = %d , adja = %d, color_adj= %d \n", k, pt ->color1, (adja[i]/3), pt1->color2 );
+
+          pt1->color2 = pt->color1;
+          //pt->ref = pt->color1;
+          //pt1->ref = pt1->color2;
+        }
+
+      }
+
     }
-  
+
   }
 
-
-return 1;
+  return 1;
 
 }
+
 /* Mesh adaptation routine for the first stages of the algorithm: intertwine splitting
- based on patterns, collapses and swaps.
+   based on patterns, collapses and swaps.
    typchk = 1 -> adaptation based on edge lengths
    typchk = 2 -> adaptation based on lengths calculated in metric met */
-int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int8_t typchk) {
+int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
+  MMG5_Hash hash;
+  int       it,maxit,ns,nc,nsw,nns,nnc,nnsw;
+  int       ret;
+  int       color, i;
+  starpu_data_handle_t vector_mesh, vector_met, vector_hash;
+  starpu_data_handle_t handle_ns, handle_nc, handle_nsw;
 
-  int      it,maxit,ns,nc,nsw,nns,nnc,nnsw;
+  fprintf(stdout," Mesh Computation: Hello anatri function ----------\n");
 
+  starpu_vector_data_register(&vector_mesh, STARPU_MAIN_RAM, (uintptr_t)mesh, 1, sizeof(MMG5_pMesh));
+  starpu_vector_data_register(&vector_met, STARPU_MAIN_RAM, (uintptr_t)met, 1, sizeof(MMG5_pSol));
+
+  starpu_variable_data_register(&vector_hash, STARPU_MAIN_RAM, (uintptr_t)&hash, sizeof(MMG5_Hash));
+
+  starpu_variable_data_register(&handle_ns, STARPU_MAIN_RAM, (uintptr_t)&ns, sizeof(ns));
+  starpu_variable_data_register(&handle_nc, STARPU_MAIN_RAM, (uintptr_t)&nc, sizeof(nc));
+  starpu_variable_data_register(&handle_nsw, STARPU_MAIN_RAM, (uintptr_t)&nsw, sizeof(nsw));
+
+  starpu_data_set_reduction_methods ( handle_ns, &accumulate_codelet, &izero_codelet) ;
+  starpu_data_set_reduction_methods ( handle_nc, &accumulate_codelet, &izero_codelet) ;
+  starpu_data_set_reduction_methods ( handle_nsw, &accumulate_codelet, &izero_codelet) ;
+
+  /* Main routine; intertwine split, collapse and swaps */
   nns = nnc = nnsw = 0;
-  ns=0; nc=0; nsw=0;
   it = 0;
   maxit = 5;
-  int ret;
-  MMG5_Hash hash;
-  
-  int color, i;
-  int SIZE=1;
-  int vect_ns[SIZE];
-  int vect_nc[SIZE];
-  int vect_nsw[SIZE];
-  
-  
-  fprintf(stdout," Mesh Computation: Hello anatri function ----------\n");
-  
-  
-  starpu_data_handle_t vector_mesh, vector_met, vector_hash, vector_ns, vector_nc, vector_nsw;
-  
-   for (i=0; i< SIZE; i++)
-      {
-        vect_ns[0]=ns;
-        vect_nc[0]=nc;
-        vect_nsw[0]=nsw;
 
-       }
-  
-  starpu_vector_data_register(&vector_mesh, STARPU_MAIN_RAM, (uintptr_t)mesh, 1, sizeof(MMG5_pMesh)); 
-  starpu_vector_data_register(&vector_met, STARPU_MAIN_RAM, (uintptr_t)met, 1, sizeof(MMG5_pSol));
-  starpu_variable_data_register(&vector_hash, STARPU_MAIN_RAM, (uintptr_t)&hash, sizeof(MMG5_Hash));
-  starpu_vector_data_register(&vector_ns, STARPU_MAIN_RAM, (uintptr_t)vect_ns, SIZE, sizeof(vect_ns[0]));
-  starpu_vector_data_register(&vector_nc, STARPU_MAIN_RAM, (uintptr_t)vect_nc, SIZE, sizeof(vect_nc[0]));
-  starpu_vector_data_register(&vector_nsw, STARPU_MAIN_RAM, (uintptr_t)vect_nsw, SIZE, sizeof(vect_nsw[0]));
-  
-  /* Main routine; intertwine split, collapse and swaps */
+  starpu_data_acquire(handle_ns, STARPU_W);
+  starpu_data_acquire(handle_nc, STARPU_W);
+  starpu_data_acquire(handle_nsw, STARPU_W);
+
   do {
     if ( typchk == 2 && it == 0 )  mesh->info.fem = 1;
 
@@ -262,85 +311,96 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int8_t typchk) {
       /* Memory free */
       MMG5_DEL_MEM(mesh,mesh->adja);
       mesh->adja = 0;
-     
+
       /* Split long edges according to patterns */
-     //ns = MMG2D_anaelt(mesh,met,typchk, color);
-     
-     if ( !MMG5_hashNew(mesh,&hash,mesh->np,3*mesh->np) ) return 0;
-     //starpu_pthread_mutex_init(&mutex, NULL);
-    
-     for (color=0; color< mesh->ncolors; color++)
-     {
-      ret = starpu_task_insert(&anaelt_codelet,
-                     STARPU_RW, vector_mesh, 
-                     STARPU_RW, vector_met, 
-                     STARPU_RW, vector_hash, 
-                     STARPU_W, vector_ns, 
-                     STARPU_VALUE, &typchk, sizeof(typchk), 
-		      STARPU_VALUE, &color, sizeof(color), 
+      fprintf(stdout," Begin insert anaelt codelet \n");
+      //ns = MMG2D_anaelt(mesh,met,typchk, color);
+
+      if ( !MMG5_hashNew(mesh,&hash,mesh->np,3*mesh->np) ) return 0;
+      //starpu_pthread_mutex_init(&mutex, NULL);
+
+      ns = 0;
+      starpu_data_release(handle_ns);
+
+      for (color=0; color< mesh->info.ncolors; color++)
+      {
+        ret = starpu_task_insert(&anaelt_codelet,
+                                 STARPU_RW, vector_mesh,
+                                 STARPU_RW, vector_met,
+                                 STARPU_RW, vector_hash,
+                                 STARPU_REDUX, handle_ns,
+                                 STARPU_VALUE, &typchk, sizeof(typchk),
+                                 STARPU_VALUE, &color, sizeof(color),
                                  0);
-                                 
-      STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit"); 
-      
+
+        STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit");
         //ns = MMG2D_anaelt(mesh,met,typchk, color);
       }
+      starpu_data_acquire(handle_ns, STARPU_RW);
       
-      starpu_task_wait_for_all();
-            
+      fprintf(stdout," End insert anaelt codelet \n");
+      fprintf(stdout," -------------------------\n");
+      fprintf(stdout," -------------------------\n");
+
       //starpu_pthread_mutex_destroy(&mutex);
-      ns=vect_ns[0];
-      
+
       if ( ns < 0 ) {
         fprintf(stderr,"  ## Unable to complete surface mesh. Exit program.\n");
         return 0;
       }
-      
-      MMG5_DEL_MEM(mesh,hash.item);
 
+      MMG5_DEL_MEM(mesh,hash.item);
+      fprintf(stdout," Begin insert hashtria codelet \n");
       /* Recreate adjacencies */
-      /*if ( !MMG2D_hashTria(mesh) ) {
+      if ( !MMG2D_hashTria(mesh) ) {
         fprintf(stdout,"  ## Hashing problem. Exit program.\n");
         return 0;
-      }*/
-      
-      fprintf(stdout," Begin insert hashtria codelet \n");
-   
-      ret = starpu_task_insert(&hashTria_codelet,
-                     STARPU_RW, vector_mesh, 
-                                 0);
-                                 
-      STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit"); 
-      
+      }
       fprintf(stdout," End insert hashTria codelet \n");
       fprintf(stdout," -------------------------\n");
       fprintf(stdout," -------------------------\n");
-     
-      starpu_task_wait_for_all();
-       
-      /* Collapse short edges */    
-      //nc = MMG2D_colelt(mesh,met,typchk,color);
       
-     fprintf(stdout," Begin insert colelt codelet \n");
+      /* fprintf(stdout," Begin insert hashtria codelet \n"); */
 
-     for (color=0; color< mesh->ncolors; color++)
+      /* ret = starpu_task_insert(&hashTria_codelet, */
+      /*                STARPU_RW, vector_mesh,  */
+      /*                            0); */
+
+      /* STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit");  */
+
+      /* fprintf(stdout," End insert hashTria codelet \n"); */
+      /* fprintf(stdout," -------------------------\n"); */
+      /* fprintf(stdout," -------------------------\n"); */
+
+      /* starpu_task_wait_for_all(); */
+
+      /* Collapse short edges */
+      //nc = MMG2D_colelt(mesh,met,typchk,color);
+
+      //fprintf(stdout," Begin insert colelt codelet \n");
+
+      nc = 0;
+      starpu_data_release(handle_nc);
+      fprintf(stdout," Begin insert colelt codelet \n");
+      
+      for (color=0; color< mesh->info.ncolors; color++)
       {
-      ret = starpu_task_insert(&colelt_codelet,
-                     STARPU_RW, vector_mesh, 
-                     STARPU_RW, vector_met, 
-                     STARPU_W, vector_nc, 
-                     STARPU_VALUE, &typchk, sizeof(typchk), 
-		      STARPU_VALUE, &color, sizeof(color), 
+        ret = starpu_task_insert(&colelt_codelet,
+                                 STARPU_RW, vector_mesh,
+                                 STARPU_RW, vector_met,
+                                 STARPU_REDUX, handle_nc,
+                                 STARPU_VALUE, &typchk, sizeof(typchk),
+                                 STARPU_VALUE, &color, sizeof(color),
                                  0);
-                                 
-      STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit");  
+
+        STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit");
       }
-      starpu_task_wait_for_all();
+
+      starpu_data_acquire(handle_nc,STARPU_RW);
       
       fprintf(stdout," End insert colelt codelet \n");
       fprintf(stdout," -------------------------\n");
       fprintf(stdout," -------------------------\n");
-      
-      nc=vect_nc[0];      
       
       if ( nc < 0 ) {
         fprintf(stderr,"  ## Unable to collapse mesh. Exiting.\n");
@@ -355,31 +415,31 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int8_t typchk) {
 
     /* Swap edges */
     if ( !mesh->info.noswap ) {
-     // nsw = MMG2D_swpmsh(mesh,met,typchk,color);
-     
-    fprintf(stdout," Begin insert swpmsh codelet \n");
-      
-     for (color=0; color< mesh->ncolors; color++)
-     {
-      ret = starpu_task_insert(&swpmsh_codelet,
-                     STARPU_RW, vector_mesh, 
-                     STARPU_RW, vector_met, 
-                     STARPU_W, vector_nsw, 
-                     STARPU_VALUE, &typchk, sizeof(typchk), 
-		      STARPU_VALUE, &color, sizeof(color), 
+      // nsw = MMG2D_swpmsh(mesh,met,typchk,color);
+
+      // fprintf(stdout," Begin insert swpmsh codelet \n");
+
+      nsw = 0;
+      starpu_data_release(handle_nsw);
+      fprintf(stdout," Begin insert swpmsh codelet \n");
+      for (color=0; color< mesh->info.ncolors; color++)
+      {
+        ret = starpu_task_insert(&swpmsh_codelet,
+                                 STARPU_RW, vector_mesh,
+                                 STARPU_RW, vector_met,
+                                 STARPU_REDUX, handle_nsw,
+                                 STARPU_VALUE, &typchk, sizeof(typchk),
+                                 STARPU_VALUE, &color, sizeof(color),
                                  0);
-                                 
-      STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit"); 
-      
+
+        STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit");
+
       }
-      starpu_task_wait_for_all();
-      
       fprintf(stdout," End insert swpmsh codelet \n");
       fprintf(stdout," -------------------------\n");
       fprintf(stdout," -------------------------\n");
 
-      nsw=vect_nsw[0];      
-      
+      starpu_data_acquire(handle_nsw,STARPU_RW);
       if ( nsw < 0 ) {
         fprintf(stderr,"  ## Unable to improve mesh. Exiting.\n");
         return 0;
@@ -401,115 +461,82 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int8_t typchk) {
     if ( (abs(mesh->info.imprim) < 5 || mesh->info.ddebug ) && nns+nnc > 0 )
       fprintf(stdout,"     %8d splitted, %8d collapsed, %8d swapped, %d iter.\n",nns,nnc,nnsw,it);
   }
-  
+
+  starpu_data_release(handle_ns);
+  starpu_data_release(handle_nc);
+  starpu_data_release(handle_nsw);
+
   starpu_data_unregister(vector_mesh);
   starpu_data_unregister(vector_met);
   starpu_data_unregister(vector_hash);
-  starpu_data_unregister(vector_ns);
-  starpu_data_unregister(vector_nc);
-  starpu_data_unregister(vector_nsw);
- 
+  starpu_data_unregister(handle_ns);
+  starpu_data_unregister(handle_nc);
+  starpu_data_unregister(handle_nsw);
+
   return 1;
 }
 
 
 void MMG2D_starpu_anaelt(void *buffers[], void *cl_arg) {
- 
-  int nx_mesh, nx_met, nx_ns, nx_hash;
-  struct starpu_vector_interface *vect_mesh, *vect_met,*vect_ns, *vect_hash ;
-  
+
+  int nx_mesh, nx_met;
+  struct starpu_vector_interface *vect_mesh, *vect_met;
+  struct starpu_variable_interface *handle_ns, *handle_hash ;
+
   MMG5_pMesh mesh;
   MMG5_pSol met;
-  
+
+  int typchk;
+  int color;
+  int *ns;
   MMG5_Hash *hash;
-  
-  int8_t typchk;
-  int color,i;
-  int *val_ns;
-  int *val_hash;
-  //int ns;
 
   vect_mesh = (struct starpu_vector_interface *) buffers[0];
   nx_mesh = STARPU_VECTOR_GET_NX(vect_mesh);
   mesh = (MMG5_pMesh)STARPU_VECTOR_GET_PTR(vect_mesh);
-  
+
   vect_met = (struct starpu_vector_interface *) buffers[1];
   nx_met = STARPU_VECTOR_GET_NX(vect_met);
   met = ( MMG5_pSol)STARPU_VECTOR_GET_PTR(vect_met);
-  
-  vect_hash = (struct starpu_vector_interface *) buffers[2];
-  nx_hash = STARPU_VECTOR_GET_NX(vect_hash);
-  hash = (MMG5_Hash *) STARPU_VARIABLE_GET_PTR(vect_hash);
 
-  vect_ns = (struct starpu_vector_interface *) buffers[3];
-  nx_ns = STARPU_VECTOR_GET_NX(vect_ns);
-  val_ns = (int *)STARPU_VECTOR_GET_PTR(vect_ns);
-  
-  //ns=val_ns[0];      
-    
+  handle_hash = (struct starpu_variable_interface *) buffers[2];
+  hash = (MMG5_Hash *) STARPU_VARIABLE_GET_PTR(handle_hash);
+
+  handle_ns = (struct starpu_variable_interface *) buffers[3];
+  ns = (int *)STARPU_VARIABLE_GET_PTR(handle_ns);
+
   starpu_codelet_unpack_args(cl_arg, &typchk, &color);
-   
-  //starpu_pthread_mutex_lock(&mutex);
-  val_ns[0]=MMG2D_anaelt(mesh,met,hash,typchk,color);
-  //starpu_pthread_mutex_unlock(&mutex);
- 
 
+  *ns += MMG2D_anaelt(mesh,met,hash,typchk,color);
 }
+
 /* Travel triangles and split long edges according to patterns */
 int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int color1) {
 
-  
+
   MMG5_pTria      pt;
   MMG5_pPoint     ppt,p1,p2;
   double          len,s,o[2],no[2];
   int             ns,nc,npinit,ni,k,nt,ip1,ip2,ip,it,vx[3];
   int8_t          i,ic,i1,i2,ier;
   static int8_t   mmgWarn0=0;
-  
+
   s = 0.5;
   ns = 0;
   npinit = mesh->np;
+
   /*workerid is an integer between 0 and starpu_worker_get_count() - 1 */
   /*Return the identifier of the current worker, i.e the one associated to the calling thread*/
   int worker_id = starpu_worker_get_id();
   enum starpu_worker_archtype type = starpu_worker_get_type(worker_id);
   char workername[128];
 
-  starpu_worker_get_name(worker_id, workername, 128);
+  //starpu_worker_get_name(worker_id, workername, 128);
 
-  fprintf(stdout," --Call anaelt codelet =, number of CPU workers= %d, worker_id= %d, Worker_name %s: , hash_address= %p \n", starpu_worker_get_count(), starpu_worker_get_id(), workername, hash );
-  
-  nbre ++;
-  
-  /*******************************************/  
-  
- 
+  //fprintf(stdout," --Call anaelt codelet =, number of CPU workers= %d, worker_id= %d, Worker_name %s: , hash_address= %p \n", starpu_worker_get_count(), starpu_worker_get_id(), workername, hash );
+
   /*******************************************/
 
-  //if ( !MMG5_hashNew(mesh,hash,mesh->np,3*mesh->np) ) return 0;
-  
-  //int   k;
-  //int hsiz=mesh->np; int hmax=3*mesh->np;
-  
-  /* adjust hash table params */
-  /*hash->siz  = hsiz+1;
-  hash->max  = hmax + 2;
-  hash->nxt  = hash->siz;
-
-  pthread_mutex_lock(&count_mutex);
-  
-  MMG5_ADD_MEM(mesh,(hash->max+1)*sizeof(MMG5_hedge),"hash table",
-              return 0);
-
-  fprintf(stdout,"hash.C,, worker_id= %d \n",starpu_worker_get_id() );
- 
-  MMG5_SAFE_CALLOC(hash->item,(hash->max+1),MMG5_hedge,return 0);
-  
-  pthread_mutex_unlock(&count_mutex);
-   
-  for (k=hash->siz; k<hash->max; k++)
-    hash->item[k].nxt = k+1;*/
-    
   /* Step 1: travel mesh, check edges, and tag those to be split; create the new vertices in hash */
   for (k=1; k<=mesh->nt; k++) {
     pt = &mesh->tria[k];
@@ -526,17 +553,17 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
     if ( typchk == 1) {
       if ( !MMG2D_chkedg(mesh,k) ) continue;
     }
-    
+
     /* typchk =2 : split on basis of edge lengths in the metric */
     else if ( typchk ==2 ) {
       for (i=0; i<3; i++) {
         i1 = MMG5_inxt2[i];
         i2 = MMG5_iprv2[i];
         len = MMG2D_lencurv(mesh,met,pt->v[i1],pt->v[i2]);
-        if ( len > MMG2D_LLONG ) 
+        if ( len > MMG2D_LLONG )
         {MG_SET(pt->flag,i);
 
-        
+
         }
       }
     }
@@ -546,13 +573,13 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
       for (i=0; i<3; i++) {
         i1 = MMG5_inxt2[i];
         i2 = MMG5_iprv2[i];
-        p1 = &mesh->point[pt->v[i1]]; //point 
+        p1 = &mesh->point[pt->v[i1]]; //point
         p2 = &mesh->point[pt->v[i2]];
-       
+
         if ( (p1->tag & MG_BDY) && (p2->tag & MG_BDY) && !(pt->tag[i] & MG_BDY) ) {
-               MG_SET(pt->flag,i);
-           fprintf(stdout," worker_id= %d, Worker_name %s: , hash_address= %p \n",starpu_worker_get_id(), workername, hash );
-               }
+          MG_SET(pt->flag,i);
+          fprintf(stdout," worker_id= %d, Worker_name %s: , hash_address= %p \n",starpu_worker_get_id(), workername, hash );
+        }
       }
     }
 
@@ -568,25 +595,20 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
       ip1 = pt->v[i1]; //v[3] est le tableau de sommet du triangle k
       ip2 = pt->v[i2];
       ip = MMG5_hashGet(hash,ip1,ip2); //parcourir les arretes à decouper
-      
-      //fprintf(stdout,"----Elt = %d, color_elt = %d, i= %d , i1= %d , i2= %d, flag =%d, ip =%d , ip1 =%d, ip2=%d \n", k, pt ->color1, i, i1,i2, pt->flag, ip, ip1, ip2);
-      //fprintf(stdout,"hashhhhh_item= %d, %d, %d\n", hash.item->a,hash.item->b, hash.item->k);
-      //fprintf(stdout,"----Elttttt111 = %d, color_elt = %d, i= %d , i1= %d , i2= %d, flag =%d , %p \n", k, pt ->color1, i, i1,i2, pt->flag, &hash.item );
-      fprintf(stdout,"----Elt = %d, color_elt = %d, i= %d , i1= %d , i2= %d, flag =%d, ip =%d , ip1 =%d, ip2=%d, %p, worker_id= %d, Worker_name %s: , hash_address= %p\n", k, pt ->color1, i, i1,i2, pt->flag, ip, ip1, ip2, hash->item, starpu_worker_get_id(), workername, hash);
 
       if ( ip > 0 ) continue;
 
       /* Geometric attributes of the new point */
       ier = MMG2D_bezierCurv(mesh,k,i,s,o,no);
-   
+
       if ( !ier ) {
         MG_CLR(pt->flag,i);
         continue;
       }
-      
+
       //pthread_mutex_lock(&count_mutex);
       ip = MMG2D_newPt(mesh,o,pt->tag[i]);  //tag contains binary flag
-      //fprintf(stdout, "TAG = %d  \n", pt->tag[i]);
+
       //pthread_mutex_unlock(&count_mutex);
 
       if ( !ip ) {
@@ -610,14 +632,12 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
       assert ( met );
       if ( met->m )
         MMG2D_intmet(mesh,met,k,i,ip,s);
-      
-      
-      // TODO: ici on met lock; 
+
+
+      // TODO: ici on met lock;
       /* Add point to the hashing structure */
       //starpu_worker_lock(worker_id);
-      fprintf(stdout," ************************worker_id= %d, Worker_name %s: , hash_address= %p \n",starpu_worker_get_id(), workername, hash );
       MMG5_hashEdge(mesh,hash,ip1,ip2,ip);
-      fprintf(stdout," ************************worker_id= %d, Worker_name %s: , hash_address= %p \n",starpu_worker_get_id(), workername, hash );
       //starpu_worker_unlock(worker_id);
     }
   }
@@ -629,7 +649,7 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
   /* Step 2: Make flags at triangles consistent between themselves (check if adjacent triangle is split) */
   for (k=1; k<=mesh->nt; k++) {
     pt = &mesh->tria[k];
-    
+
     //if ( !MMG2D_EOK(pt,color1) || pt->ref < 0 ) continue;
     if ( !MMG2D_EOK(pt,color1) || pt->ref < 0)
       continue;
@@ -664,7 +684,7 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
     ni = 0;
     for ( k=1; k<= mesh->nt; k++) {
       pt = &mesh->tria[k];
-      //if ( !MMG2D_EOK(pt,color1) || pt->ref < 0 ) continue;MG_EOK(pt) 
+      //if ( !MMG2D_EOK(pt,color1) || pt->ref < 0 ) continue;MG_EOK(pt)
       if ( !MMG2D_EOK(pt,color1) || pt->ref < 0)
         continue;
       else if ( pt->flag == 0 ) continue;
@@ -679,22 +699,21 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
         vx[i] = MMG5_hashGet(hash,pt->v[i1],pt->v[i2]);
         if ( vx[i] > 0 ) {
           MG_SET(pt->flag,i);
-          fprintf(stdout,"hashhhhh_item= %d, %d, %d, worker_id= %d, Worker_name %s: , hash_address= %p \n", pt->v[i1],pt->v[i], vx[i], starpu_worker_get_id(), workername,hash);
           if ( mesh->point[vx[i]].flag > 2 )  ic = 1;
         }
       }
 
       if ( !pt->flag )  continue;
       switch (pt->flag) {
-        case 1: case 2: case 4:
-          ier = MMG2D_split1_sim(mesh,met,k,vx);
-          break;
-        case 7:
-          ier = MMG2D_split3_sim(mesh,met,k,vx);
-          break;
-        default:
-          ier = MMG2D_split2_sim(mesh,met,k,vx);
-          break;
+      case 1: case 2: case 4:
+        ier = MMG2D_split1_sim(mesh,met,k,vx);
+        break;
+      case 7:
+        ier = MMG2D_split3_sim(mesh,met,k,vx);
+        break;
+      default:
+        ier = MMG2D_split2_sim(mesh,met,k,vx);
+        break;
       }
       if ( ier )  continue;
 
@@ -731,10 +750,8 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
   nt = mesh->nt;
   for (k=1; k<=nt; k++) {
     pt = &mesh->tria[k];
-    //if ( !MMG2D_EOK(pt,color1) || pt->ref < 0 )  continue; MG_EOK(pt)
-    if ( !MMG2D_EOK(pt,color1) || pt->ref < 0)
-      continue;
-    
+
+    if ( !MMG2D_EOK(pt,color1) || pt->ref < 0 )  continue;
     else if ( pt->flag == 0 )  continue;
 
     vx[0] = vx[1] = vx[2] = 0;
@@ -767,11 +784,8 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
     }
     if ( !ier ) return -1;
   }
-  if ( (mesh->info.ddebug || abs(mesh->info.imprim) > 5) && ns > 0 )
-    fprintf(stdout,"     %7d splitted\n",ns);
-  
-  
-
+  if ( (mesh->info.ddebug || abs(mesh->info.imprim) > 5) && ns > 0  )
+    fprintf(stdout,"     worker %d: %8d splitted\n", starpu_worker_get_id(),ns);
 
   return ns;
 }
@@ -830,15 +844,15 @@ int MMG2D_dichoto(MMG5_pMesh mesh,MMG5_pSol met,int k,int *vx) {
       }
     }
     switch (pt->flag) {
-      case 1: case 2: case 4:
-        ier = MMG2D_split1_sim(mesh,met,k,vx);
-        break;
-      case 7:
-        ier = MMG2D_split3_sim(mesh,met,k,vx);
-        break;
-      default:
-        ier = MMG2D_split2_sim(mesh,met,k,vx);
-        break;
+    case 1: case 2: case 4:
+      ier = MMG2D_split1_sim(mesh,met,k,vx);
+      break;
+    case 7:
+      ier = MMG2D_split3_sim(mesh,met,k,vx);
+      break;
+    default:
+      ier = MMG2D_split2_sim(mesh,met,k,vx);
+      break;
     }
     if ( ier )
       to = t;
@@ -863,67 +877,78 @@ int MMG2D_dichoto(MMG5_pMesh mesh,MMG5_pSol met,int k,int *vx) {
 
 
 void MMG2D_starpu_colelt(void *buffers[], void *cl_arg) {
- 
-  int nx_mesh, nx_met,nx_nc;
-  struct starpu_vector_interface *vect_mesh, *vect_met, *vect_nc;
-  
+
+  int nx_mesh, nx_met;
+  struct starpu_vector_interface *vect_mesh, *vect_met;
+  struct starpu_variable_interface *handle_nc;
+
   MMG5_pMesh mesh;
   MMG5_pSol met;
-  
-  int8_t typchk;
+
+  int typchk;
   int color;
-  
-  int *val_nc;
-  //int nc;
- 
+
+  int *nc;
+
   vect_mesh = (struct starpu_vector_interface *) buffers[0];
   nx_mesh = STARPU_VECTOR_GET_NX(vect_mesh);
   mesh = (MMG5_pMesh)STARPU_VECTOR_GET_PTR(vect_mesh);
-  
+
   vect_met = (struct starpu_vector_interface *) buffers[1];
   nx_met = STARPU_VECTOR_GET_NX(vect_met);
   met = ( MMG5_pSol)STARPU_VECTOR_GET_PTR(vect_met);
-  
-  vect_nc = (struct starpu_vector_interface *) buffers[2];
-  nx_nc = STARPU_VECTOR_GET_NX(vect_nc);
-  val_nc = (int *)STARPU_VECTOR_GET_PTR(vect_nc);
-     
-  //nc=val_nc[0];  
-  starpu_codelet_unpack_args(cl_arg, &typchk, &color);
- 
-  val_nc[0]=MMG2D_colelt(mesh,met,typchk,color);
 
- }
+  handle_nc = (struct starpu_variable_interface *) buffers[2];
+  nc = (int *)STARPU_VARIABLE_GET_PTR(handle_nc);
+
+  starpu_codelet_unpack_args(cl_arg, &typchk, &color);
+
+  *nc += MMG2D_colelt(mesh,met,typchk,color);
+}
 
 /* Travel triangles and collapse short edges */
 int MMG2D_colelt(MMG5_pMesh mesh,MMG5_pSol met,int typchk,int color1) {
-  MMG5_pTria   pt;
+  MMG5_pTria   pt,pt1;
   MMG5_pPoint  p1,p2;
   double       ux,uy,ll,hmin2;
   int          list[MMG2D_LONMAX+2],ilist,nc,k;
   uint8_t      i,i1,i2,open;
+  int        *adja;
 
-  fprintf(stdout," ----------Call colelt codelet -----------\n");
   nc = 0;
   hmin2 = mesh->info.hmin * mesh->info.hmin;
- 
-  for (k=1; k<=mesh->nt; k++) {
-    pt = &mesh->tria[k];
-    if ( !MMG2D_EOK(pt,color1) || pt->ref < 0 ) continue;
 
+  for (k=1; k<=mesh->nt; k++) {
+   //for (k=mesh->nt; k>=1; k--) {
+    adja = &mesh->adja[3*(k-1) + 1];
+    pt   = &mesh->tria[k];
+    
+    if ( !MMG2D_EOK(pt,color1) || pt->ref < 0 ) continue;
+    
     /* Travel 3 edges of the triangle and decide whether to collapse p1->p2, based on length criterion */
     pt->flag = 0; // was here before, but probably serves for nothing
 
     for (i=0; i<3; i++) {
+    
+      pt1=&mesh->tria[(adja[i]/3)];
+      
+      /*overlaping*/
+          
+     /* if( (pt1->color2) < (pt->color1)) {
+           pt->color1=pt1->color2;
+         }*/
+
       if ( MG_SIN(pt->tag[i]) ) continue;
       i1 = MMG5_inxt2[i];
       i2 = MMG5_iprv2[i];
       p1 = &mesh->point[pt->v[i1]];
       p2 = &mesh->point[pt->v[i2]];
+      /*if (pt->v[i1])==22) */ 
+
       if ( MG_SIN(p1->tag) || p1->tag & MG_NOM ) continue;
 
       /* Impossible to collapse a surface point onto a non surface point -- impossible to
-       collapse a surface point along a non geometric edge */
+         collapse a surface point along a non geometric edge */
       else if ( p1->tag & MG_GEO ) {
         if ( ! (p2->tag & MG_GEO) || !(pt->tag[i] & MG_GEO) ) continue;
       }
@@ -951,62 +976,62 @@ int MMG2D_colelt(MMG5_pMesh mesh,MMG5_pSol met,int typchk,int color1) {
 
       if ( ilist > 3 || ( ilist == 3 && open ) ) {
         nc += MMG2D_colver(mesh,ilist,list);
+        printf("worker=%d, color=%d, element= %d, edge=%d, nc=%d, ilist=%d, v[i1]=%d, v[i2]=%d\n",starpu_worker_get_id(), color1, k, i, nc, ilist, pt->v[i1], pt->v[i2]);
         break;
       }
       else if ( ilist == 3 ) {
         nc += MMG2D_colver3(mesh,list);
+        printf("worker=%d, color=%d, element= %d, edge=%d, nc=%d, ilist=%d, v[i1]=%d, v[i2]=%d\n",starpu_worker_get_id(), color1, k, i, nc, ilist, pt->v[i1], pt->v[i2]);
         break;
       }
       else if ( ilist == 2 ) {
         nc += MMG2D_colver2(mesh,list);
+        printf("worker=%d, color=%d, element= %d, edge=%d, nc=%d, ilist=%d, v[i1]=%d, v[i2]=%d\n",starpu_worker_get_id(), color1, k, i, nc, ilist, pt->v[i1], pt->v[i2]);
         break;
       }
     }
   }
 
   if ( nc > 0 && (abs(mesh->info.imprim) > 5 || mesh->info.ddebug) )
-    fprintf(stdout,"     %8d vertices removed\n",nc);
-
+     fprintf(stdout,"     %8d vertices removed\n",nc);
+    
+  //fprintf(stdout," worker_id= %d, nc= %d\n",starpu_worker_get_id(), nc); 
+     
   return nc;
+  
 }
 
 /* Travel triangles and swap edges to improve quality */
 void MMG2D_starpu_swpmsh(void *buffers[], void *cl_arg) {
- 
-  int nx_mesh, nx_met, nx_nsw;
-  struct starpu_vector_interface *vect_mesh, *vect_met, *vect_nsw;
-  
+
+  int nx_mesh, nx_met;
+  struct starpu_vector_interface *vect_mesh, *vect_met;
+  struct starpu_variable_interface *handle_nsw;
+
   MMG5_pMesh mesh;
   MMG5_pSol met;
-  
-  int8_t typchk;
-  int rett;
+
+  int typchk;
   int color;
-  
-  int *val_nsw;
-  //int nsw;
-  
+
+  int *nsw;
+
   vect_mesh = (struct starpu_vector_interface *) buffers[0];
   nx_mesh = STARPU_VECTOR_GET_NX(vect_mesh);
   mesh = (MMG5_pMesh)STARPU_VECTOR_GET_PTR(vect_mesh);
-  
+
   vect_met = (struct starpu_vector_interface *) buffers[1];
   nx_met = STARPU_VECTOR_GET_NX(vect_met);
   met = ( MMG5_pSol)STARPU_VECTOR_GET_PTR(vect_met);
-  
-  vect_nsw = (struct starpu_vector_interface *) buffers[2];
-  nx_nsw = STARPU_VECTOR_GET_NX(vect_nsw);
-  val_nsw = (int *)STARPU_VECTOR_GET_PTR(vect_nsw);
-          
-  //nsw=val_nsw[0];
+
+  handle_nsw = (struct starpu_variable_interface *) buffers[2];
+  nsw = (int *)STARPU_VARIABLE_GET_PTR(handle_nsw);
+
   starpu_codelet_unpack_args(cl_arg, &typchk, &color);
-  
-  //fprintf(stdout," typchk= %d  \n", typchk);
-  
-  val_nsw[0]=MMG2D_swpmsh(mesh,met,typchk,color);
-  
-  
-  }
+
+  *nsw += MMG2D_swpmsh(mesh,met,typchk,color);
+
+}
 
 int MMG2D_swpmsh(MMG5_pMesh mesh,MMG5_pSol met,int typchk, int color1) {
 
@@ -1015,7 +1040,6 @@ int MMG2D_swpmsh(MMG5_pMesh mesh,MMG5_pSol met,int typchk, int color1) {
   uint8_t    i;
 
 
-  fprintf(stdout," ----------Call swpmsh codelet -----------\n");
   it = nns = 0;
   maxit = 2;
   mesh->base++;
@@ -1038,110 +1062,109 @@ int MMG2D_swpmsh(MMG5_pMesh mesh,MMG5_pSol met,int typchk, int color1) {
   }
   while ( ns > 0 && ++it<maxit );
   if ( (abs(mesh->info.imprim) > 5 || mesh->info.ddebug) && nns > 0 )
-    fprintf(stdout,"     %8d edge swapped\n",nns);
+    fprintf(stdout,"      worker %d: %8d edge swapped\n",starpu_worker_get_id(),nns);
 
   return nns;
 }
 
 
 /* Mesh adaptation routine for the final stage of the algorithm: intertwine splitting
- based on patterns, collapses, swaps and vertex relocations.*/
+   based on patterns, collapses, swaps and vertex relocations.*/
 int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
 
   int it,nns,ns,nnc,nc,nnsw,nsw,nnm,nm;
-
-  nns = nnc = nnsw = nnm = it = 0;
-  ns=0; nc=0; nsw=0; nm=0;
-  int typchk;
   int color;
   int ret, i;
   int maxit;
+  int maxit_test;
+  int typchk;
   int8_t improve;
-    
-  int SIZE=1;
-  int vect_ns[SIZE];
-  int vect_nc[SIZE];
-  int vect_nsw[SIZE];
-  int vect_nm[SIZE];
+  maxit_test=5;
   
   fprintf(stdout," Mesh Adaptation: Hello adptri function-----------\n");
-  
-  starpu_data_handle_t vector_mesh,vector_met, vector_ns, vector_nc,vector_nsw,vector_nm;
-  
-  
-  for (i=0; i< SIZE; i++)
-      {
-        vect_ns[0]=ns;
-        vect_nc[0]=nc;
-        vect_nsw[0]=nsw;
-        vect_nm[0]=nm;
 
-       }
-  
-  starpu_vector_data_register(&vector_mesh, STARPU_MAIN_RAM, (uintptr_t)mesh, 1, sizeof(MMG5_pMesh)); 
+  starpu_data_handle_t vector_mesh,vector_met, handle_ns, handle_nc,handle_nsw,handle_nm;
+
+  nns = nnc = nnsw = nnm = it = 0;
+
+  starpu_vector_data_register(&vector_mesh, STARPU_MAIN_RAM, (uintptr_t)mesh, 1, sizeof(MMG5_pMesh));
   starpu_vector_data_register(&vector_met, STARPU_MAIN_RAM, (uintptr_t)met, 1, sizeof(MMG5_pSol));
-  starpu_vector_data_register(&vector_ns, STARPU_MAIN_RAM, (uintptr_t)vect_ns, SIZE, sizeof(vect_ns[0]));
-  starpu_vector_data_register(&vector_nc, STARPU_MAIN_RAM, (uintptr_t)vect_nc, SIZE, sizeof(vect_nc[0]));
-  starpu_vector_data_register(&vector_nsw, STARPU_MAIN_RAM, (uintptr_t)vect_nsw, SIZE, sizeof(vect_nsw[0]));
-  starpu_vector_data_register(&vector_nm, STARPU_MAIN_RAM,(uintptr_t)vect_nm, SIZE, sizeof(vect_nm[0]));
-  
-   do {
 
+  starpu_variable_data_register(&handle_ns, STARPU_MAIN_RAM, (uintptr_t)&ns, sizeof(ns));
+  starpu_variable_data_register(&handle_nc, STARPU_MAIN_RAM, (uintptr_t)&nc, sizeof(nc));
+  starpu_variable_data_register(&handle_nsw, STARPU_MAIN_RAM, (uintptr_t)&nsw, sizeof(nsw));
+  starpu_variable_data_register(&handle_nm, STARPU_MAIN_RAM, (uintptr_t)&nm, sizeof(nsw));
+
+  starpu_data_set_reduction_methods ( handle_ns, &accumulate_codelet, &izero_codelet) ;
+  starpu_data_set_reduction_methods ( handle_nc, &accumulate_codelet, &izero_codelet) ;
+  starpu_data_set_reduction_methods ( handle_nsw, &accumulate_codelet, &izero_codelet) ;
+  starpu_data_set_reduction_methods ( handle_nm, &accumulate_codelet, &izero_codelet) ;
+
+  starpu_data_acquire(handle_ns,  STARPU_W);
+  starpu_data_acquire(handle_nc,  STARPU_W);
+  starpu_data_acquire(handle_nsw, STARPU_W);
+  starpu_data_acquire(handle_nm,  STARPU_W);
+
+  do {
     if ( !mesh->info.noinsert ) {
       //ns = MMG2D_adpspl(mesh,met,color);
-      
-     fprintf(stdout," Begin insert adpspl codelet \n");
-      
-     for (color=0; color< mesh->ncolors; color++)
-     {
-      ret = starpu_task_insert(&adpspl_codelet,
-                STARPU_RW, vector_mesh, 
-                STARPU_RW, vector_met, 
-                STARPU_W, vector_ns, 
-		 STARPU_VALUE, &color, sizeof(color), 
+
+      //fprintf(stdout," Begin insert adpspl codelet \n");
+
+      ns = 0;
+      starpu_data_release(handle_ns);
+      fprintf(stdout," Begin insert adpspl codelet \n");
+      for (color=0; color< mesh->info.ncolors; color++)
+      {
+        ret = starpu_task_insert(&adpspl_codelet,
+                                 STARPU_RW, vector_mesh,
+                                 STARPU_RW, vector_met,
+                                 STARPU_REDUX, handle_ns,
+                                 STARPU_VALUE, &color, sizeof(color),
                                  0);
-                                 
-      STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit"); 
-      
+
+        STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit");
+
       }
+
+      starpu_data_acquire(handle_ns, STARPU_RW);
       
-      starpu_task_wait_for_all();
-            
       fprintf(stdout," End insert adpspl codelet \n");
       fprintf(stdout," -------------------------\n");
-      fprintf(stdout," -------------------------\n");   
-       
-      ns=vect_ns[0];       
+      fprintf(stdout," -------------------------\n"); 
+
       if ( ns < 0 ) {
         fprintf(stderr,"  ## Problem in function adpspl."
                 " Unable to complete mesh. Exit program.\n");
         return 0;
       }
 
+      //fprintf(stdout," Begin insert adpcol codelet \n");
+
       //nc = MMG2D_adpcol(mesh,met,color);
-      
-     fprintf(stdout," Begin insert adpcol codelet \n");
-      
-     for (color=0; color< mesh->ncolors; color++)
-     {
-      ret = starpu_task_insert(&adpcol_codelet,
-                STARPU_RW, vector_mesh, 
-                STARPU_RW, vector_met, 
-                 STARPU_W, vector_nc, 
-		 STARPU_VALUE, &color, sizeof(color), 
+
+      nc = 0;
+      starpu_data_release(handle_nc);
+
+      fprintf(stdout," Begin insert adpcol codelet \n");
+      for (color=0; color< mesh->info.ncolors; color++)
+      {
+        ret = starpu_task_insert(&adpcol_codelet,
+                                 STARPU_RW, vector_mesh,
+                                 STARPU_RW, vector_met,
+                                 STARPU_REDUX, handle_nc,
+                                 STARPU_VALUE, &color, sizeof(color),
                                  0);
-                                 
-      STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit"); 
-      
+
+        STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit");
+
       }
-      starpu_task_wait_for_all();
-      
+      starpu_data_acquire(handle_nc,STARPU_RW);
+
       fprintf(stdout," End insert adpcol codelet \n");
       fprintf(stdout," -------------------------\n");
       fprintf(stdout," -------------------------\n");
-      
-      nc=vect_nc[0];  
-          
+
       if ( nc < 0 ) {
         fprintf(stderr,"  ## Problem in function adpcol."
                 " Unable to complete mesh. Exit program.\n");
@@ -1155,34 +1178,32 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
 
     if ( !mesh->info.noswap ) {
       //nsw = MMG2D_swpmsh(mesh,met,2,color);
-      
-    fprintf(stdout," Begin insert swpmsh codelet \n");
-         
-    typchk=2;
-      
-     for (color=0; color< mesh->ncolors; color++)
-     {
 
-     ret = starpu_task_insert(&swpmsh_codelet,
-                STARPU_RW, vector_mesh, 
-                STARPU_RW, vector_met, 
-                STARPU_W, vector_nsw, 
-                STARPU_VALUE, &typchk, sizeof(typchk), 
-		 STARPU_VALUE, &color, sizeof(color), 
+      typchk=2;
+
+      nsw = 0;
+      starpu_data_release(handle_nsw);
+      fprintf(stdout," Begin insert swpmsh codelet \n");
+      for (color=0; color< mesh->info.ncolors; color++)
+      {
+
+        ret = starpu_task_insert(&swpmsh_codelet,
+                                 STARPU_RW, vector_mesh,
+                                 STARPU_RW, vector_met,
+                                 STARPU_REDUX, handle_nsw,
+                                 STARPU_VALUE, &typchk, sizeof(typchk),
+                                 STARPU_VALUE, &color, sizeof(color),
                                  0);
-                                 
-     STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit"); 
-      
-      }
 
-      starpu_task_wait_for_all();
-      
+        STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit");
+
+      }
+      starpu_data_acquire(handle_nsw,STARPU_RW);
+
       fprintf(stdout," End insert swpmsh1 codelet \n");
       fprintf(stdout," -------------------------\n");
       fprintf(stdout," -------------------------\n");
-            
-      nsw=vect_nsw[0];
-      
+
       if ( nsw < 0 ) {
         fprintf(stderr,"  ## Problem in function swpmsh."
                 " Unable to complete mesh. Exit program.\n");
@@ -1194,34 +1215,36 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
 
     if ( !mesh->info.nomove ) {
       //nm = MMG2D_movtri(mesh,met,1,0,color);
+
+      maxit=1;
+      improve=0;
+
+      nm = 0;
+      starpu_data_release(handle_nm);
       
-    //fprintf(stdout," Begin insert movtri1 codelet \n");
-      
-    maxit=1;
-    improve=0;
-      
-     for (color=0; color< mesh->ncolors; color++)
-     {
-      ret = starpu_task_insert(&movtri_codelet,
-                STARPU_RW, vector_mesh, 
-                STARPU_RW, vector_met, 
-                STARPU_W, vector_nm, 
-                STARPU_VALUE, &maxit, sizeof(maxit), 
-                STARPU_VALUE, &improve, sizeof(improve), 
-		 STARPU_VALUE, &color, sizeof(color), 
+      fprintf(stdout," Begin insert movtri1 codelet \n");
+
+      for (color=0; color< mesh->info.ncolors; color++)
+      {
+        ret = starpu_task_insert(&movtri_codelet,
+                                 STARPU_RW, vector_mesh,
+                                 STARPU_RW, vector_met,
+                                 STARPU_REDUX, handle_nm,
+                                 STARPU_VALUE, &maxit, sizeof(maxit),
+                                 STARPU_VALUE, &improve, sizeof(improve),
+                                 STARPU_VALUE, &color, sizeof(color),
                                  0);
-                                 
-      STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit"); 
-      
+
+        STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit");
+
       }
-      starpu_task_wait_for_all();
-      
+
+      starpu_data_acquire(handle_nm,STARPU_RW);
+
       fprintf(stdout," End insert movtri1 codelet \n");
       fprintf(stdout," -------------------------\n");
       fprintf(stdout," -------------------------\n");
-      
-      nm=vect_nm[0];      
-      
+
       if ( nm < 0 ) {
         fprintf(stderr,"  ## Problem in function movtri. "
                 "Unable to complete mesh. Exit program.\n");
@@ -1241,38 +1264,39 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
     if ( ns < 10 && abs(nc-ns) < 3 )  break;
     else if ( it > 3 && abs(nc-ns) < 0.3 * MG_MAX(nc,ns) )  break;
   }
-  while( ++it < maxit && (nc+ns+nsw+nm > 0) );
+  while( ++it < maxit_test && (nc+ns+nsw+nm > 0) );
+    // printf("hellooo %d \n", maxit);
 
   /* Last iterations of vertex relocation only */
   if ( !mesh->info.nomove ) {
     maxit=5;
-   improve=1;
-    //nm = MMG2D_movtri(mesh,met,5,1,color); 
-    
+    improve=1;
+    //nm = MMG2D_movtri(mesh,met,5,1,color);
+
+    nm = 0;
+    starpu_data_release(handle_nm);
+
    fprintf(stdout," Begin insert movtri2 codelet \n"); 
-     
-    for (color=0; color< mesh->ncolors; color++)
-     {
-    ret = starpu_task_insert(&movtri_codelet,
-                STARPU_RW, vector_mesh, 
-                STARPU_RW, vector_met, 
-                STARPU_W, vector_nm, 
-                STARPU_VALUE, &maxit, sizeof(maxit), 
-                STARPU_VALUE, &improve, sizeof(improve), 
-		 STARPU_VALUE, &color, sizeof(color), 
-                                 0);
-                                 
-    STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit"); 
-    
+    for (color=0; color< mesh->info.ncolors; color++)
+    {
+      ret = starpu_task_insert(&movtri_codelet,
+                               STARPU_RW, vector_mesh,
+                               STARPU_RW, vector_met,
+                               STARPU_REDUX, handle_nm,
+                               STARPU_VALUE, &maxit, sizeof(maxit),
+                               STARPU_VALUE, &improve, sizeof(improve),
+                               STARPU_VALUE, &color, sizeof(color),
+                               0);
+
+      STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit");
+
     }
-    starpu_task_wait_for_all();
+    starpu_data_acquire(handle_nm,STARPU_RW);
     
     fprintf(stdout," End insert movtri2 codelet \n");
     fprintf(stdout," -------------------------\n");
     fprintf(stdout," -------------------------\n");
 
-    nm=vect_nm[0];      
-    
     if ( nm < 0 ) {
       fprintf(stderr,"  ## Problem in function movtri. Unable to complete mesh."
               " Exit program.\n");
@@ -1285,14 +1309,19 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
     if ( abs(mesh->info.imprim) < 5 && (nnc > 0 || nns > 0) )
       fprintf(stdout,"     %8d splitted, %8d collapsed, %8d swapped, %8d moved, %d iter. \n",nns,nnc,nnsw,nnm,it);
   }
-  
+
+  starpu_data_release(handle_ns);
+  starpu_data_release(handle_nc);
+  starpu_data_release(handle_nsw);
+  starpu_data_release(handle_nm);
+
   starpu_data_unregister(vector_mesh);
   starpu_data_unregister(vector_met);
-  starpu_data_unregister(vector_ns);
-  starpu_data_unregister(vector_nc);
-  starpu_data_unregister(vector_nsw);
-  starpu_data_unregister(vector_nm);
-  
+  starpu_data_unregister(handle_ns);
+  starpu_data_unregister(handle_nc);
+  starpu_data_unregister(handle_nsw);
+  starpu_data_unregister(handle_nm);
+
   return 1;
 }
 
@@ -1306,41 +1335,38 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
  * edges are only splitted on a one-by-one basis
  *
  */
- 
- void MMG2D_starpu_adpspl(void *buffers[], void *cl_arg) {
+
+void MMG2D_starpu_adpspl(void *buffers[], void *cl_arg) {
 
 
-  int nx_mesh, nx_met, nx_ns;
-  struct starpu_vector_interface *vect_mesh, *vect_met, *vect_ns;
-  
+  int nx_mesh, nx_met;
+  struct starpu_vector_interface *vect_mesh, *vect_met;
+  struct starpu_variable_interface *handle_ns;
+
   MMG5_pMesh mesh;
   MMG5_pSol met;
-  
+
   int color;
-  int *val_ns;
-  //int ns;
- 
+  int *ns;
+
   vect_mesh = (struct starpu_vector_interface *) buffers[0];
   nx_mesh = STARPU_VECTOR_GET_NX(vect_mesh);
   mesh = (MMG5_pMesh)STARPU_VECTOR_GET_PTR(vect_mesh);
-  
+
   vect_met = (struct starpu_vector_interface *) buffers[1];
   nx_met = STARPU_VECTOR_GET_NX(vect_met);
   met = ( MMG5_pSol)STARPU_VECTOR_GET_PTR(vect_met);
-  
-  
-  vect_ns = (struct starpu_vector_interface *) buffers[2];
-  nx_ns = STARPU_VECTOR_GET_NX(vect_ns);
-  val_ns = (int *)STARPU_VECTOR_GET_PTR(vect_ns);
-     
-  //ns=val_ns;  
+
+
+  handle_ns = (struct starpu_variable_interface *) buffers[2];
+  ns = (int *)STARPU_VARIABLE_GET_PTR(handle_ns);
+
   starpu_codelet_unpack_args(cl_arg,&color);
 
- 
-  val_ns[0]=MMG2D_adpspl(mesh,met,color);
-  
+  *ns += MMG2D_adpspl(mesh,met,color);
 
- }
+}
+
 int MMG2D_adpspl(MMG5_pMesh mesh,MMG5_pSol met, int color1) {
   MMG5_pTria         pt;
   double             lmax,len;
@@ -1348,8 +1374,8 @@ int MMG2D_adpspl(MMG5_pMesh mesh,MMG5_pSol met, int color1) {
   int8_t             i,i1,i2,imax;
 
   ns = 0;
-  
-  fprintf(stdout," ----------Call adpspl codelet -----------\n");
+
+  //fprintf(stdout," ----------Call adpspl codelet -----------\n");
 
   /*loop until nt to avoid the split of new triangle*/
   nt = mesh->nt;
@@ -1400,36 +1426,32 @@ int MMG2D_adpspl(MMG5_pMesh mesh,MMG5_pSol met, int color1) {
 
 void MMG2D_starpu_adpcol(void *buffers[], void *cl_arg) {
 
- 
-  int nx_mesh, nx_met, nx_nc;
-  struct starpu_vector_interface *vect_mesh, *vect_met, *vect_nc;
-  
+
+  int nx_mesh, nx_met;
+  struct starpu_vector_interface *vect_mesh, *vect_met;
+  struct starpu_variable_interface *handle_nc;
+
   MMG5_pMesh mesh;
   MMG5_pSol met;
-  
-  //int nc;
+
   int color;
-  int *val_nc;
-  //int nc;
- 
+  int *nc;
+
   vect_mesh = (struct starpu_vector_interface *) buffers[0];
   nx_mesh = STARPU_VECTOR_GET_NX(vect_mesh);
   mesh = (MMG5_pMesh)STARPU_VECTOR_GET_PTR(vect_mesh);
-  
+
   vect_met = (struct starpu_vector_interface *) buffers[1];
   nx_met = STARPU_VECTOR_GET_NX(vect_met);
   met = ( MMG5_pSol)STARPU_VECTOR_GET_PTR(vect_met);
-  
-  vect_nc = (struct starpu_vector_interface *) buffers[2];
-  nx_nc = STARPU_VECTOR_GET_NX(vect_nc);
-  val_nc = (int *)STARPU_VECTOR_GET_PTR(vect_nc);
-     
-  //nc=val_nc[0];
+
+  handle_nc = (struct starpu_variable_interface *) buffers[2];
+  nc = (int *)STARPU_VARIABLE_GET_PTR(handle_nc);
+
   starpu_codelet_unpack_args(cl_arg,&color);
- 
-  val_nc[0]=MMG2D_adpspl(mesh,met,color);
-  
- }
+
+  *nc += MMG2D_adpcol(mesh,met,color);
+}
 
 /* Analysis and collapse routine for edges in the final step of the algorithm */
 int MMG2D_adpcol(MMG5_pMesh mesh,MMG5_pSol met, int color1) {
@@ -1438,8 +1460,8 @@ int MMG2D_adpcol(MMG5_pMesh mesh,MMG5_pSol met, int color1) {
   double            len;
   int               k,nc,ilist,list[MMG2D_LONMAX+2];
   int8_t            i,i1,i2,open;
-  
-  fprintf(stdout," ----------Call adpcol codelet -----------\n");
+
+  //fprintf(stdout," ----------Call adpcol codelet -----------\n");
   nc = 0;
   for (k=1; k<=mesh->nt; k++) {
     pt = &mesh->tria[k];
@@ -1492,36 +1514,33 @@ int MMG2D_adpcol(MMG5_pMesh mesh,MMG5_pSol met, int color1) {
 /* Analyze points to relocate them according to a quality criterion */
 void MMG2D_starpu_movtri(void *buffers[], void *cl_arg) {
 
- 
-  int nx_mesh, nx_met, nx_nm;
-  struct starpu_vector_interface *vect_mesh, *vect_met, *vect_nm;
-  
+
+  int nx_mesh, nx_met;
+  struct starpu_vector_interface *vect_mesh, *vect_met;
+  struct starpu_variable_interface *handle_nm;
+
   MMG5_pMesh mesh;
   MMG5_pSol met;
-  
+
   int maxit,improve,color;
-  
-  int *val_nm;
-  //int nm;
- 
+
+  int *nm;
+
   vect_mesh = (struct starpu_vector_interface *) buffers[0];
   nx_mesh = STARPU_VECTOR_GET_NX(vect_mesh);
   mesh = (MMG5_pMesh)STARPU_VECTOR_GET_PTR(vect_mesh);
-  
+
   vect_met = (struct starpu_vector_interface *) buffers[1];
   nx_met = STARPU_VECTOR_GET_NX(vect_met);
   met = ( MMG5_pSol)STARPU_VECTOR_GET_PTR(vect_met);
-  
-  vect_nm = (struct starpu_vector_interface *) buffers[2];
-  nx_nm = STARPU_VECTOR_GET_NX(vect_nm);
-  val_nm = (int *)STARPU_VECTOR_GET_PTR(vect_nm);
-  //nm=val_nm[0];
-     
-     
+
+  handle_nm = (struct starpu_variable_interface *) buffers[2];
+  nm = (int *)STARPU_VARIABLE_GET_PTR(handle_nm);
+
   starpu_codelet_unpack_args(cl_arg, &maxit, &improve,&color);
- 
-  val_nm[0]=MMG2D_movtri(mesh,met,maxit,improve,color);
-  
+
+  *nm += MMG2D_movtri(mesh,met,maxit,improve,color);
+
 }
 
 int MMG2D_movtri(MMG5_pMesh mesh,MMG5_pSol met,int maxit,int8_t improve, int color1) {
@@ -1532,8 +1551,8 @@ int MMG2D_movtri(MMG5_pMesh mesh,MMG5_pSol met,int maxit,int8_t improve, int col
 
   it = nnm = 0;
   base = 0;
-  
-  fprintf(stdout," ----------Call movtri codelet -----------\n");
+
+  //fprintf(stdout," ----------Call movtri codelet -----------\n");
 
   for (k=1; k<=mesh->np; k++)
     mesh->point[k].flag = base;
@@ -1542,9 +1561,9 @@ int MMG2D_movtri(MMG5_pMesh mesh,MMG5_pSol met,int maxit,int8_t improve, int col
     base++;
     nm = ns = 0;
     for (k=1; k<=mesh->nt; k++) {
-      pt = &mesh->tria[k]; 
+      pt = &mesh->tria[k];
 
-      if ( !MMG2D_EOK(pt,color1) || pt->ref < 0 || MMG2D_ADJEOK(mesh,k,color1)) continue;
+      if ( !MMG2D_EOK(pt,color1) || pt->ref < 0 )  continue;
 
       for (i=0; i<3; i++) {
         p0 = &mesh->point[pt->v[i]];
@@ -1570,12 +1589,13 @@ int MMG2D_movtri(MMG5_pMesh mesh,MMG5_pSol met,int maxit,int8_t improve, int col
       }
     }
     nnm += nm;
-    if ( mesh->info.ddebug )  fprintf(stdout,"     %8d moved, %d geometry\n",nm,ns);
+    if ( mesh->info.ddebug )
+      fprintf(stdout,"     worker %d: %8d moved, %d geometry\n",starpu_worker_get_id(),nm,ns);
   }
   while ( ++it < maxit && nm > 0 );
 
   if ( (abs(mesh->info.imprim) > 5 || mesh->info.ddebug) && nnm > 0 )
-    fprintf(stdout,"     %8d vertices moved, %d iter.\n",nnm,it);
+    fprintf(stdout,"     worker %d: %8d vertices moved, %d iter.\n",starpu_worker_get_id(),nnm,it);
 
   return nnm;
 }
@@ -1591,11 +1611,11 @@ int MMG2D_movtri(MMG5_pMesh mesh,MMG5_pSol met,int maxit,int8_t improve, int col
 int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
 
   /* Stage 0: mesh coloration with metis*/
-   
-  fprintf(stdout,"  -- Call Metis for partioning  \n");
+
+  //fprintf(stdout,"  -- Call Metis for partioning  \n");
 
   idx_t *part;
- 
+
   //int color1;
 
   /** Allocate the table part */
@@ -1603,45 +1623,52 @@ int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
   int status, i;
   int status1;
 
-
-  int nelt= mesh->nt;
-
   MMG5_pTria pt;
+
+  //fprintf(stdout,"  --Begin Call Metis---- \n");
+
+  status=MMG_part_meshElts2metis( mesh, part, (idx_t)mesh->info.ncolors );
   
-  fprintf(stdout,"  --Begin Call Metis---- \n");
-
-  status=MMG_part_meshElts2metis( mesh, part, (idx_t)mesh->ncolors );
-
-  for (i=0; i< mesh->nt; i++)
-  {
-
-	  pt= &mesh->tria[i+1];
-          pt->color1 = part[i];
-          pt->color2 = pt->color1;
-          pt->ref = pt->color1;
-
-          //fprintf(stdout,"----nbelts= %d, --color1= %d \n",i, pt->color1);
+  
+  //int ref_init[mesh->nt];
+  
+  for (i=0; i< mesh->nt; i++) {
+    pt= &mesh->tria[i+1];
+    pt->color1 = part[i];
+    pt->color2 = pt->color1;
+   // ref_init[i]=pt->ref;
+    //pt->ref = pt->color1;
+   //fprintf(stdout,"----nbelts= %d, --color1= %d \n",i, pt->color1);
   }
-
-  fprintf(stdout,"  --END Call Metis------ \n");
   
-   /*save result*/
+
+  //fprintf(stdout,"  --END Call Metis------ \n");
+
+  /*save result*/
   if ( MMG2D_saveMesh(mesh, "metis.mesh") != 1 )
     exit(EXIT_FAILURE);
-    
-    
-   //status1=MMG2D_overlap(mesh, part);
-  
-   /*save result*/
+
+   /*for (i=0; i< mesh->nt; i++) {
+    pt= &mesh->tria[i+1];
+    pt->color1 = part[i];
+    pt->color2 = pt->color1;
+    pt->ref = ref_init[i];
+
+    //fprintf(stdout,"----nbelts= %d, --color1= %d \n",i, pt->color1);
+  }*/
+
+  //status1=MMG2D_overlap(mesh, part);
+
+  /*save result*/
   /* if ( MMG2D_saveMesh(mesh, "metise.mesh") != 1 )
-    exit(EXIT_FAILURE);*/
-   
- /*************************************/
- 
+     exit(EXIT_FAILURE);*/
+
+  /*************************************/
+
   /* Stage 1: creation of a geometric mesh */
   if ( abs(mesh->info.imprim) > 4 || mesh->info.ddebug )
     fprintf(stdout,"  ** GEOMETRIC MESH\n");
-  
+
   if ( !MMG2D_anatri(mesh,met,1) ) {
     fprintf(stderr,"  ## Unable to split mesh-> Exiting.\n");
     return 0;
@@ -1668,17 +1695,31 @@ int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
     MMG2D_gradsizreq(mesh,met);
   }
 
+
+  /*MMG2D_pack(mesh,met,NULL); */
+  /*save result*/
+  /*if ( MMG2D_saveMesh(mesh, "aps_typch=1.mesh") != 1 )
+       {exit(EXIT_FAILURE);}*/
+  
   if ( !MMG2D_anatri(mesh,met,2)  ) {
     fprintf(stderr,"  ## Unable to proceed adaptation. Exit program.\n");
     return 0;
   }
 
+
+  /*MMG2D_pack(mesh,met,NULL); */
+  /*save result*/
+   /*if ( MMG2D_saveMesh(mesh, "aps_typch=2.mesh") != 1 )
+       {exit(EXIT_FAILURE);}*/
+       
+   //exit(0);
+  //return 1;
   /* Stage 3: fine mesh improvements */
   if ( !MMG2D_adptri(mesh,met) ) {
     fprintf(stderr,"  ## Unable to make fine improvements. Exit program.\n");
     return 0;
   }
-  
+
 
 
 

@@ -33,38 +33,37 @@
  * Create adjacency relations between the triangles dein the mesh
  *
  */
- 
+
 void MMG2D_starpu_hashTria(void *buffers[], void *cl_arg) {
 
   int nx_mesh;
   struct starpu_vector_interface *vect_mesh;
-  
+
   MMG5_pMesh mesh;
-  
+
   int ret;
- 
+
   vect_mesh = (struct starpu_vector_interface *) buffers[0];
   nx_mesh = STARPU_VECTOR_GET_NX(vect_mesh);
   mesh = (MMG5_pMesh)STARPU_VECTOR_GET_PTR(vect_mesh);
- 
+
   ret=MMG2D_hashTria(mesh);
- 
+
   if (ret<0)
-     {
-        fprintf(stdout,"  ## Hashing problem. Exit program.\n");
-     
-     }
- 
- 
- }
+  {
+    fprintf(stdout,"  ## Hashing problem. Exit program.\n");
+
+  }
+}
+
 int MMG2D_hashTria(MMG5_pMesh mesh) {
   MMG5_pTria     pt,pt1;
   int            k,kk,pp,l,ll,mins,mins1,maxs,maxs1;
   int            *hcode,*link,inival,hsize,iadr;
   uint8_t        i,ii,i1,i2;
   unsigned int   key;
-  
-  fprintf(stdout," ----------Call hashTria codelet -----------\n");
+
+  //fprintf(stdout," ----------Call hashTria codelet -----------\n");
 
   if ( mesh->adja )  return 1;
   if ( !mesh->nt )  return 0;
@@ -74,8 +73,8 @@ int MMG2D_hashTria(MMG5_pMesh mesh) {
 
   /* memory alloc */
   MMG5_ADD_MEM(mesh,(3*mesh->ntmax+5)*sizeof(int),"adjacency table",
-                printf("  Exit program.\n");
-                return 0;);
+               printf("  Exit program.\n");
+               return 0;);
   MMG5_SAFE_CALLOC(mesh->adja,3*mesh->ntmax+5,int,return 0);
 
   link  = mesh->adja;
@@ -662,9 +661,9 @@ int MMG2D_pack(MMG5_pMesh mesh,MMG5_pSol sol,MMG5_pSol met) {
       mesh->namax = mesh->na;
       memWarn = 0;
       MMG5_ADD_MEM(mesh,(mesh->namax+1)*sizeof(MMG5_Edge),"final edges",
-                    fprintf(stderr,"\n  ## Warning: %s: uncomplete mesh.\n",
-                            __func__);
-                    memWarn=1);
+                   fprintf(stderr,"\n  ## Warning: %s: uncomplete mesh.\n",
+                           __func__);
+                   memWarn=1);
     }
 
     if ( memWarn )
@@ -745,6 +744,16 @@ int MMG2D_pack(MMG5_pMesh mesh,MMG5_pSol sol,MMG5_pSol met) {
     if ( !ped->a ) continue;
     ped->a = mesh->point[ped->a].tmp;
     ped->b = mesh->point[ped->b].tmp;
+  }
+
+  if ( mesh->info.ddebug ) {
+    fprintf(stdout,"Warning: %s: %d: set metis colors to element references.\n",__func__,__LINE__);
+  }
+  for (k=1; k<=mesh->nt; k++) {
+    pt = &mesh->tria[k];
+    if ( !MG_EOK(pt)) continue;
+
+    pt->ref = pt->color1;
   }
 
   /** Pack triangles */

@@ -288,7 +288,7 @@ int MMG2D_norver(MMG5_pMesh,int );
 int MMG2D_regnor(MMG5_pMesh );
 int MMG2D_boulen(MMG5_pMesh , int ,int8_t ,int *,int *,double *);
 int MMG2D_mmg2d1n(MMG5_pMesh ,MMG5_pSol );
-int MMG2D_anatri(MMG5_pMesh ,MMG5_pSol, int8_t );
+int MMG2D_anatri(MMG5_pMesh ,MMG5_pSol, int );
 int MMG2D_adptri(MMG5_pMesh ,MMG5_pSol );
 int MMG2D_defsiz_iso(MMG5_pMesh ,MMG5_pSol );
 int MMG2D_defsiz_ani(MMG5_pMesh ,MMG5_pSol );

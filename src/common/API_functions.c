@@ -101,6 +101,9 @@ void MMG5_Init_parameters(MMG5_pMesh mesh) {
    * scaleMesh function */
   mesh->info.lag      = MMG5_LAG;
 
+  /* By default, mesh has 1 color only */
+  mesh->info.ncolors  = 1;
+
   /* initial value for memMax and gap */
   mesh->gap = MMG5_GAP;
   mesh->memMax = MMG5_memSize();
