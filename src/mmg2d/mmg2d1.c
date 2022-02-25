@@ -1625,8 +1625,6 @@ int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
 
   MMG5_pTria pt;
 
-  //fprintf(stdout,"  --Begin Call Metis---- \n");
-
   status=MMG_part_meshElts2metis( mesh, part, (idx_t)mesh->info.ncolors );
   
   
