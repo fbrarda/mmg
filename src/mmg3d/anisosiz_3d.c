@@ -1159,7 +1159,7 @@ int MMG5_defmetvol(MMG5_pMesh mesh,MMG5_pSol met,int8_t ismet) {
 
       /** Second step: set metric */
       m = &met->m[met->size*ip];
-      if ( !MMG5_eigenv(1,m,lambda,v) ) {
+      if ( !MMG5_eigenv3d(1,m,lambda,v) ) {
         if ( !mmgWarn ) {
           fprintf(stderr,"\n  ## Warning: %s: Unable to diagonalize at least"
                   " 1 metric.\n",__func__);
@@ -1370,7 +1370,8 @@ int MMG3D_defsiz_ani(MMG5_pMesh mesh,MMG5_pSol met) {
  * \return -1 if no gradation is needed, else index of graded point.
  *
  * Enforces gradation of metric in one extremity of edge \a ia in tetra \a pt
- * with respect to the other.
+ * with respect to the other. See: \cite{borouchaki1998mesh}. The Hv-correction
+ * is used (gradation with respect to H-variation measure).
  *
  */
 static inline
@@ -1433,7 +1434,7 @@ int MMG5_grad2metVol(MMG5_pMesh mesh,MMG5_pSol met,MMG5_pTetra pt,int np1,int np
     if( ps1 >= alpha -MMG5_EPS )
       return -1;
 
-    if ( !MMG5_eigenv(1,m1,lambda,vp) ) {
+    if ( !MMG5_eigenv3d(1,m1,lambda,vp) ) {
       if ( !mmgWarn ) {
         fprintf(stderr,"\n  ## Warning: %s: Unable to diagonalize at least"
                 " 1 metric.\n",__func__);
@@ -1522,7 +1523,7 @@ int MMG5_grad2metVol(MMG5_pMesh mesh,MMG5_pSol met,MMG5_pTetra pt,int np1,int np
     if( ps2 >= alpha - MMG5_EPS)
       return -1;
 
-    MMG5_eigenv(1,m2,lambda,vp);
+    MMG5_eigenv3d(1,m2,lambda,vp);
 
     c[0] = t[0]*vp[0][0] + t[1]*vp[0][1] + t[2]*vp[0][2];
     c[1] = t[0]*vp[1][0] + t[1]*vp[1][1] + t[2]*vp[1][2];
@@ -1588,108 +1589,6 @@ int MMG5_grad2metVol(MMG5_pMesh mesh,MMG5_pSol met,MMG5_pTetra pt,int np1,int np
     }
     return np2;
   }
-}
-
-
-/**
- * \param mesh pointer toward the mesh
- * \param m first matrix
- * \param n second matrix
- * \param dm eigenvalues of m in the coreduction basis (to fill)
- * \param dn eigenvalues of n in the coreduction basis (to fill)
- * \param vp coreduction basis (to fill)
- *
- * \return 0 if fail 1 otherwise.
- *
- * Perform simultaneous reduction of matrices \a m and \a n.
- *
- */
-static inline
-int MMG3D_simred(MMG5_pMesh mesh,double *m,double *n,double dm[3],
-                 double dn[3],double vp[3][3] ) {
-
-  double        lambda[3],im[6],imn[9];
-  int           order;
-  static int8_t mmgWarn0=0;
-
-  /* Compute imn = M^{-1}N */
-  if ( !MMG5_invmat ( m,im ) ) {
-    if ( !mmgWarn0 ) {
-      mmgWarn0 = 1;
-      fprintf(stderr,"\n  ## Warning: %s: unable to invert the matrix.\n",__func__);
-    }
-    return 0;
-  }
-
-  MMG5_mn(im,n,imn);
-
-  /* Find eigenvalues of imn */
-  order = MMG5_eigenv(0,imn,lambda,vp);
-
-  if ( !order ) {
-    if ( !mmgWarn0 ) {
-      mmgWarn0 = 1;
-      fprintf(stderr,"\n  ## Warning: %s: at least 1 failing"
-              " simultaneous reduction.\n",__func__);
-    }
-    return 0;
-  }
-
-  if ( order == 3 ) {
-    /* First case : matrices m and n are homothetic: n = lambda0*m */
-    if ( (fabs(m[1]) < MMG5_EPS && fabs(m[2]) < MMG5_EPS
-          && fabs(m[4]) < MMG5_EPS) ) {
-      /* Subcase where m is diaonal */
-        dm[0]   = m[0];
-        dm[1]   = m[3];
-        dm[2]   = m[5];
-        vp[0][0] = 1;
-        vp[0][1] = 0;
-        vp[0][2] = 0;
-        vp[1][0] = 0;
-        vp[1][1] = 1;
-        vp[1][2] = 0;
-        vp[2][0] = 0;
-        vp[2][1] = 0;
-        vp[2][2] = 1;
-    }
-    else {
-      /* Subcase where m is not diagonal; dd,trimn,... are reused */
-      MMG5_eigenv(1,m,dm,vp);
-    }
-    /* Eigenvalues of metric n */
-    dn[0] = lambda[0]*dm[0];
-    dn[1] = lambda[0]*dm[1];
-    dn[2] = lambda[0]*dm[2];
-  }
-  else {
-    /* Second case: eigenvalues of imn are distinct ; theory says qf associated
-       to m and n are diagonalizable in basis (vp[0], vp[1], vp[2]) - the
-       coreduction basis */
-    /* Compute diagonal values in simultaneous reduction basis */
-    dm[0] = m[0]*vp[0][0]*vp[0][0] + 2.0*m[1]*vp[0][0]*vp[0][1] + 2.0*m[2]*vp[0][0]*vp[0][2]
-      + m[3]*vp[0][1]*vp[0][1] + 2.0*m[4]*vp[0][1]*vp[0][2] + m[5]*vp[0][2]*vp[0][2];
-    dm[1] = m[0]*vp[1][0]*vp[1][0] + 2.0*m[1]*vp[1][0]*vp[1][1] + 2.0*m[2]*vp[1][0]*vp[1][2]
-      + m[3]*vp[1][1]*vp[1][1] + 2.0*m[4]*vp[1][1]*vp[1][2] + m[5]*vp[1][2]*vp[1][2];
-    dm[2] = m[0]*vp[2][0]*vp[2][0] + 2.0*m[1]*vp[2][0]*vp[2][1] + 2.0*m[2]*vp[2][0]*vp[2][2]
-      + m[3]*vp[2][1]*vp[2][1] + 2.0*m[4]*vp[2][1]*vp[2][2] + m[5]*vp[2][2]*vp[2][2];
-
-    dn[0] = n[0]*vp[0][0]*vp[0][0] + 2.0*n[1]*vp[0][0]*vp[0][1] + 2.0*n[2]*vp[0][0]*vp[0][2]
-      + n[3]*vp[0][1]*vp[0][1] + 2.0*n[4]*vp[0][1]*vp[0][2] + n[5]*vp[0][2]*vp[0][2];
-    dn[1] = n[0]*vp[1][0]*vp[1][0] + 2.0*n[1]*vp[1][0]*vp[1][1] + 2.0*n[2]*vp[1][0]*vp[1][2]
-      + n[3]*vp[1][1]*vp[1][1] + 2.0*n[4]*vp[1][1]*vp[1][2] + n[5]*vp[1][2]*vp[1][2];
-    dn[2] = n[0]*vp[2][0]*vp[2][0] + 2.0*n[1]*vp[2][0]*vp[2][1] + 2.0*n[2]*vp[2][0]*vp[2][2]
-      + n[3]*vp[2][1]*vp[2][1] + 2.0*n[4]*vp[2][1]*vp[2][2] + n[5]*vp[2][2]*vp[2][2];
-  }
-
-  assert ( dm[0] >= MMG5_EPSD2 && dm[1] >= MMG5_EPSD2 && dm[2] >= MMG5_EPSD2 && "positive eigenvalue" );
-  assert ( dn[0] >= MMG5_EPSD2 && dn[1] >= MMG5_EPSD2 && dn[2] >= MMG5_EPSD2 && "positive eigenvalue" );
-
-  if ( dm[0] < MMG5_EPSOK || dn[0] < MMG5_EPSOK ) { return 0; }
-  if ( dm[1] < MMG5_EPSOK || dn[1] < MMG5_EPSOK ) { return 0; }
-  if ( dm[2] < MMG5_EPSOK || dn[2] < MMG5_EPSOK ) { return 0; }
-
-  return 1;
 }
 
 /**
@@ -1787,7 +1686,7 @@ int MMG5_grad2metVolreq(MMG5_pMesh mesh,MMG5_pSol met,MMG5_pTetra pt,int npmaste
   difsiz = mesh->info.hgradreq*l;
 
   /* Simultaneous reduction of mtan1 and mtan2 */
-  if ( !MMG3D_simred(mesh,m1,m2,lambda,mu,vp) ) {
+  if ( !MMG5_simred3d(mesh,m1,m2,lambda,mu,vp) ) {
     return 0;
   }
 
@@ -1810,21 +1709,34 @@ int MMG5_grad2metVolreq(MMG5_pMesh mesh,MMG5_pSol met,MMG5_pTetra pt,int npmaste
      * of the singular points. Thus:
      * lambda_new = = 0.5 lambda_1 + 0.5 lambda_new = lambda_1 + 0.5 beta.
      * with beta the smallest variation of the eigenvalues (lambda_new-lambda_1). */
-    assert ( fabs(mm2[0]-mm2[3]) < MMG5_EPSOK && fabs(mm2[3]-mm2[5]) < MMG5_EPSOK
-             && "iso metric?" );
 
-    beta = mu[0] - mm2[0];
+    /* This point can have an anisotropic metric if a user-provided metric is
+     * found. So, compute the eigenvalues. */
+    double ll[3],rr[3][3],llmin;
+    int i;
+    if( !MMG5_eigenv3d(1,mm2,ll, rr) )
+      return 0;
+    llmin = DBL_MAX;
+    for( i = 0; i < 3; i++ )
+      if( ll[i] < llmin )
+        llmin = ll[i];
 
-    if ( fabs(beta) < fabs(mm2[0]-mu[1]) ) {
-      beta = mu[1] - mm2[0];
+
+    beta = mu[0] - llmin;
+
+    if ( fabs(beta) < fabs(llmin-mu[1]) ) {
+      beta = mu[1] - llmin;
     }
-    if ( fabs(beta) < fabs(mm2[0]-mu[2]) ) {
-      beta = mu[2] - mm2[0];
-    }
-
-    mm2[0] += 0.5*beta;
-    mm2[3] += 0.5*beta;
-    mm2[5] += 0.5*beta;
+    ll[0] += 0.5*beta;
+    ll[1] += 0.5*beta;
+    ll[2] += 0.5*beta;
+    assert ( ll[0]>0. && ll[1]>0. && ll[2]>0. );
+    mm2[0] = ll[0]*rr[0][0]*rr[0][0] + ll[1]*rr[1][0]*rr[1][0] + ll[2]*rr[2][0]*rr[2][0];
+    mm2[1] = ll[0]*rr[0][0]*rr[0][1] + ll[1]*rr[1][0]*rr[1][1] + ll[2]*rr[2][0]*rr[2][1];
+    mm2[2] = ll[0]*rr[0][0]*rr[0][2] + ll[1]*rr[1][0]*rr[1][2] + ll[2]*rr[2][0]*rr[2][2];
+    mm2[3] = ll[0]*rr[0][1]*rr[0][1] + ll[1]*rr[1][1]*rr[1][1] + ll[2]*rr[2][1]*rr[2][1];
+    mm2[4] = ll[0]*rr[0][1]*rr[0][2] + ll[1]*rr[1][1]*rr[1][2] + ll[2]*rr[2][1]*rr[2][2];
+    mm2[5] = ll[0]*rr[0][2]*rr[0][2] + ll[1]*rr[1][2]*rr[1][2] + ll[2]*rr[2][2]*rr[2][2];
   }
   else if( p2->tag & MG_GEO ){
 

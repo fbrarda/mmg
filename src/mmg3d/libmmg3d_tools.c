@@ -268,8 +268,16 @@ int MMG3D_parsar(int argc,char *argv[],MMG5_pMesh mesh,MMG5_pSol met,MMG5_pSol s
             return 0;
           }
         }
+        else if ( !strcmp(argv[i],"-isoref") && ++i <= argc ) {
+          if ( !MMG3D_Set_iparameter(mesh,met,MMG3D_IPARAM_isoref,
+                                     atoi(argv[i])) )
+            return 0;
+        }
+        else {
+          MMG3D_usage(argv[0]);
+          return 0;
+        }
         break;
-
       case 'l':
         if ( !strcmp(argv[i],"-lag") ) {
           if ( ++i < argc && isdigit(argv[i][0]) ) {
@@ -916,12 +924,14 @@ int MMG3D_Get_nonBdyTriangle(MMG5_pMesh mesh,int* v0,int* v1,int* v2,
             " before the %s one and check that the number of internal"
             " triangles is non null.\n",
             __func__,__func__);
+    return 0;
   }
 
   if ( mesh->nt+idx > nt_tot ) {
     fprintf(stderr,"\n  ## Error: %s: Can't get the internal triangle of index %d."
             " Index must be between 1 and %zu.\n",
             __func__,idx,nt_tot-mesh->nt);
+    return 0;
   }
 
   ptt = &mesh->tria[mesh->nt+idx];
@@ -1380,7 +1390,7 @@ int MMG3D_switch_metricStorage(MMG5_pMesh mesh, MMG5_pSol met) {
 
 int MMG3D_Compute_eigenv(double m[6],double lambda[3],double vp[3][3]) {
 
-  return  MMG5_eigenv(1,m,lambda,vp);
+  return  MMG5_eigenv3d(1,m,lambda,vp);
 
 }
 

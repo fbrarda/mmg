@@ -84,6 +84,7 @@ void MMG2D_Init_parameters(MMG5_pMesh mesh) {
 
   /* default values for integers */
   mesh->info.lag      = MMG5_LAG;
+  mesh->info.setfem   = MMG5_FEM;
   mesh->info.optim    = MMG5_OFF;
   /* [0/1]   ,avoid/allow surface modifications */
   mesh->info.nosurf   =  MMG5_OFF;
@@ -137,11 +138,17 @@ int MMG2D_Set_iparameter(MMG5_pMesh mesh, MMG5_pSol sol, int iparam, int val){
       mesh->info.dhd    = MMG5_ANGEDG;
     }
     break;
+  case MMG2D_IPARAM_nofem :
+    mesh->info.setfem = (val==1)? 0 : 1;
+    break;
   case MMG2D_IPARAM_opnbdy :
     mesh->info.opnbdy = val;
     break;
   case MMG2D_IPARAM_iso :
     mesh->info.iso      = val;
+    break;
+  case MMG2D_IPARAM_isoref :
+    mesh->info.isoref   = val;
     break;
   case MMG2D_IPARAM_lag :
 #ifdef USE_ELAS
@@ -235,7 +242,7 @@ int MMG2D_Set_iparameter(MMG5_pMesh mesh, MMG5_pSol sol, int iparam, int val){
     return 0;
   }
   /* other options */
-  mesh->info.setfem      = MMG5_OFF;
+
   return 1;
 }
 
@@ -261,7 +268,7 @@ int MMG2D_Set_dparameter(MMG5_pMesh mesh, MMG5_pSol sol, int dparam, double val)
     break;
   case MMG2D_DPARAM_hgrad :
     mesh->info.hgrad    = val;
-    if ( mesh->info.hgrad < 0.0 ) {
+    if ( mesh->info.hgrad <= 0.0 ) {
       mesh->info.hgrad = MMG5_NOHGRAD;
     }
     else {
@@ -270,7 +277,7 @@ int MMG2D_Set_dparameter(MMG5_pMesh mesh, MMG5_pSol sol, int dparam, double val)
     break;
   case MMG2D_DPARAM_hgradreq :
     mesh->info.hgradreq    = val;
-    if ( mesh->info.hgradreq < 0.0 ) {
+    if ( mesh->info.hgradreq <= 0.0 ) {
       mesh->info.hgradreq = MMG5_NOHGRAD;
     }
     else {
@@ -1628,11 +1635,11 @@ int MMG2D_Set_tensorSols(MMG5_pSol met, double *sols) {
 
   for ( k=0; k<met->np; ++k ) {
     j = 3*k;
-    m = &met->m[j];
+    m = &met->m[j+3];
 
-    m[1] = sols[j];
-    m[2] = sols[j+1];
-    m[3] = sols[j+2];
+    m[0] = sols[j];
+    m[1] = sols[j+1];
+    m[2] = sols[j+2];
   }
   return 1;
 }
@@ -1643,11 +1650,11 @@ int MMG2D_Get_tensorSols(MMG5_pSol met, double *sols) {
 
   for ( k=0; k<met->np; ++k ) {
     j = 3*k;
-    m = &met->m[j];
+    m = &met->m[j+3];
 
-    sols[j]   = m[1];
-    sols[j+1] = m[2];
-    sols[j+2] = m[3];
+    sols[j]   = m[0];
+    sols[j+1] = m[1];
+    sols[j+2] = m[2];
   }
 
   return 1;

@@ -485,7 +485,7 @@ int MMGS_loadMesh(MMG5_pMesh mesh, const char *filename) {
     rewind(inm);
     fseek(inm,posned,SEEK_SET);
 
-    /* Skip edges with MG_ISO refs */
+    /* Skip edges with mesh->info.isoref refs */
     if( mesh->info.iso ) {
       mesh->na = 0;
       MMG5_SAFE_CALLOC(ina,na+1,int,return 0);
@@ -508,7 +508,7 @@ int MMGS_loadMesh(MMG5_pMesh mesh, const char *filename) {
           ++nref;
         }
 
-        if ( ref != MG_ISO ) {
+        if ( ref != mesh->info.isoref ) {
           ped = &mesh->edge[++mesh->na];
           ped->a   = a;
           ped->b   = b;
@@ -752,8 +752,10 @@ int MMGS_loadMshMesh(MMG5_pMesh mesh,MMG5_pSol sol,const char *filename) {
     return  ier;
   }
 
-  /* Check the metric type */
-  ier = MMG5_chkMetricType(mesh,&sol->type,inm);
+  if ( sol ) {
+    /* Check the metric type */
+    ier = MMG5_chkMetricType(mesh,&sol->type,inm);
+  }
 
   return ier;
 }
@@ -814,6 +816,84 @@ int MMGS_loadMshMesh_and_allData(MMG5_pMesh mesh,MMG5_pSol *sol,const char *file
 
   return ier;
 }
+
+int MMGS_loadGenericMesh(MMG5_pMesh mesh, MMG5_pSol sol, const char *filename) {
+  int ier=0;
+  const char *filenameptr,*solnameptr;
+  char *tmp,*soltmp;
+
+  if ( filename && strlen(filename) ) {
+    filenameptr = filename;
+    solnameptr = filename;
+  }
+  else if (mesh->namein && strlen(mesh->namein) ) {
+    filenameptr = mesh->namein;
+    if ( sol && strlen(sol->namein) ) {
+      solnameptr  = sol->namein;
+    }
+    else {
+      solnameptr = mesh->namein;
+    }
+  }
+  else {
+    fprintf(stderr,"  ## Error: %s: please provide input file name"
+            " (either in the mesh structure or as function argument).\n",
+            __func__);
+    return 0;
+  }
+
+  MMG5_SAFE_MALLOC(tmp,strlen(filenameptr)+1,char,return 0);
+  strcpy(tmp,filenameptr);
+
+  /* read mesh/sol files */
+  char *ptr   = MMG5_Get_filenameExt(tmp);
+  int  fmtin = MMG5_Get_format(ptr,MMG5_FMT_MeditASCII);
+
+  switch ( fmtin ) {
+
+  case ( MMG5_FMT_GmshASCII ): case ( MMG5_FMT_GmshBinary ):
+    ier = MMGS_loadMshMesh(mesh,sol,tmp);
+    break;
+
+  case ( MMG5_FMT_VtkVtp ):
+    ier = MMGS_loadVtpMesh(mesh,sol,tmp);
+    break;
+
+  case ( MMG5_FMT_VtkVtu ):
+    ier = MMGS_loadVtuMesh(mesh,sol,tmp);
+    break;
+
+  case ( MMG5_FMT_VtkVtk ):
+    ier = MMGS_loadVtkMesh(mesh,sol,tmp);
+    break;
+
+  case ( MMG5_FMT_MeditASCII ): case ( MMG5_FMT_MeditBinary ):
+    ier = MMGS_loadMesh(mesh,tmp);
+    if ( ier <  1 ) { break; }
+
+    /* Facultative metric */
+    if ( sol ) {
+      MMG5_SAFE_MALLOC(soltmp,strlen(solnameptr)+1,char,return 0);
+      strcpy(soltmp,solnameptr);
+
+      if ( MMGS_loadSol(mesh,sol,tmp) == -1) {
+        fprintf(stderr,"\n  ## ERROR: WRONG DATA TYPE OR WRONG SOLUTION NUMBER.\n");
+        ier = 0;
+      }
+      MMG5_SAFE_FREE(soltmp);
+    }
+    break;
+
+  default:
+    fprintf(stderr,"  ** I/O AT FORMAT %s NOT IMPLEMENTED.\n",MMG5_Get_formatName(fmtin) );
+    ier= 0;
+  }
+
+  MMG5_SAFE_FREE(tmp);
+
+  return ier;
+}
+
 
 int MMGS_saveMesh(MMG5_pMesh mesh, const char* filename) {
   FILE         *inm;
@@ -1315,7 +1395,10 @@ int MMGS_loadSol(MMG5_pMesh mesh,MMG5_pSol met,const char* filename) {
   }
 
   ier = MMG5_chkMetricType(mesh,type,inm);
-  if ( ier <1 ) return ier;
+  if ( ier < 1 ) {
+    MMG5_SAFE_FREE(type);
+    return ier;
+  }
 
   /* Allocate and store the header informations for each solution */
   if ( !MMGS_Set_solSize(mesh,met,MMG5_Vertex,mesh->np,type[0]) ) {
@@ -1325,6 +1408,8 @@ int MMGS_loadSol(MMG5_pMesh mesh,MMG5_pSol met,const char* filename) {
   }
   /* For binary file, we read the verson inside the file */
   if ( ver ) met->ver = ver;
+
+  MMG5_SAFE_FREE(type);
 
   /* Read mesh solutions */
   rewind(inm);
@@ -1358,7 +1443,7 @@ int MMGS_loadAllSols(MMG5_pMesh mesh,MMG5_pSol *sol, const char *filename) {
   long        posnp;
   int         iswp,ier,dim;
   int         j,k,ver,bin,np,nsols,*type;
-  char        data[10];
+  char        data[16];
   static char mmgWarn = 0;
 
   /** Read the file header */
@@ -1451,7 +1536,7 @@ int MMGS_loadAllSols(MMG5_pMesh mesh,MMG5_pSol *sol, const char *filename) {
 int MMGS_saveSol(MMG5_pMesh mesh,MMG5_pSol met, const char *filename) {
   FILE*        inm;
   MMG5_pPoint  ppt;
-  int          binch,bin,ier,k;
+  int          binch,bpos,bin,ier,k;
 
   if ( !met->m ) {
     fprintf(stderr,"\n  ## Warning: %s: no metric data to save.\n",__func__);
@@ -1459,9 +1544,9 @@ int MMGS_saveSol(MMG5_pMesh mesh,MMG5_pSol met, const char *filename) {
   }
 
   met->ver = 2;
-
-  ier = MMG5_saveSolHeader( mesh,filename,&inm,met->ver,&bin,mesh->np,met->dim,
-                            1,&met->type,&met->size);
+  bpos = 0;
+  ier = MMG5_saveSolHeader( mesh,filename,&inm,met->ver,&bin,&bpos,mesh->np,met->dim,
+                            1,&met->entities,&met->type,&met->size);
 
   if ( ier < 1 )  return ier;
 
@@ -1488,38 +1573,78 @@ int MMGS_saveAllSols(MMG5_pMesh mesh,MMG5_pSol *sol, const char *filename) {
   MMG5_pSol    psl;
   FILE*        inm;
   MMG5_pPoint  ppt;
-  int          binch,bin,ier,k,j;
-  int          *type,*size;
+  int          binch,bpos,bin,ier,k,j,npointSols,ncellSols;
+  int          *type,*size,*entities;
 
   if ( !(*sol)[0].m )  return -1;
 
   (*sol)[0].ver = 2;
 
   MMG5_SAFE_CALLOC(type,mesh->nsols,int,return 0);
-  MMG5_SAFE_CALLOC(size,mesh->nsols,int,return 0);
+  MMG5_SAFE_CALLOC(size,mesh->nsols,int,MMG5_SAFE_FREE(type);return 0);
+  MMG5_SAFE_CALLOC(entities,mesh->nsols,int,
+                   MMG5_SAFE_FREE(type);MMG5_SAFE_FREE(size);return 0);
+
+  npointSols = 0;
+  ncellSols = 0;
   for (k=0; k<mesh->nsols; ++k ) {
+
+    if ( ((*sol)[k].entities==MMG5_Noentity) || ((*sol)[k].entities==MMG5_Vertex) ) {
+      ++npointSols;
+    }
+    else if ( (*sol)[k].entities == MMG5_Triangle ) {
+      ++ncellSols;
+    }
+    else {
+      printf("\n  ## Warning: %s: unexpected entity type for solution %d: %s."
+             "\n Ignored.\n",
+             __func__,k,MMG5_Get_entitiesName((*sol)[k].entities));
+    }
+
     type[k] = (*sol)[k].type;
     size[k] = (*sol)[k].size;
+    entities[k] = (*sol)[k].entities;
   }
 
-  ier = MMG5_saveSolHeader( mesh,filename,&inm,(*sol)[0].ver,&bin,mesh->np,
-                            (*sol)[0].dim,mesh->nsols,type,size);
-
-  MMG5_SAFE_FREE(type);
-  MMG5_SAFE_FREE(size);
+  bpos = 0;
+  ier = MMG5_saveSolHeader( mesh,filename,&inm,(*sol)[0].ver,&bin,&bpos,mesh->np,
+                            (*sol)[0].dim,mesh->nsols,entities,type,size);
 
   if ( ier < 1 )  return ier;
 
   for (k=1; k<=mesh->np; k++) {
     ppt = &mesh->point[k];
-    if ( !MG_VOK(ppt) ) continue;
+    if ( !MG_VOK(ppt) )  continue;
 
     for ( j=0; j<mesh->nsols; ++j ) {
-      psl = *sol+j;
-      MMG5_writeDoubleSol3D(mesh,psl,inm,bin,k,0);
+      psl = *sol + j;
+
+      if ( (psl->entities==MMG5_Noentity) || (psl->entities==MMG5_Vertex) ) {
+        MMG5_writeDoubleSol3D(mesh,psl,inm,bin,k,0);
+      }
     }
     fprintf(inm,"\n");
   }
+
+  MMG5_saveSolAtTrianglesHeader( mesh,inm,(*sol)[0].ver,bin,&bpos,mesh->nsols,
+                                 ncellSols,entities,type,size );
+
+  for (k=1; k<=mesh->nt; k++) {
+    MMG5_pTria ptt = &mesh->tria[k];
+    if ( !MG_EOK(ptt) )  continue;
+
+    for ( j=0; j<mesh->nsols; ++j ) {
+      psl = *sol + j;
+      if ( psl->entities==MMG5_Triangle ) {
+        MMG5_writeDoubleSol3D(mesh,psl,inm,bin,k,0);
+      }
+    }
+    fprintf(inm,"\n");
+  }
+
+  MMG5_SAFE_FREE(type);
+  MMG5_SAFE_FREE(size);
+  MMG5_SAFE_FREE(entities);
 
   /* End file */
   if(!bin) {
@@ -1530,4 +1655,74 @@ int MMGS_saveAllSols(MMG5_pMesh mesh,MMG5_pSol *sol, const char *filename) {
   }
   fclose(inm);
   return 1;
+}
+
+int MMGS_saveGenericMesh(MMG5_pMesh mesh, MMG5_pSol sol, const char *filename) {
+  int ier=0;
+  const char *filenameptr,*solnameptr;
+  char *tmp,*soltmp;
+
+  if ( filename && strlen(filename) ) {
+    filenameptr = filename;
+    solnameptr = filename;
+  }
+  else if (mesh->namein && strlen(mesh->namein) ) {
+    filenameptr = mesh->namein;
+    if ( sol && strlen(sol->namein) ) {
+      solnameptr  = sol->namein;
+    }
+    else {
+      solnameptr = mesh->namein;
+    }
+  }
+  else {
+    fprintf(stderr,"  ## Error: %s: please provide input file name"
+            " (either in the mesh structure or as function argument).\n",
+            __func__);
+    return 0;
+  }
+
+  MMG5_SAFE_MALLOC(tmp,strlen(filenameptr)+1,char,return 0);
+  strcpy(tmp,filenameptr);
+
+  /* read mesh/sol files */
+  char *ptr   = MMG5_Get_filenameExt(tmp);
+  int  fmt = MMG5_Get_format(ptr,MMG5_FMT_MeditASCII);
+
+  int8_t savesolFile = 0;
+
+  switch ( fmt ) {
+  case ( MMG5_FMT_GmshASCII ): case ( MMG5_FMT_GmshBinary ):
+    ier = MMGS_saveMshMesh(mesh,sol,tmp);
+    break;
+  case ( MMG5_FMT_VtkVtp ):
+    ier = MMGS_saveVtpMesh(mesh,sol,tmp);
+    break;
+  case ( MMG5_FMT_VtkVtu ):
+    ier = MMGS_saveVtuMesh(mesh,sol,tmp);
+    break;
+  case ( MMG5_FMT_VtkVtk ):
+    ier = MMGS_saveVtkMesh(mesh,sol,tmp);
+    break;
+  default:
+    ier = MMGS_saveMesh(mesh,tmp);
+    savesolFile = 1;
+    break;
+  }
+
+  if ( ier && savesolFile ) {
+    /* Medit or tetgen output: save the solution in a .sol file */
+    if ( sol && sol->np ) {
+      MMG5_SAFE_MALLOC(soltmp,strlen(solnameptr)+1,char,return 0);
+      strcpy(soltmp,solnameptr);
+
+      if ( MMGS_saveSol(mesh,sol,soltmp) == -1) {
+        fprintf(stderr,"\n  ## ERROR: WRONG DATA TYPE OR WRONG SOLUTION NUMBER.\n");
+        ier = 0;
+      }
+      MMG5_SAFE_FREE(soltmp);
+    }
+  }
+
+  return ier;
 }

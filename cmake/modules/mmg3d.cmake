@@ -140,6 +140,8 @@ IF (NOT WIN32 OR MINGW)
   LIST(APPEND mmg3d_headers  ${COMMON_BINARY_DIR}/git_log_mmg.h )
 ENDIF()
 
+# install man pages
+INSTALL(FILES ${PROJECT_SOURCE_DIR}/doc/man/mmg3d.1.gz DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 
 # Install header files in /usr/local or equivalent
 INSTALL(FILES ${mmg3d_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mmg/mmg3d COMPONENT headers)
@@ -184,9 +186,6 @@ IF ( BUILD_TESTING )
   # Add runtime that we want to test for mmg3d
   IF ( MMG3D_CI )
 
-    SET ( CTEST_OUTPUT_DIR ${PROJECT_BINARY_DIR}/TEST_OUTPUTS )
-    FILE ( MAKE_DIRECTORY  ${CTEST_OUTPUT_DIR} )
-
     IF ( LONG_TESTS )
       # Run some tests twice with the output of the previous test as input
       OPTION ( RUN_AGAIN "Enable/Disable second run of some tests" ON )
@@ -206,10 +205,14 @@ IF ( BUILD_TESTING )
       SET(LIBMMG3D_EXEC4   ${EXECUTABLE_OUTPUT_PATH}/libmmg3d_example4)
       SET(LIBMMG3D_EXEC5   ${EXECUTABLE_OUTPUT_PATH}/libmmg3d_example5)
       SET(LIBMMG3D_EXEC6   ${EXECUTABLE_OUTPUT_PATH}/libmmg3d_example6_io)
+      SET(LIBMMG3D_GENERICIO ${EXECUTABLE_OUTPUT_PATH}/libmmg3d_generic_io)
       SET(LIBMMG3D_LSONLY ${EXECUTABLE_OUTPUT_PATH}/libmmg3d_lsOnly )
       SET(LIBMMG3D_LSANDMETRIC ${EXECUTABLE_OUTPUT_PATH}/libmmg3d_lsAndMetric )
       SET(TEST_API3D_EXEC0 ${EXECUTABLE_OUTPUT_PATH}/test_api3d_0)
       SET(TEST_API3D_DOMSEL ${EXECUTABLE_OUTPUT_PATH}/test_api3d_domain-selection)
+      SET(TEST_API3D_VTK2MESH ${EXECUTABLE_OUTPUT_PATH}/test_api3d_vtk2mesh)
+      SET(TEST_MET3D ${EXECUTABLE_OUTPUT_PATH}/test_met3d)
+      SET(TEST_COMPARE_PARA_TRIA ${EXECUTABLE_OUTPUT_PATH}/test_compare-para-tria)
 
       ADD_TEST(NAME libmmg3d_example0_a COMMAND ${LIBMMG3D_EXEC0_a}
         "${PROJECT_SOURCE_DIR}/libexamples/mmg3d/adaptation_example0/example0_a/cube.mesh"
@@ -259,7 +262,58 @@ IF ( BUILD_TESTING )
         "${MMG3D_CI_TESTS}/OptLs_plane/p.sol"
         "${CTEST_OUTPUT_DIR}/test_API3d-domsel-whole.o"
         "${CTEST_OUTPUT_DIR}/test_API3d-domsel-dom2.o"
-       )
+        )
+      ADD_TEST(NAME test_api3d_vtk2mesh   COMMAND ${TEST_API3D_VTK2MESH}
+        "${MMG3D_CI_TESTS}/API_tests/cellsAndNode-data.vtk"
+        "${CTEST_OUTPUT_DIR}/test_API3d-vtk2mesh.o"
+        )
+      ADD_TEST(NAME test_met3d   COMMAND ${TEST_MET3D}
+        )
+      ADD_TEST(NAME libmmg3d_generic_io_msh   COMMAND ${LIBMMG3D_GENERICIO}
+        "${PROJECT_SOURCE_DIR}/libexamples/mmg3d/io_generic_and_get_adja/cube.msh"
+        "${CTEST_OUTPUT_DIR}/cube.o.msh" "1"
+        )
+      ADD_TEST(NAME libmmg3d_generic_io_mesh   COMMAND ${LIBMMG3D_GENERICIO}
+        "${PROJECT_SOURCE_DIR}/libexamples/mmg3d/io_generic_and_get_adja/cube.mesh"
+        "${CTEST_OUTPUT_DIR}/cube.o.mesh" "1"
+        )
+      ADD_TEST(NAME libmmg3d_generic_io_vtk   COMMAND ${LIBMMG3D_GENERICIO}
+        "${PROJECT_SOURCE_DIR}/libexamples/mmg3d/io_generic_and_get_adja/cube.vtk"
+        "${CTEST_OUTPUT_DIR}/cube.o.vtk" "1"
+        )
+      ADD_TEST(NAME libmmg3d_generic_io_vtu   COMMAND ${LIBMMG3D_GENERICIO}
+        "${PROJECT_SOURCE_DIR}/libexamples/mmg3d/io_generic_and_get_adja/cube.vtu"
+        "${CTEST_OUTPUT_DIR}/cube.o.vtu" "1"
+        )
+
+      IF ( NOT VTK_FOUND )
+        SET(expr "VTK library not founded")
+        SET_PROPERTY(TEST test_api3d_vtk2mesh
+          PROPERTY PASS_REGULAR_EXPRESSION "${expr}")
+        SET_PROPERTY(TEST libmmg3d_generic_io_vtk
+          PROPERTY PASS_REGULAR_EXPRESSION "${expr}")
+        SET_PROPERTY(TEST libmmg3d_generic_io_vtu
+          PROPERTY PASS_REGULAR_EXPRESSION "${expr}")
+      ENDIF ( )
+
+      ADD_TEST(NAME test_para_tria
+        COMMAND ${EXECUT_MMG3D}
+        -ar 0.02 -nofem -nosizreq -hgradreq -1 -hgrad -1
+        ${MMG3D_CI_TESTS}/test_para_tria/proc0.mesh
+        -sol ${MMG3D_CI_TESTS}/test_para_tria/proc0.sol
+        ${CTEST_OUTPUT_DIR}/proc0.o.mesh
+        )
+
+      SET_TESTS_PROPERTIES ( test_para_tria
+        PROPERTIES FIXTURES_SETUP test_para_tria )
+
+      ADD_TEST(NAME test_compare_para_tria
+        COMMAND ${TEST_COMPARE_PARA_TRIA}
+        ${MMG3D_CI_TESTS}/test_para_tria/proc0.mesh
+        ${CTEST_OUTPUT_DIR}/proc0.o.mesh
+        )
+      SET_TESTS_PROPERTIES ( test_compare_para_tria
+        PROPERTIES FIXTURES_REQUIRED test_para_tria )
 
       IF ( CMAKE_Fortran_COMPILER)
         SET(LIBMMG3D_EXECFORTRAN_a  ${EXECUTABLE_OUTPUT_PATH}/libmmg3d_fortran_a)

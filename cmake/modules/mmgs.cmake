@@ -105,6 +105,9 @@ IF (NOT WIN32 OR MINGW)
   LIST(APPEND mmgs_headers  ${COMMON_BINARY_DIR}/git_log_mmg.h )
 ENDIF()
 
+# install man pages
+INSTALL(FILES ${PROJECT_SOURCE_DIR}/doc/man/mmgs.1.gz DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+
 # Install header files in /usr/local or equivalent
 INSTALL(FILES ${mmgs_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mmg/mmgs COMPONENT headers)
 
@@ -148,10 +151,6 @@ IF ( BUILD_TESTING )
   ##-------------------------------------------------------------------##
   # Add runtime that we want to test for mmgs
   IF( MMGS_CI )
-
-    SET ( CTEST_OUTPUT_DIR ${PROJECT_BINARY_DIR}/TEST_OUTPUTS )
-    FILE ( MAKE_DIRECTORY  ${CTEST_OUTPUT_DIR} )
-
 
     ADD_EXEC_TO_CI_TESTS ( ${PROJECT_NAME}s EXECUT_MMGS )
     SET ( LISTEXEC_MMG ${EXECUT_MMGS} )

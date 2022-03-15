@@ -35,9 +35,12 @@ SET ( MMG3D_LIB_TESTS
   libmmg3d_example6_io
   libmmg3d_lsOnly
   libmmg3d_lsAndMetric
+  libmmg3d_generic_io
   test_api3d_0
   test_api3d_domain-selection
   test_api3d_vtk2mesh
+  test_met3d
+  test_compare-para-tria
   )
 SET ( MMG3D_LIB_TESTS_MAIN_PATH
   ${PROJECT_SOURCE_DIR}/libexamples/mmg3d/adaptation_example0/example0_a/main.c
@@ -48,9 +51,12 @@ SET ( MMG3D_LIB_TESTS_MAIN_PATH
   ${PROJECT_SOURCE_DIR}/libexamples/mmg3d/io_multisols_example6/main.c
   ${PROJECT_SOURCE_DIR}/libexamples/mmg3d/IsosurfDiscretization_lsOnly/main.c
   ${PROJECT_SOURCE_DIR}/libexamples/mmg3d/IsosurfDiscretization_lsAndMetric/main.c
+  ${PROJECT_SOURCE_DIR}/libexamples/mmg3d/io_generic_and_get_adja/genericIO.c
   ${MMG3D_CI_TESTS}/API_tests/3d.c
   ${MMG3D_CI_TESTS}/API_tests/domain-selection.c
   ${MMG3D_CI_TESTS}/API_tests/vtk2mesh.c
+  ${PROJECT_SOURCE_DIR}/cmake/testing/code/test_met3d.c
+  ${PROJECT_SOURCE_DIR}/cmake/testing/code/compare-para-tria.c
   )
 
 IF ( LIBMMG3D_STATIC )
