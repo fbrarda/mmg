@@ -347,8 +347,6 @@ int MMG5_hashEdge(MMG5_pMesh mesh,MMG5_Hash *hash, int a,int b,int k) {
   key = (MMG5_KA*ia + MMG5_KB*ib) % hash->siz;
   ph  = &hash->item[key];
  
-  //fprintf(stdout,"111111111111111111111111111 worker_id= %d , hash_address= %p \n",starpu_worker_get_id(), hash );
-
   if ( ph->a == ia && ph->b == ib )
     return 1;
   else if ( ph->a ) {

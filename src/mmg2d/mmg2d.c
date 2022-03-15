@@ -54,189 +54,6 @@ int max;
 
 pthread_mutex_t mutex;
 
-/**************************************************************************************************/
-
-
-struct Cell {
-
-  int val;
-  struct Cell * suivant;  // pointeur vers la cellule suivante
-
-};
-typedef struct Cell cellule;
-
-cellule * cree_liste_vide()
-{
-	return NULL;
-}
-
-cellule * ajout_debut(cellule * liste, int e)
-{
-	cellule * premiercellule;
-
-	/* Creation d'un cellule (la nouvelle tete de liste) */
-	premiercellule = (cellule *) malloc(size+1 * sizeof(cellule));
-	premiercellule->val = e;
-	premiercellule->suivant = liste;
-
-	return premiercellule;
-}
-
-void afficher(cellule * liste)
-{
-	cellule * ptr = liste;
-
-	printf("Liste = ");
-	while(ptr != NULL)
-	{
-		printf("%d ", ptr->val);
-
-		ptr = ptr->suivant;
-	}
-	printf("\n");
-}
-
-int taille(cellule * liste)
-{
-	cellule * ptr = liste;
-	int i = 0;
-
-	while(ptr != NULL)
-	{
-		ptr = ptr->suivant;
-		i++;
-	}
-
-	return i;
-}
-
-
-int jieme(cellule * liste, int j)
-{
-	cellule * ptr = liste;
-	int i;
-
-	/* avance jusqu'a arriver en jieme position */
-	for (i=1; i<j;i++)
-	{
-		ptr = ptr->suivant;
-	}
-
-	/* retourne la donnee en jieme position */
-	return ptr->val;
-}
-
-
-cellule* ajout_jieme(cellule* liste, int j, int e)
-{
-	cellule* ptr = liste;
-	cellule* nouveaucellule;
-	int i;
-
-	/* Insertion en tete => appeler la fonction */
-	if (j==1) return ajout_debut(liste,e);
-
-	/* verification de l'indice */
-	if (j>taille(liste)+1 || j<1)
-	{       max=2*size;
-		//printf("Mauvais indice\n");
-		return liste;
-	}
-
-	/* Sinon avance jusqu'a arriver en (j - 1)eme position */
-	for (i=1; i<j-1;i++)
-	{
-		ptr = ptr->suivant;
-	}
-
-	/* Creation et insertion d'un cellulee position j */
-	nouveaucellule= (cellule*) malloc(max * sizeof(cellule));
-	nouveaucellule->val= e;
-	nouveaucellule->suivant = ptr->suivant;
-	ptr->suivant = nouveaucellule;
-
-	return liste;
-
-}
-
-cellule * supprime_debut(cellule * liste)
-{
-	cellule * premiercellule;
-
-	/* On sauvegarde l'adresse du premier cellule */
-	premiercellule = liste;
-	/* on change la tete de la liste */
-	liste = premiercellule->suivant;
-	/* on libere la memoire occupee par le premier cellule supprime */
-	free(premiercellule);
-
-	/* on retourne la nouvelle liste */
-	return liste;
-}
-
-cellule * supprime_jieme(cellule * liste, int j)
-{
-	cellule * ptr = liste;
-	cellule * anciencellule;
-	int i;
-
-	/* Suppression en tete => appeler la fonction */
-	if (j==1) return supprime_debut(liste);
-
-	/* verification de l'indice */
-	//if (j>taille(liste) || j<1)
-	if (j<1)
-	{
-		printf("Mauvais indice\n");
-		return liste;
-	}
-
-	/* Sinon avance jusqu'a arriver en (j - 1)eme position */
-	for (i=1; i<j-1;i++)
-	{
-		ptr = ptr->suivant;
-	}
-
-	/* Destruction du cellule en position j : */
-	/* on sauvegarde son adresse */
-	anciencellule = ptr->suivant;
-	/* on le "saute" */
-	ptr->suivant = ptr->suivant->suivant;
-	/* on libere la memoire */
-	free(anciencellule);
-
-	return liste;
-
-}
-
-void *Insert_thread(void *threadid){
-  long tid;
-  int c;
-  int key;
-
-
-  tid = (long)threadid;
-  cellule * maliste;
-
-  //printf("Hello World!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!It's me, thread #%ld!\n", tid);
-
-  for (c=0;c<NBR;c++)
-  {
-    key=rand() % 100;
-
-    //pthread_mutex_lock(&mutex);
-
-    maliste = ajout_jieme(maliste, size+1, key);
-
-    //pthread_mutex_unlock(&mutex);
-
-  }
-  pthread_exit(NULL);
-
-}
-/**************************************************************************************************/
-
-
 mytime   MMG5_ctim[TIMEMAX];
 
 /**
@@ -684,7 +501,19 @@ int parsar(int argc,char *argv[],MMG5_pMesh mesh,MMG5_pSol met,MMG5_pSol sol) {
           if ( !MMG2D_Set_iparameter(mesh,met,MMG2D_IPARAM_nofem,1) )
             return 0;
         }
-        if ( !strcmp(argv[i],"-nreg") ) {
+        else if ( !strcmp(argv[i],"-ncolors") ) {
+          if ( ++i < argc && isdigit(argv[i][0]) )
+          {
+#warning add API function
+            mesh->info.ncolors=atoi(argv[i]);
+          }
+          else {
+            fprintf(stderr,"Missing argument option %c\n",argv[i-1][1]);
+            MMG2D_usage(argv[0]);
+            return 0;
+          }
+        }
+        else if ( !strcmp(argv[i],"-nreg") ) {
           if ( !MMG2D_Set_iparameter(mesh,met,MMG2D_IPARAM_nreg,1) )
             return 0;
         }
@@ -897,8 +726,8 @@ int main(int argc,char *argv[]) {
   STARPU_CHECK_RETURN_VALUE(ret, "starpu_init");
 
   /*ret = starpu_init(NULL);
-    if (ret == -ENODEV) return 77;
-    STARPU_CHECK_RETURN_VALUE(ret, "starpu_init");*/
+  if (ret == -ENODEV) return 77;
+  STARPU_CHECK_RETURN_VALUE(ret, "starpu_init");*/
 
   starpu_profiling_status_set(STARPU_PROFILING_ENABLE);
 
@@ -907,79 +736,6 @@ int main(int argc,char *argv[]) {
   setenv("STARPU_FXT_TRACE", "1", 1);
   setenv("STARPU_GENERATE_TRACE", "1", 1);
 
-  //fprintf(stdout,"----number of workers= %d \n",starpu_worker_get_count());
-
-
-  /* /\**********************************************************\/ */
-
-  /* //int size=np+1; */
-  /* int j,k; */
-  /* cellule * maliste; */
-
-  /* maliste = cree_liste_vide(); */
-
-  /* for (j=1; j<size+1;j++) */
-  /* { */
-  /*   maliste = ajout_debut(maliste,1); */
-
-  /* } */
-
-  /* afficher(maliste); */
-
-
-  /* clock_t ta,tp; */
-  /* ta = clock(); */
-
-  /* for (j=0; j<10;j++) */
-  /* { */
-
-  /*   pthread_mutex_lock(&mutex); */
-  /*   for (k=0; k<1000;k++) */
-  /*   { */
-  /*     int value=rand() % 50; */
-  /*     int key=rand() % 100; */
-  /*     maliste = ajout_jieme(maliste, key, value); */
-
-  /*   } */
-  /*   pthread_mutex_unlock(&mutex); */
-
-  /*   for (i=size+1; i<100;i++) */
-  /*   { */
-  /*     supprime_jieme(maliste, i); */
-  /*   } */
-
-
-  /* } */
-  /* tp= clock(); */
-  /* printf("%ld micro seconde\n",tp-ta); */
-  /* printf("durée= %lf sec\n",(double)(tp-ta)/(double)CLOCKS_PER_SEC); */
-
-
-
-  /* /\* pthread_t threadid; */
-  /*    for (j=0;j<10;j++) */
-  /*    { */
-
-  /*    printf("Before Thread\n"); */
-
-  /*    pthread_create(&threadid, NULL, Insert_thread, NULL); */
-  /*    pthread_join(threadid, NULL); */
-
-  /*    printf("After Thread\n"); */
-
-
-
-  /*    } *\/ */
-
-  /* //afficher(maliste); */
-
-  /* //printf("Taille de la liste : %d\n\n",taille(maliste)); */
-
-
-  /* //exit (0); */
-
-
-  /****************************************/
   MMG5_pMesh    mesh;
   MMG5_pSol     sol,met,disp,ls;
   int           ier,ierSave,fmtin,fmtout;
@@ -1168,6 +924,10 @@ int main(int argc,char *argv[]) {
 
     ier = MMG2D_mmg2dlib(mesh,met);
   }
+  
+  
+  /* terminate StarPU */
+  starpu_shutdown();
 
   if ( ier != MMG5_STRONGFAILURE ) {
     chrono(ON,&MMG5_ctim[1]);

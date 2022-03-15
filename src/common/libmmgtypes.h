@@ -314,7 +314,6 @@ typedef struct {
   int      v[3]; /*!< Vertices of the triangle */
   int      ref; /*!< Reference of the triangle */
   int      color1; /*!< Color1 assigned by Metis */
-  int      color2; /*!< Color2 assigned by Metis */
   int      id_task; /*!< id_task */
   int      base;
   int      cc; /*!< used to store the tetra + tetra face indices
