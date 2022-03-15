@@ -326,7 +326,7 @@ int MMG2D_markSD(MMG5_pMesh mesh) {
   /* Catch first triangle with vertex ip1 */
   for(k=1; k<=mesh->nt; k++) {
     pt = &mesh->tria[k];
-    if ( !MG_EOK(pt)) continue;
+    if ( !MG_EOK(pt) ) continue;
     pt->flag = mesh->mark;
     pt->ref  = 0;
     if ( (!kinit) && ( pt->v[0]==ip1 || pt->v[1]==ip1 || pt->v[2]==ip1) ) kinit = k;

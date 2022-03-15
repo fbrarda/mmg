@@ -862,7 +862,7 @@ int MMG2D_cuttri_ls(MMG5_pMesh mesh, MMG5_pSol sol, MMG5_pSol met){
 
   for (k=1; k<=mesh->nt; k++) {
     pt = &mesh->tria[k];
-    if ( !MG_EOK(pt)) continue;
+    if ( !MG_EOK(pt) ) continue;
 
     for (i=0; i<3; i++) {
       i0 = MMG5_inxt2[i];

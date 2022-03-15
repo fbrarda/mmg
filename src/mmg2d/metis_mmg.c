@@ -137,7 +137,6 @@ int MMG_part_meshElts2metis( MMG5_pMesh mesh, idx_t* part, idx_t nproc )
   xadj = adjncy = vwgt = NULL;
 
   METIS_SetDefaultOptions(options);
-  //options[METIS_OPTION_CONTIG] = 1;
 
   /** Build the graph */
   if ( !MMG_graph_meshElts2metis(mesh,&xadj,&adjncy ) )

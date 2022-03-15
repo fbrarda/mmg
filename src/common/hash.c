@@ -33,7 +33,6 @@
  */
 
 #include "mmgcommon.h"
-#include <starpu.h>
 
 /**
  * \param mesh pointer toward the mesh structure.

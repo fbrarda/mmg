@@ -226,7 +226,7 @@ int MMG2D_dispmesh(MMG5_pMesh mesh,MMG5_pSol disp,short t,int itdeg) {
   /* Identify elements which are very distorted in the process */
   for (k=1; k<=mesh->nt; k++) {
     pt  = &mesh->tria[k];
-    if ( !MG_EOK(pt)) continue;
+    if ( !MG_EOK(pt) ) continue;
 
     for (i=0; i<3; i++) {
       np = pt->v[i];

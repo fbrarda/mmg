@@ -222,7 +222,7 @@ int MMG2D_Get_numberOfNonBdyEdges(MMG5_pMesh mesh, int* nb_edges) {
     /* Count the number of non boundary edges */
     for ( k=1; k<=mesh->nt; k++ ) {
       pt = &mesh->tria[k];
-      if ( !MG_EOK(pt)  ) continue;
+      if ( !MG_EOK(pt) ) continue;
 
       adja = &mesh->adja[3*(k-1)+1];
 

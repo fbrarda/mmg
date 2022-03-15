@@ -74,7 +74,7 @@ int* MMG2D_packLS(MMG5_pMesh mesh,MMG5_pSol disp,LSst *lsst,int *npfin) {
   /* Step 1: pile up all the triangles with one edge with ref DISPREF, and get the corresponding points */
   for (k=1; k<=mesh->nt; k++) {
     pt = &mesh->tria[k];
-    if ( !MG_EOK(pt)) continue;
+    if ( !MG_EOK(pt) ) continue;
 
     for (i=0; i<3; i++) {
       if ( pt->edg[i] == MMG5_DISPREF ) {

@@ -32,6 +32,7 @@
  *
  * Create adjacency relations between the triangles dein the mesh
  *
+ * \warning unused: insertion inside the hash table can't be done in parallel using tasks
  */
 
 void MMG2D_starpu_hashTria(void *buffers[], void *cl_arg) {
@@ -63,8 +64,6 @@ int MMG2D_hashTria(MMG5_pMesh mesh) {
   uint8_t        i,ii,i1,i2;
   unsigned int   key;
 
-  //fprintf(stdout," ----------Call hashTria codelet -----------\n");
-
   if ( mesh->adja )  return 1;
   if ( !mesh->nt )  return 0;
 
@@ -73,8 +72,8 @@ int MMG2D_hashTria(MMG5_pMesh mesh) {
 
   /* memory alloc */
   MMG5_ADD_MEM(mesh,(3*mesh->ntmax+5)*sizeof(int),"adjacency table",
-               printf("  Exit program.\n");
-               return 0;);
+                printf("  Exit program.\n");
+                return 0;);
   MMG5_SAFE_CALLOC(mesh->adja,3*mesh->ntmax+5,int,return 0);
 
   link  = mesh->adja;
@@ -661,9 +660,9 @@ int MMG2D_pack(MMG5_pMesh mesh,MMG5_pSol sol,MMG5_pSol met) {
       mesh->namax = mesh->na;
       memWarn = 0;
       MMG5_ADD_MEM(mesh,(mesh->namax+1)*sizeof(MMG5_Edge),"final edges",
-                   fprintf(stderr,"\n  ## Warning: %s: uncomplete mesh.\n",
-                           __func__);
-                   memWarn=1);
+                    fprintf(stderr,"\n  ## Warning: %s: uncomplete mesh.\n",
+                            __func__);
+                    memWarn=1);
     }
 
     if ( memWarn )
@@ -746,22 +745,12 @@ int MMG2D_pack(MMG5_pMesh mesh,MMG5_pSol sol,MMG5_pSol met) {
     ped->b = mesh->point[ped->b].tmp;
   }
 
-  if ( mesh->info.ddebug ) {
-    fprintf(stdout,"Warning: %s: %d: set metis colors to element references.\n",__func__,__LINE__);
-  }
-  for (k=1; k<=mesh->nt; k++) {
-    pt = &mesh->tria[k];
-    if ( !MG_EOK(pt)) continue;
-
-    pt->ref = pt->color1;
-  }
-
   /** Pack triangles */
   nt  = 0;
   nbl = 1;
   for (k=1; k<=mesh->nt; k++) {
     pt = &mesh->tria[k];
-    if ( !MG_EOK(pt)) continue;
+    if ( !MG_EOK(pt) ) continue;
 
     pt->v[0] = mesh->point[pt->v[0]].tmp;
     pt->v[1] = mesh->point[pt->v[1]].tmp;

@@ -155,7 +155,7 @@ extern "C" {
 
 
 #define MG_VOK(ppt)      (ppt && ((ppt)->tag < MG_NUL)) /**< Vertex OK */
-#define MG_EOK(pt)       (pt && ((pt)->v[0] > 0))  /**< Element OK */
+#define MG_EOK(pt)       (pt && ((pt)->v[0] > 0))       /**< Element OK */
 
 #define MG_EDG(tag) ((tag & MG_GEO) || (tag & MG_REF)) /**< Edge or Ridge */
 #define MG_SIN(tag) ((tag & MG_CRN) || (tag & MG_REQ)) /**< Corner or Required */

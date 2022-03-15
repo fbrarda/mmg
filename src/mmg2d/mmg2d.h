@@ -72,6 +72,7 @@ extern "C" {
 #define MMG2D_NEDMAX  100000
 #define MMG2D_NEMAX   100000
 
+#warning TODO Mariem: add short comment
 #define MMG2D_EOK(pt,color1)       (pt && ((pt)->v[0] > 0) && ((pt)->color1==color1))  /**< Element OK */
 
 /** \brief idir[i]: vertices of edge i for a quad */

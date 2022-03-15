@@ -2060,7 +2060,7 @@ int MMG2D_saveEle(MMG5_pMesh mesh,const char *filename) {
   ne    = 0;
   for (k=1; k<=mesh->nt; k++) {
     pt = &mesh->tria[k];
-    if ( !MG_EOK(pt)) continue;
+    if ( !MG_EOK(pt) ) continue;
     ne++;
   }
 

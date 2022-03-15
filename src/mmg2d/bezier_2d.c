@@ -118,7 +118,6 @@ int MMG2D_chkedg(MMG5_pMesh mesh, int k) {
     /* Long edges should be split */
     if ( ll > hmax[i]*hmax[i] ) {
       MG_SET(pt->flag,i);
-      //fprintf(stdout,"----Eltttt_check111 = %d, color_elt = %d, i= %d , i1= %d , i2= %d, flag =%d  \n", k, pt ->color1, i, i1,i2, pt->flag );
       continue;
     }
     /* Do not split very short edges */
@@ -128,7 +127,6 @@ int MMG2D_chkedg(MMG5_pMesh mesh, int k) {
     else if ( mesh->info.fem &&
               ( (!MG_EDG(pt->tag[i])) && (p1->tag > MG_NOTAG) && (p2->tag > MG_NOTAG)) ) {
       MG_SET(pt->flag,i);
-      //fprintf(stdout,"----Eltt_check222 = %d, color_elt = %d, i= %d , i1= %d , i2= %d, flag =%d  \n", k, pt ->color1, i, i1,i2, pt->flag );
       continue;
     }
 
@@ -191,7 +189,7 @@ int MMG2D_bezierCurv(MMG5_pMesh mesh,int k,int8_t i,double s,double *o,double *n
   int8_t             i1,i2;
 
   pt = &mesh->tria[k];
-  if ( !MG_EOK(pt)) return 0;
+  if ( !MG_EOK(pt) ) return 0;
 
   i1 = MMG5_inxt2[i];
   i2 = MMG5_iprv2[i];
