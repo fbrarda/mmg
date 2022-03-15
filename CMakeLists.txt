@@ -261,6 +261,29 @@ IF ( USE_STARPU )
 
 ENDIF ( ) 
 
+############################################################################
+#####
+#####         FXT
+#####
+############################################################################
+# Find FXT library?
+SET(FXT_DIR "" CACHE PATH "Installation directory for FXT")
+LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
+
+# add Fxt library?
+OPTION ( USE_FXT "Use FXT TOOL for SCEDULING" ON )
+
+IF ( USE_FXT )
+    FIND_PACKAGE(FXT)
+    
+    IF ( NOT FXT_FOUND )
+       MESSAGE ( WARNING "FXT library not found:"
+      "If you have already installed FXT and want to use it, "
+      "please set the CMake variable or environment variable FXT_DIR "
+      "to your FXT directory.")
+  ENDIF ( )
+
+ENDIF ( ) 
 
 ############################################################################
 #####
@@ -467,6 +490,14 @@ IF( STARPU_FOUND )
   SET( LIBRARIES ${STARPU_LIBRARIES} ${LIBRARIES})
 ENDIF()
 
+IF( FXT_FOUND )
+  SET(CMAKE_C_FLAGS "-DUSE_FXT ${CMAKE_C_FLAGS}")
+
+  MESSAGE(STATUS
+    "Compilation with fxt: ${FXT_LIBRARIES}")
+  SET( LIBRARIES ${FXT_LIBRARIES} ${LIBRARIES})
+ENDIF()
+
 IF( METIS_FOUND )
   SET(CMAKE_C_FLAGS "-DUSE_METIS ${CMAKE_C_FLAGS}")
 
@@ -553,6 +584,11 @@ IF( STARPU_FOUND )
   INCLUDE_DIRECTORIES(PUBLIC ${STARPU_INCLUDE_DIRS})
 ENDIF()
 
+IF( FXT_FOUND )
+  # Include Fxt Dir here to ensure that Mmg doesn't search it's own headers in /usr/local
+  INCLUDE_DIRECTORIES(PUBLIC ${FXT_INCLUDE_DIRS})
+ENDIF()
+
 IF( METIS_FOUND )
   # Include Metis Dir here to ensure that Mmg doesn't search it's own headers in /usr/local
   INCLUDE_DIRECTORIES(PUBLIC ${METIS_INCLUDE_DIRS})
@@ -576,6 +612,7 @@ IF ( MmgTargetsExported )
   install(FILES
     ${PROJECT_SOURCE_DIR}/cmake/modules/FindSCOTCH.cmake
     ${PROJECT_SOURCE_DIR}/cmake/modules/FindSTARPU.cmake
+    ${PROJECT_SOURCE_DIR}/cmake/modules/FindFXT.cmake
     ${PROJECT_SOURCE_DIR}/cmake/modules/FindMETIS.cmake
     ${PROJECT_SOURCE_DIR}/cmake/modules/FindElas.cmake
     DESTINATION ${MMG_CMAKE_INSTALL_DIR} )

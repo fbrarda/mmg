@@ -39,6 +39,7 @@
 #include "libmmg2d.h"
 #include <stdbool.h>
 #include "mmgcommon.h"
+#include <pthread.h>
 
 struct starpu_codelet colelt_codelet =
 {
@@ -83,7 +84,7 @@ struct starpu_codelet movtri_codelet =
   .cpu_funcs = {MMG2D_starpu_movtri},
   .cpu_funcs_name = {"MMG2D_starpu_movtri"},
   .nbuffers = 3,
-  .modes = {STARPU_RW, STARPU_RW, STARPU_REDUX},
+  .modes = {STARPU_R, STARPU_R, STARPU_REDUX},
   .specific_nodes = 1,
   .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
   .where = STARPU_CPU,
@@ -210,7 +211,6 @@ int MMG2D_ADJEOK( MMG5_pMesh mesh, int k, int color1 ) {
 	  return 0;
     }*/
 
-
   adja = &mesh->adja[3*(k-1) + 1];
   //pt   = &mesh->tria[k];
   isAdja = 0;
@@ -317,7 +317,6 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
       //ns = MMG2D_anaelt(mesh,met,typchk, color);
 
       if ( !MMG5_hashNew(mesh,&hash,mesh->np,3*mesh->np) ) return 0;
-      //starpu_pthread_mutex_init(&mutex, NULL);
 
       ns = 0;
       starpu_data_release(handle_ns);
@@ -341,8 +340,6 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
       fprintf(stdout," End insert anaelt codelet \n");
       fprintf(stdout," -------------------------\n");
       fprintf(stdout," -------------------------\n");
-
-      //starpu_pthread_mutex_destroy(&mutex);
 
       if ( ns < 0 ) {
         fprintf(stderr,"  ## Unable to complete surface mesh. Exit program.\n");
@@ -563,7 +560,6 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
         if ( len > MMG2D_LLONG )
         {MG_SET(pt->flag,i);
 
-
         }
       }
     }
@@ -578,7 +574,7 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
 
         if ( (p1->tag & MG_BDY) && (p2->tag & MG_BDY) && !(pt->tag[i] & MG_BDY) ) {
           MG_SET(pt->flag,i);
-          fprintf(stdout," worker_id= %d, Worker_name %s: , hash_address= %p \n",starpu_worker_get_id(), workername, hash );
+          //fprintf(stdout," worker_id= %d, Worker_name %s: , hash_address= %p \n",starpu_worker_get_id(), workername, hash );
         }
       }
     }
@@ -633,16 +629,15 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
       if ( met->m )
         MMG2D_intmet(mesh,met,k,i,ip,s);
 
-
-      // TODO: ici on met lock;
-      /* Add point to the hashing structure */
-      //starpu_worker_lock(worker_id);
+      /* Add point to the hashing structure: Insertion */
+      //pthread_mutex_lock(&count_mutex);
       MMG5_hashEdge(mesh,hash,ip1,ip2,ip);
-      //starpu_worker_unlock(worker_id);
+      //pthread_mutex_unlock(&count_mutex);
     }
   }
+  //A verifier
   if ( !ns ) {
-    MMG5_DEL_MEM(mesh,hash->item);
+    //MMG5_DEL_MEM(mesh,hash->item);
     return ns;
   }
 
@@ -785,7 +780,7 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
     if ( !ier ) return -1;
   }
   if ( (mesh->info.ddebug || abs(mesh->info.imprim) > 5) && ns > 0  )
-    fprintf(stdout,"     worker %d: %8d splitted\n", starpu_worker_get_id(),ns);
+    //fprintf(stdout,"     worker %d: %8d splitted\n", starpu_worker_get_id(),ns);
 
   return ns;
 }
@@ -976,17 +971,17 @@ int MMG2D_colelt(MMG5_pMesh mesh,MMG5_pSol met,int typchk,int color1) {
 
       if ( ilist > 3 || ( ilist == 3 && open ) ) {
         nc += MMG2D_colver(mesh,ilist,list);
-        printf("worker=%d, color=%d, element= %d, edge=%d, nc=%d, ilist=%d, v[i1]=%d, v[i2]=%d\n",starpu_worker_get_id(), color1, k, i, nc, ilist, pt->v[i1], pt->v[i2]);
+        //printf("worker=%d, color=%d, element= %d, edge=%d, nc=%d, ilist=%d, v[i1]=%d, v[i2]=%d\n",starpu_worker_get_id(), color1, k, i, nc, ilist, pt->v[i1], pt->v[i2]);
         break;
       }
       else if ( ilist == 3 ) {
         nc += MMG2D_colver3(mesh,list);
-        printf("worker=%d, color=%d, element= %d, edge=%d, nc=%d, ilist=%d, v[i1]=%d, v[i2]=%d\n",starpu_worker_get_id(), color1, k, i, nc, ilist, pt->v[i1], pt->v[i2]);
+        //printf("worker=%d, color=%d, element= %d, edge=%d, nc=%d, ilist=%d, v[i1]=%d, v[i2]=%d\n",starpu_worker_get_id(), color1, k, i, nc, ilist, pt->v[i1], pt->v[i2]);
         break;
       }
       else if ( ilist == 2 ) {
         nc += MMG2D_colver2(mesh,list);
-        printf("worker=%d, color=%d, element= %d, edge=%d, nc=%d, ilist=%d, v[i1]=%d, v[i2]=%d\n",starpu_worker_get_id(), color1, k, i, nc, ilist, pt->v[i1], pt->v[i2]);
+        //printf("worker=%d, color=%d, element= %d, edge=%d, nc=%d, ilist=%d, v[i1]=%d, v[i2]=%d\n",starpu_worker_get_id(), color1, k, i, nc, ilist, pt->v[i1], pt->v[i2]);
         break;
       }
     }
@@ -1147,6 +1142,13 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
       starpu_data_release(handle_nc);
 
       fprintf(stdout," Begin insert adpcol codelet \n");
+      
+       //MMG2D_pack(mesh,met,NULL); 
+      /*save result*/
+      /*if ( MMG2D_saveMesh(mesh, "before_adpcol.mesh") != 1 )
+       {exit(EXIT_FAILURE);}
+      exit(0); */
+      
       for (color=0; color< mesh->info.ncolors; color++)
       {
         ret = starpu_task_insert(&adpcol_codelet,
@@ -1227,8 +1229,8 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
       for (color=0; color< mesh->info.ncolors; color++)
       {
         ret = starpu_task_insert(&movtri_codelet,
-                                 STARPU_RW, vector_mesh,
-                                 STARPU_RW, vector_met,
+                                 STARPU_R, vector_mesh,
+                                 STARPU_R, vector_met,
                                  STARPU_REDUX, handle_nm,
                                  STARPU_VALUE, &maxit, sizeof(maxit),
                                  STARPU_VALUE, &improve, sizeof(improve),
@@ -1280,8 +1282,8 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
     for (color=0; color< mesh->info.ncolors; color++)
     {
       ret = starpu_task_insert(&movtri_codelet,
-                               STARPU_RW, vector_mesh,
-                               STARPU_RW, vector_met,
+                               STARPU_R, vector_mesh,
+                               STARPU_R, vector_met,
                                STARPU_REDUX, handle_nm,
                                STARPU_VALUE, &maxit, sizeof(maxit),
                                STARPU_VALUE, &improve, sizeof(improve),
