@@ -724,6 +724,7 @@ int main(int argc,char *argv[]) {
 #warning TODO Mariem:  add comments
   starpu_profiling_status_set(STARPU_PROFILING_ENABLE);
 
+#warning TODO Mariem: should be in your local environment to generate traces (maybe with associated doc) but not in Mmg.
   setenv("STARPU_WORKER_STATS", "1", 1);
   setenv("STARPU_PROFILING", "1", 1);
   setenv("STARPU_FXT_TRACE", "1", 1);

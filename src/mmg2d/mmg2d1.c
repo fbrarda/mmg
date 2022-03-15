@@ -163,7 +163,7 @@ static struct starpu_codelet accumulate_codelet =
 {
   .cpu_funcs = {accumulate_cpu},
   .cpu_funcs_name = {"redux_cpu_func"},
-  .modes = {STARPU_RW|STARPU_COMMUTE, STARPU_R},
+  .modes = {STARPU_RW, STARPU_R},
   .nbuffers = 2,
   .name = "redux"
 };
@@ -184,7 +184,7 @@ static struct starpu_codelet print_codelet =
   .cpu_funcs_name = {"print_cpu_func"},
   .modes = {STARPU_R},
   .nbuffers = 1,
-  .name = "redux"
+  .name = "print"
 };
 
 /* Mesh adaptation routine for the first stages of the algorithm: intertwine splitting
