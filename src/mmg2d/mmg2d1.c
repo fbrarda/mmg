@@ -31,15 +31,13 @@
  * \copyright GNU Lesser General Public License.
  */
 #include "mmg2d.h"
+#include <pthread.h>
 #include <starpu.h>
 #include "metis_mmg.h"
-#include <stdio.h>
-#include <stdint.h>
-#include <unistd.h>
-#include "libmmg2d.h"
-#include <stdbool.h>
-#include "mmgcommon.h"
 
+/*
+ *    Codelets 
+ */
 struct starpu_codelet colelt_codelet =
 {
   .cpu_funcs = {MMG2D_starpu_colelt},
@@ -187,6 +185,9 @@ static struct starpu_codelet print_codelet =
   .name = "print"
 };
 
+/* Mutex used for lock/unlock hash access */
+pthread_mutex_t lock;
+
 /* Mesh adaptation routine for the first stages of the algorithm: intertwine splitting
  based on patterns, collapses and swaps.
    typchk = 1 -> adaptation based on edge lengths
@@ -256,7 +257,7 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
         fprintf(stderr,"  ## Unable to complete surface mesh. Exit program.\n");
         return 0;
       }
-
+      /* Memory free */
       MMG5_DEL_MEM(mesh,hash.item);
 
       /* Recreate adjacencies */
@@ -394,13 +395,8 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
   ns = 0;
   npinit = mesh->np;
 
-  /* workerid is an integer between 0 and starpu_worker_get_count() - 1 */
-  /* Return the identifier of the current worker, i.e the one associated to the
-   * calling thread */
-  int worker_id = starpu_worker_get_id();
-  //enum starpu_worker_archtype type = starpu_worker_get_type(worker_id);
-  //char workername[128];
-  //starpu_worker_get_name(worker_id, workername, 128);
+  /* Return the identifier of the current worker, i.e the one associated to the calling thread */
+  /* int worker_id = starpu_worker_get_id();*/
 
   /* Step 1: travel mesh, check edges, and tag those to be split; create the new vertices in hash */
   for (k=1; k<=mesh->nt; k++) {
@@ -477,9 +473,11 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
       assert ( met );
       if ( met->m )
         MMG2D_intmet(mesh,met,k,i,ip,s);
-
-#warning do we need to add a mutex here
+        
+      /* Add a mutex lock for hash table access*/
+      pthread_mutex_lock(&lock);
       MMG5_hashEdge(mesh,hash,ip1,ip2,ip);
+      pthread_mutex_unlock(&lock);
     }
   }
   if ( !ns ) {
@@ -669,7 +667,7 @@ int MMG2D_dichoto(MMG5_pMesh mesh,MMG5_pSol met,int k,int *vx) {
   to = 0.0;
 
   do {
-    /* compute new position */
+    /* Compute new position */
     t = 0.5 * (tp + to);
     for (i=0; i<3; i++) {
       if ( vx[i] > 0 ) {
@@ -696,7 +694,7 @@ int MMG2D_dichoto(MMG5_pMesh mesh,MMG5_pSol met,int k,int *vx) {
   }
   while ( ++it < maxit );
 
-  /* restore coords of last valid pos. */
+  /* Restore coords of last valid pos. */
   if ( !ier ) {
     t = to;
     for (i=0; i<3; i++) {
@@ -1375,7 +1373,7 @@ int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
   /* Stage 0: mesh coloration with metis*/
   idx_t *part;
 
-  /** Allocate the table part */
+  /* Allocate the table part */
   MMG5_SAFE_CALLOC(part,mesh->nt,idx_t,return 0);
   int status, i;
   int status1;
@@ -1396,11 +1394,21 @@ int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
   /* Save result*/
   if ( MMG2D_saveMesh(mesh, "metis.mesh") != 1 )
     exit(EXIT_FAILURE);
+  
+  int ret;
+  struct starpu_conf conf;
 
-  for ( i=1; i<=mesh->nt; i++) {
-    pt = &mesh->tria[i];
-    pt->ref = ref_init[i];
-  }
+  /* StarPU configuration: set the sceduling policy */
+  starpu_conf_init(&conf);
+  conf.sched_policy_name = "eager";
+
+  /* StarPU initialization method */
+  ret = starpu_init(&conf);
+  if (ret == -ENODEV) return 0;
+  STARPU_CHECK_RETURN_VALUE(ret, "starpu_init");
+
+ /* STARPU task profiling info */
+  starpu_profiling_status_set(STARPU_PROFILING_ENABLE);
 
   /* Stage 1: creation of a geometric mesh */
   if ( abs(mesh->info.imprim) > 4 || mesh->info.ddebug )
@@ -1443,5 +1451,8 @@ int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
     return 0;
   }
 
+  /* Terminate StarPU */
+  starpu_shutdown();
+  
   return 1;
 }

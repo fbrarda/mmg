@@ -572,7 +572,7 @@ typedef struct {
   MMG5_hedge  *item;
 } MMG5_Hash;
 
-#warning TODO Mariem: comments -> Global hash table used by task-based algo to allow each task to see nodes inserted by other ones
+/* Global hash table used by task-based algo to allow each task to see nodes inserted by other ones */
 typedef MMG5_Hash * MMG5_pHash;
 
 /**

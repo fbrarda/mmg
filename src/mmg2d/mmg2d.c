@@ -21,28 +21,6 @@
 ** =============================================================================
 */
 #include "mmg2d.h"
-#warning TODO Mariem: move header inclusion using the Mmg philosophy: in mmg2d.h if useless for user that link mmg library, in libmmg2d.h otherwise
-#include <starpu.h>
-#include <omp.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <unistd.h>
-#include <time.h>
-#include "metis_mmg.h"
-#include "libmmg2d.h"
-#include <stdbool.h>
-#include <stdlib.h>
-
-#warning TODO Mariem: remove this if useless, document it otherwise
-
-#define STARTlin 1190
-#define START 1024
-#ifdef STARPU_QUICK_CHECK
-#define END 4330
-#else
-#define END 4330
-#endif
-
 mytime   MMG5_ctim[TIMEMAX];
 
 /**
@@ -493,7 +471,7 @@ int parsar(int argc,char *argv[],MMG5_pMesh mesh,MMG5_pSol met,MMG5_pSol sol) {
         else if ( !strcmp(argv[i],"-ncolors") ) {
           if ( ++i < argc && isdigit(argv[i][0]) )
           {
-#warning TODO Mariem add API function (C + Fortran)
+       //TODO Mariem add API function (C + Fortran)
             mesh->info.ncolors=atoi(argv[i]);
           }
           else {
@@ -693,42 +671,8 @@ int parsar(int argc,char *argv[],MMG5_pMesh mesh,MMG5_pSol met,MMG5_pSol sol) {
   return 1;
 }
 
-#warning TODO Mariem: probably wrong, you can't assign a value to NX at compiler time
-#define NX mesh->nt
 
 int main(int argc,char *argv[]) {
-
-#warning TODO Mariem: please clean unused variables
-  int ret,l,i;
-  int worker;
-
-#warning TODO Mariem: using Mmg library StarPU will not be initiaized.  Move starpu initializer at least, under the library function, better, where we actually need it (mmg2d1 for now)
-  enum starpu_worker_archtype archi;
-
-  struct starpu_conf conf;
-
-  starpu_conf_init(&conf);
-
-  conf.sched_policy_name = "eager";
-
-  ret = starpu_initialize(&conf, &argc, &argv);
-  if (ret == -ENODEV) return 0;
-  STARPU_CHECK_RETURN_VALUE(ret, "starpu_init");
-
-#warning  TODO Mariem: remove useless code instead of using comments. Please, document hard coded values, why 77 ???
-
-  /*ret = starpu_init(NULL);
-  if (ret == -ENODEV) return 77;
-  STARPU_CHECK_RETURN_VALUE(ret, "starpu_init");*/
-
-#warning TODO Mariem:  add comments
-  starpu_profiling_status_set(STARPU_PROFILING_ENABLE);
-
-#warning TODO Mariem: should be in your local environment to generate traces (maybe with associated doc) but not in Mmg.
-  setenv("STARPU_WORKER_STATS", "1", 1);
-  setenv("STARPU_PROFILING", "1", 1);
-  setenv("STARPU_FXT_TRACE", "1", 1);
-  setenv("STARPU_GENERATE_TRACE", "1", 1);
 
   MMG5_pMesh    mesh;
   MMG5_pSol     sol,met,disp,ls;
@@ -918,10 +862,6 @@ int main(int argc,char *argv[]) {
 
     ier = MMG2D_mmg2dlib(mesh,met);
   }
-
-#warning TODO Mariem: move shutdown in the same location than initialization (mmg2d1)
-  /* terminate StarPU */
-  starpu_shutdown();
 
   if ( ier != MMG5_STRONGFAILURE ) {
     chrono(ON,&MMG5_ctim[1]);
