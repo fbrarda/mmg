@@ -342,6 +342,17 @@ int MMG3D_parsar(int argc,char *argv[],MMG5_pMesh mesh,MMG5_pSol met,MMG5_pSol s
           if ( !MMG3D_Set_iparameter(mesh,met,MMG3D_IPARAM_nofem,1) )
             return 0;
         }
+        else if ( !strcmp(argv[i],"-ncolors") ) {
+          if ( ++i < argc && isdigit(argv[i][0]) )
+          {
+            mesh->info.ncolors=atoi(argv[i]);
+          }
+          else {
+            fprintf(stderr,"Missing argument option %c\n",argv[i-1][1]);
+            MMG3D_usage(argv[0]);
+            return 0;
+          }
+        }   
         else if ( !strcmp(argv[i],"-nreg") ) {
           if ( !MMG3D_Set_iparameter(mesh,met,MMG3D_IPARAM_nreg,1) )
             return 0;

@@ -33,7 +33,7 @@
 #include "mmg2d.h"
 #include <pthread.h>
 #include <starpu.h>
-#include "metis_mmg.h"
+#include "metis_mmg2d.h"
 
 /*
  *    Codelets 
@@ -161,7 +161,7 @@ static struct starpu_codelet accumulate_codelet =
 {
   .cpu_funcs = {accumulate_cpu},
   .cpu_funcs_name = {"redux_cpu_func"},
-  .modes = {STARPU_RW, STARPU_R},
+  .modes = {STARPU_RW|STARPU_COMMUTE, STARPU_R},
   .nbuffers = 2,
   .name = "redux"
 };
@@ -1371,34 +1371,14 @@ int MMG2D_movtri(MMG5_pMesh mesh,MMG5_pSol met,int maxit,int8_t improve, int col
 int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
 
   /* Stage 0: mesh coloration with metis*/
-  idx_t *part;
-
-  /* Allocate the table part */
-  MMG5_SAFE_CALLOC(part,mesh->nt,idx_t,return 0);
-  int status, i;
-  int status1;
-
-  MMG5_pTria pt;
-
-  status=MMG_part_meshElts2metis( mesh, part, (idx_t)mesh->info.ncolors );
-
-  int ref_init[mesh->nt+1];
-
-  for ( i=1; i<=mesh->nt; i++) {
-    pt = &mesh->tria[i];
-    pt->color1 = part[i-1];
-    ref_init[i]=pt->ref;
-    pt->ref = pt->color1;
-  }
-
-  /* Save result*/
-  if ( MMG2D_saveMesh(mesh, "metis.mesh") != 1 )
-    exit(EXIT_FAILURE);
-  
+  int status;
   int ret;
-  struct starpu_conf conf;
+  status=MMG2D_part_meshElts2metis(mesh);
 
+  //TODO: #ifdef MMG_USE_STARPU
+  
   /* StarPU configuration: set the sceduling policy */
+  struct starpu_conf conf;
   starpu_conf_init(&conf);
   conf.sched_policy_name = "eager";
 
@@ -1409,6 +1389,7 @@ int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
 
  /* STARPU task profiling info */
   starpu_profiling_status_set(STARPU_PROFILING_ENABLE);
+  //#endif
 
   /* Stage 1: creation of a geometric mesh */
   if ( abs(mesh->info.imprim) > 4 || mesh->info.ddebug )

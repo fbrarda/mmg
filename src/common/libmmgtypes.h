@@ -384,6 +384,7 @@ typedef struct {
   double   qual; /*!< Quality of the element */
   int      v[4]; /*!< Vertices of the tetrahedron */
   int      ref; /*!< Reference of the tetrahedron */
+  int      color1; /*!< Color1 assigned by Metis */
   int      base;
   int      mark; /*!< Used for delaunay */
   int      xt; /*!< Index of the surface \ref MMG5_xTetra associated to
