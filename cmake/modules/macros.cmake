@@ -143,7 +143,7 @@ MACRO ( ADD_AND_INSTALL_LIBRARY
   IF ( ${CMAKE_C_COMPILER_ID} STREQUAL "Clang" AND DEFINED CMAKE_C_COMPILER_VERSION )
     IF ( ${CMAKE_C_COMPILER_VERSION} VERSION_GREATER 10 )
       target_compile_options(${target_name} PRIVATE "-fcommon")
-    ENDIF()
+  ENDIF()
   ENDIF()
 
   IF (NOT WIN32 OR MINGW)
@@ -152,10 +152,10 @@ MACRO ( ADD_AND_INSTALL_LIBRARY
   ADD_DEPENDENCIES( ${target_name} ${target_dependencies})
 
   IF ( CMAKE_VERSION VERSION_LESS 2.8.12 )
-    INCLUDE_DIRECTORIES (
+    INCLUDE_DIRECTORIES ( BEFORE
       ${COMMON_BINARY_DIR} ${COMMON_SOURCE_DIR} ${PROJECT_BINARY_DIR}/include ${PROJECT_BINARY_DIR})
   ELSE ( )
-    target_include_directories( ${target_name} PUBLIC
+    target_include_directories( ${target_name} BEFORE PUBLIC
       $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include/>
       $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
       $<BUILD_INTERFACE:${COMMON_SOURCE_DIR}>
@@ -169,14 +169,43 @@ MACRO ( ADD_AND_INSTALL_LIBRARY
       $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}> )
 
   ENDIF ( )
+
   if ( SCOTCH_FOUND )
-    message(STATUS "[mmg] add include scotch directories ${SCOTCH_INCLUDE_DIRS}")
+    message(STATUS "[mmg:${target_name}] add include scotch directories ${SCOTCH_INCLUDE_DIRS}")
     IF ( CMAKE_VERSION VERSION_LESS 2.8.12 )
-      INCLUDE_DIRECTORIES (${SCOTCH_INCLUDE_DIRS} )
+      INCLUDE_DIRECTORIES ( AFTER ${SCOTCH_INCLUDE_DIRS} )
     ELSE ( )
       target_include_directories( ${target_name} PUBLIC ${SCOTCH_INCLUDE_DIRS} )
     endif()
   endif( )
+
+  if ( STARPU_FOUND )
+    message(STATUS "[mmg:${target_name}] add include StarPU directories ${STARPU_INCLUDE_DIRS}")
+    IF ( CMAKE_VERSION VERSION_LESS 2.8.12 )
+      INCLUDE_DIRECTORIES ( AFTER ${STARPU_INCLUDE_DIRS} )
+    ELSE ( )
+      target_include_directories( ${target_name} PUBLIC ${STARPU_INCLUDE_DIRS} )
+    endif()
+  endif( )
+
+  if ( FXT_FOUND )
+    message(STATUS "[mmg:${target_name}] add include FXT directories ${FXT_INCLUDE_DIRS}")
+    IF ( CMAKE_VERSION VERSION_LESS 2.8.12 )
+      INCLUDE_DIRECTORIES ( AFTER ${FXT_INCLUDE_DIRS} )
+    ELSE ( )
+      target_include_directories( ${target_name} PUBLIC ${FXT_INCLUDE_DIRS} )
+    endif()
+  endif( )
+
+  if ( METIS_FOUND )
+    message(STATUS "[mmg:${target_name}] add include METIS directories ${METIS_INCLUDE_DIRS}")
+    IF ( CMAKE_VERSION VERSION_LESS 2.8.12 )
+      INCLUDE_DIRECTORIES ( AFTER ${METIS_INCLUDE_DIRS} )
+    ELSE ( )
+      target_include_directories( ${target_name} PUBLIC ${METIS_INCLUDE_DIRS} )
+    endif()
+  endif( )
+
 
   SET_TARGET_PROPERTIES ( ${target_name} PROPERTIES
     OUTPUT_NAME ${output_name}
@@ -237,11 +266,53 @@ MACRO ( ADD_AND_INSTALL_EXECUTABLE
   ENDIF ( )
 
  IF ( CMAKE_VERSION VERSION_LESS 2.8.12 )
-   INCLUDE_DIRECTORIES (
+   INCLUDE_DIRECTORIES ( BEFORE
      ${COMMON_BINARY_DIR} ${COMMON_SOURCE_DIR} ${PROJECT_BINARY_DIR}/include ${PROJECT_BINARY_DIR} )
+
+   if ( SCOTCH_FOUND )
+     message(STATUS "[mmg:${exec_name}] add include scotch directories ${SCOTCH_INCLUDE_DIRS}")
+     INCLUDE_DIRECTORIES ( AFTER ${SCOTCH_INCLUDE_DIRS} )
+   ENDIF()
+
+   IF ( STARPU_FOUND )
+     message(STATUS "[mmg:${exec_name}] add include starPU directories ${STARPU_INCLUDE_DIRS}")
+     INCLUDE_DIRECTORIES ( AFTER ${STARPU_INCLUDE_DIRS} )
+   ENDIF()
+
+   IF ( FXT_FOUND )
+     message(STATUS "[mmg:${exec_name}] add include FXT directories ${FXT_INCLUDE_DIRS}")
+     INCLUDE_DIRECTORIES ( AFTER ${FXT_INCLUDE_DIRS} )
+   ENDIF()
+
+   IF ( METIS_FOUND )
+     message(STATUS "[mmg:${exec_name}] add include METIS directories ${METIS_INCLUDE_DIRS}")
+     INCLUDE_DIRECTORIES ( AFTER ${METIS_INCLUDE_DIRS} )
+   ENDIF()
+
  ELSE ( )
-   TARGET_INCLUDE_DIRECTORIES ( ${exec_name} PUBLIC
+   TARGET_INCLUDE_DIRECTORIES ( ${exec_name} BEFORE PUBLIC
      ${COMMON_BINARY_DIR} ${COMMON_SOURCE_DIR} ${PROJECT_BINARY_DIR}/include ${PROJECT_BINARY_DIR} )
+
+   if ( SCOTCH_FOUND )
+     message(STATUS "[mmg:${exec_name}] add include scotch directories ${SCOTCH_INCLUDE_DIRS}")
+     target_include_directories( ${exec_name} BEFORE PUBLIC ${SCOTCH_INCLUDE_DIRS} )
+   ENDIF()
+
+   IF ( STARPU_FOUND )
+     message(STATUS "[mmg:${exec_name}] add include starPU directories ${STARPU_INCLUDE_DIRS}")
+     TARGET_INCLUDE_DIRECTORIES ( ${exec_name} BEFORE  PUBLIC ${STARPU_INCLUDE_DIRS} )
+   ENDIF()
+
+   IF ( FXT_FOUND )
+     message(STATUS "[mmg:${exec_name}] add include FXT directories ${FXT_INCLUDE_DIRS}")
+     TARGET_INCLUDE_DIRECTORIES ( ${exec_name} BEFORE  PUBLIC  ${FXT_INCLUDE_DIRS} )
+   ENDIF()
+
+   IF ( METIS_FOUND )
+     message(STATUS "[mmg:${exec_name}] add include METIS directories ${METIS_INCLUDE_DIRS}")
+     TARGET_INCLUDE_DIRECTORIES ( ${exec_name} BEFORE  PUBLIC ${METIS_INCLUDE_DIRS} )
+   ENDIF()
+
  ENDIF ( )
 
   TARGET_LINK_LIBRARIES ( ${exec_name} PRIVATE ${LIBRARIES}  )
@@ -316,9 +387,9 @@ MACRO ( ADD_LIBRARY_TEST target_name main_path target_dependency lib_name )
   ADD_DEPENDENCIES( ${target_name} ${target_dependency} )
 
   IF ( CMAKE_VERSION VERSION_LESS 2.8.12 )
-    INCLUDE_DIRECTORIES (${PROJECT_BINARY_DIR}/include )
+    INCLUDE_DIRECTORIES ( BEFORE ${PROJECT_BINARY_DIR}/include )
   ELSE ( )
-    TARGET_INCLUDE_DIRECTORIES ( ${target_name} PUBLIC ${PROJECT_BINARY_DIR}/include )
+    TARGET_INCLUDE_DIRECTORIES ( ${target_name} BEFORE PUBLIC ${PROJECT_BINARY_DIR}/include )
   ENDIF ( )
 
   IF ( WIN32 AND ((NOT MINGW) AND SCOTCH_FOUND) )

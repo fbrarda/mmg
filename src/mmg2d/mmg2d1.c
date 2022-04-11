@@ -194,7 +194,7 @@ pthread_mutex_t lock;
    typchk = 2 -> adaptation based on lengths calculated in metric met */
 int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
   MMG5_Hash hash;
-  int       it,maxit,ns,nc,nsw,nns,nnc,nnsw;
+  int      it,maxit,ns,nc,nsw,nns,nnc,nnsw;
   int       ret;
   int       color, i;
   starpu_data_handle_t vector_mesh, vector_met, vector_hash;
@@ -473,7 +473,7 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
       assert ( met );
       if ( met->m )
         MMG2D_intmet(mesh,met,k,i,ip,s);
-        
+
       /* Add a mutex lock for hash table access*/
       pthread_mutex_lock(&lock);
       MMG5_hashEdge(mesh,hash,ip1,ip2,ip);
@@ -617,7 +617,7 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
     }
     if ( !ier ) return -1;
   }
-  if ( (mesh->info.ddebug || abs(mesh->info.imprim) > 5) && ns > 0  )
+  if ( (mesh->info.ddebug || abs(mesh->info.imprim) > 5) && ns > 0 )
     fprintf(stdout,"     worker %d: %8d splitted\n", starpu_worker_get_id(),ns);
 
   return ns;
@@ -1434,6 +1434,6 @@ int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
 
   /* Terminate StarPU */
   starpu_shutdown();
-  
+
   return 1;
 }

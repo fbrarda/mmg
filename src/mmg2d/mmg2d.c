@@ -21,6 +21,7 @@
 ** =============================================================================
 */
 #include "mmg2d.h"
+
 mytime   MMG5_ctim[TIMEMAX];
 
 /**
@@ -671,9 +672,7 @@ int parsar(int argc,char *argv[],MMG5_pMesh mesh,MMG5_pSol met,MMG5_pSol sol) {
   return 1;
 }
 
-
 int main(int argc,char *argv[]) {
-
   MMG5_pMesh    mesh;
   MMG5_pSol     sol,met,disp,ls;
   int           ier,ierSave,fmtin,fmtout;
