@@ -64,6 +64,7 @@ extern "C" {
     MMG2D_IPARAM_lag,               /*!< [-1/0/1/2], Lagrangian option */
     MMG2D_IPARAM_3dMedit,           /*!< [0/1/2], Read/write 2D mesh in 3D (Medit only). out if val=1 in/out if val=2 */
     MMG2D_IPARAM_optim,             /*!< [1/0], Optimize mesh keeping its initial edge sizes */
+    MMG2D_IPARAM_ncolors,           /*!< [n], Number of colors for partitioning */
     MMG2D_IPARAM_noinsert,          /*!< [1/0], Avoid/allow point insertion */
     MMG2D_IPARAM_noswap,            /*!< [1/0], Avoid/allow edge or face flipping */
     MMG2D_IPARAM_nomove,            /*!< [1/0], Avoid/allow point relocation */

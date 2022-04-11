@@ -148,84 +148,86 @@ IF ( VTK_FOUND )
   SET( LIBRARIES ${VTK_LIBRARIES} ${LIBRARIES} )
 ENDIF ( )
 
-############################################################################
-#####
-#####         StarPU
-#####
-############################################################################
-# Find STARPU library?
-SET(STARPU_DIR "" CACHE PATH "Installation directory for StarPU")
+IF (NOT WIN32)
+  ############################################################################
+  #####
+  #####         StarPU
+  #####
+  ############################################################################
+  # Find STARPU library?
+  SET(STARPU_DIR "" CACHE PATH "Installation directory for StarPU")
 
-SET ( USE_STARPU "" CACHE STRING "Use the StarPU scheduler for shared memory parallelization (ON, OFF or <empty>)" )
-SET_PROPERTY(CACHE USE_STARPU PROPERTY STRINGS "ON" "OFF" " ")
+  SET ( USE_STARPU "" CACHE STRING "Use the StarPU scheduler for shared memory parallelization (ON, OFF or <empty>)" )
+  SET_PROPERTY(CACHE USE_STARPU PROPERTY STRINGS "ON" "OFF" " ")
 
-IF ( NOT DEFINED USE_STARPU OR USE_STARPU STREQUAL ""  )
-  # Variable is not provided by user
-  FIND_PACKAGE(STARPU QUIET)
+  IF ( NOT DEFINED USE_STARPU OR USE_STARPU STREQUAL ""  )
+    # Variable is not provided by user
+    FIND_PACKAGE(STARPU QUIET)
 
-ELSE ()
+  ELSE ()
 
-  IF ( USE_STARPU )
-    # User wants to use starPU
-    FIND_PACKAGE(STARPU)
-    IF ( NOT STARPU_FOUND )
-      MESSAGE ( FATAL_ERROR "StarPU library not found:"
-      "If you have already installed StarPU and want to use it, "
-      "please set the CMake variable or environment variable STARPU_DIR "
-      "to your StarPU directory.")
+    IF ( USE_STARPU )
+      # User wants to use starPU
+      FIND_PACKAGE(STARPU)
+      IF ( NOT STARPU_FOUND )
+        MESSAGE ( FATAL_ERROR "StarPU library not found:"
+          "If you have already installed StarPU and want to use it, "
+          "please set the CMake variable or environment variable STARPU_DIR "
+          "to your StarPU directory.")
+      ENDIF ( )
     ENDIF ( )
+
   ENDIF ( )
 
-ENDIF ( )
+  If ( STARPU_FOUND )
+    add_definitions(-DUSE_STARPU)
 
-If ( STARPU_FOUND )
-  add_definitions(-DUSE_STARPU)
+    MESSAGE(STATUS
+      "Compilation with starPU: ${STARPU_LIBRARIES}")
 
+    IF ( CMAKE_VERSION VERSION_LESS 2.8.12 )
+      # Append to library list, useless for following versions because starpu will
+      # be linked explicitely using defined target.
+      SET( LIBRARIES ${STARPU_LIBRARIES} ${LIBRARIES})
+    ENDIF ()
 
-  MESSAGE(STATUS
-    "Compilation with starPU: ${STARPU_LIBRARIES}")
+  ENDIF()
 
-  IF ( CMAKE_VERSION VERSION_LESS 2.8.12 )
-    # Append to library list, useless for following versions because starpu will
-    # be linked explicitely using defined target.
-    SET( LIBRARIES ${STARPU_LIBRARIES} ${LIBRARIES})
-  ENDIF ()
+  ############################################################################
+  #####
+  #####        Metis
+  #####
+  ############################################################################
 
-ENDIF()
+  # Find METIS library?
+  SET(METIS_DIR "" CACHE PATH "Installation directory for METIS")
+  SET ( USE_METIS "" CACHE STRING "Use the Metis graph partitionner (ON, OFF or <empty>)" )
+  SET_PROPERTY(CACHE USE_METIS PROPERTY STRINGS "ON" "OFF" " ")
 
-############################################################################
-#####
-#####        Metis
-#####
-############################################################################
+  IF ( NOT DEFINED USE_METIS OR USE_METIS STREQUAL ""  )
+    # Variable is not provided by user
+    FIND_PACKAGE(METIS QUIET)
 
-# Find METIS library?
-SET(METIS_DIR "" CACHE PATH "Installation directory for METIS")
-SET ( USE_METIS "" CACHE STRING "Use the Metis graph partitionner (ON, OFF or <empty>)" )
-SET_PROPERTY(CACHE USE_METIS PROPERTY STRINGS "ON" "OFF" " ")
-
-IF ( NOT DEFINED USE_METIS OR USE_METIS STREQUAL ""  )
-  # Variable is not provided by user
-  FIND_PACKAGE(METIS QUIET)
-
-ELSE ()
-  IF ( USE_METIS )
-    # User wants to use METIS
-    FIND_PACKAGE(METIS)
-    IF ( NOT METIS_FOUND )
-      MESSAGE ( FATAL_ERROR "METIS library not found:"
-      "If you have already installed METIS and want to use it, "
-      "please set the CMake variable or environment variable METIS_DIR "
-      "to your METIS directory.")
+  ELSE ()
+    IF ( USE_METIS )
+      # User wants to use METIS
+      FIND_PACKAGE(METIS)
+      IF ( NOT METIS_FOUND )
+        MESSAGE ( FATAL_ERROR "METIS library not found:"
+          "If you have already installed METIS and want to use it, "
+          "please set the CMake variable or environment variable METIS_DIR "
+          "to your METIS directory.")
+      ENDIF ( )
     ENDIF ( )
+
   ENDIF ( )
 
-ENDIF ( )
+  If ( METIS_FOUND )
+    add_definitions(-DUSE_METIS)
 
-If ( METIS_FOUND )
-  add_definitions(-DUSE_METIS)
+    MESSAGE(STATUS
+      "Compilation with METIS: ${METIS_LIBRARIES}")
+    SET( LIBRARIES ${METIS_LIBRARIES} ${LIBRARIES})
+  ENDIF()
 
-  MESSAGE(STATUS
-    "Compilation with METIS: ${METIS_LIBRARIES}")
-  SET( LIBRARIES ${METIS_LIBRARIES} ${LIBRARIES})
 ENDIF()

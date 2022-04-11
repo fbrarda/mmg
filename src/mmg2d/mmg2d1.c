@@ -32,11 +32,11 @@
  */
 #include "mmg2d.h"
 #include <pthread.h>
-#include <starpu.h>
+#include "starpu.h"
 #include "metis_mmg2d.h"
 
 /*
- *    Codelets 
+ *    Codelets
  */
 struct starpu_codelet colelt_codelet =
 {

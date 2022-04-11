@@ -472,8 +472,8 @@ int parsar(int argc,char *argv[],MMG5_pMesh mesh,MMG5_pSol met,MMG5_pSol sol) {
         else if ( !strcmp(argv[i],"-ncolors") ) {
           if ( ++i < argc && isdigit(argv[i][0]) )
           {
-       //TODO Mariem add API function (C + Fortran)
-            mesh->info.ncolors=atoi(argv[i]);
+            if ( !MMG2D_Set_iparameter(mesh,met,MMG2D_IPARAM_ncolors,atoi(argv[i])) )
+              return 0;
           }
           else {
             fprintf(stderr,"Missing argument option %c\n",argv[i-1][1]);

@@ -177,6 +177,9 @@ int MMG2D_Set_iparameter(MMG5_pMesh mesh, MMG5_pSol sol, int iparam, int val){
   case MMG2D_IPARAM_optim :
     mesh->info.optim = val;
     break;
+  case MMG2D_IPARAM_ncolors :
+    mesh->info.ncolors = val;
+    break;
   case MMG2D_IPARAM_noinsert :
     mesh->info.noinsert = val;
     break;
