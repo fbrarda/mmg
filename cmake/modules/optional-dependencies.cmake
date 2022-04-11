@@ -181,57 +181,17 @@ ENDIF ( )
 If ( STARPU_FOUND )
   add_definitions(-DUSE_STARPU)
 
-  MESSAGE(STATUS
-    "Compilation with starPU: ${STARPU_LIBRARY_DIRS}/${STARPU_LIBRARIES}")
-  SET( LIBRARIES ${STARPU_LIBRARIES} ${LIBRARIES})
-
-  # FindSTARPU returns library names without paths: add paths
-  link_directories(AFTER ${STARPU_LIBRARY_DIRS})
-
-ENDIF()
-
-
-############################################################################
-#####
-#####         FXT
-#####
-############################################################################
-
-## warning Useless I think: FindSTARPU already search for FXT
-
-# Find FXT library for StarPU execution trace?
-SET(FXT_DIR "" CACHE PATH "Installation directory for FXT")
-
-SET ( USE_FXT "" CACHE STRING "Use the FXT trace tool for StarPU (ON, OFF or <empty>)" )
-SET_PROPERTY(CACHE USE_FXT PROPERTY STRINGS "ON" "OFF" " ")
-
-IF ( NOT DEFINED USE_FXT OR USE_FXT STREQUAL ""  )
-  # Variable is not provided by user
-  FIND_PACKAGE(FXT QUIET)
-
-ELSE ()
-
-  IF ( USE_FXT )
-    # User wants to use FXT
-    FIND_PACKAGE(FXT)
-    IF ( NOT FXT_FOUND )
-      MESSAGE ( FATAL_ERROR "FXT library not found:"
-      "If you have already installed FXT and want to use it, "
-      "please set the CMake variable or environment variable FXT_DIR "
-      "to your FXT directory.")
-    ENDIF ( )
-  ENDIF ( )
-
-ENDIF ( )
-
-If ( FXT_FOUND )
-  add_definitions(-DUSE_FXT)
 
   MESSAGE(STATUS
-    "Compilation with FXT: ${FXT_LIBRARIES}")
-  SET( LIBRARIES ${FXT_LIBRARIES} ${LIBRARIES})
-ENDIF()
+    "Compilation with starPU: ${STARPU_LIBRARIES}")
 
+  IF ( CMAKE_VERSION VERSION_LESS 2.8.12 )
+    # Append to library list, useless for following versions because starpu will
+    # be linked explicitely using defined target.
+    SET( LIBRARIES ${STARPU_LIBRARIES} ${LIBRARIES})
+  ENDIF ()
+
+ENDIF()
 
 ############################################################################
 #####

@@ -185,15 +185,7 @@ MACRO ( ADD_AND_INSTALL_LIBRARY
       INCLUDE_DIRECTORIES ( AFTER ${STARPU_INCLUDE_DIRS} )
     ELSE ( )
       target_include_directories( ${target_name} PUBLIC ${STARPU_INCLUDE_DIRS} )
-    endif()
-  endif( )
-
-  if ( FXT_FOUND )
-    message(STATUS "[mmg:${target_name}] add include FXT directories ${FXT_INCLUDE_DIRS}")
-    IF ( CMAKE_VERSION VERSION_LESS 2.8.12 )
-      INCLUDE_DIRECTORIES ( AFTER ${FXT_INCLUDE_DIRS} )
-    ELSE ( )
-      target_include_directories( ${target_name} PUBLIC ${FXT_INCLUDE_DIRS} )
+      target_link_libraries( ${target_name} PUBLIC MORSE::STARPU)
     endif()
   endif( )
 

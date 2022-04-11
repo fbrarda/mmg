@@ -31,6 +31,7 @@ INCLUDE(CMakeDependentOption)
 
 LIST(APPEND CMAKE_MODULE_PATH
   ${CMAKE_SOURCE_DIR}/cmake/modules
+  ${CMAKE_SOURCE_DIR}/cmake/modules/starpu_deps
   ${CMAKE_SOURCE_DIR}/cmake/testing )
 
 INCLUDE(macros)
