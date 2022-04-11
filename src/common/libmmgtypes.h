@@ -313,7 +313,9 @@ typedef struct {
   double   qual;   /*Quality of the triangle*/
   int      v[3]; /*!< Vertices of the triangle */
   int      ref; /*!< Reference of the triangle */
+#ifdef USE_STARPU
   int      color1; /*!< Color1 assigned by Metis */
+#endif
   int      id_task; /*!< id_task */
   int      base;
   int      cc; /*!< used to store the tetra + tetra face indices
@@ -384,7 +386,9 @@ typedef struct {
   double   qual; /*!< Quality of the element */
   int      v[4]; /*!< Vertices of the tetrahedron */
   int      ref; /*!< Reference of the tetrahedron */
+#ifdef USE_STARPU
   int      color1; /*!< Color1 assigned by Metis */
+#endif
   int      base;
   int      mark; /*!< Used for delaunay */
   int      xt; /*!< Index of the surface \ref MMG5_xTetra associated to

@@ -37,9 +37,12 @@
  */
 
 #include "inlined_functions_3d.h"
+
+#ifdef USE_STARPU
 #include <pthread.h>
 #include <starpu.h>
 #include "metis_mmg3d.h"
+#endif
 
 /**
  * \param mesh pointer toward the mesh structure.
@@ -455,9 +458,12 @@ static int MMG5_adptet(MMG5_pMesh mesh,MMG5_pSol met,int *permNodGlob) {
  *
  */
 int MMG5_mmg3d1_pattern(MMG5_pMesh mesh,MMG5_pSol met,int *permNodGlob) {
+
+#ifdef USE_STARPU
   /* Stage 0: mesh coloration with metis*/
   int status;
   status=MMG3D_part_meshElts2metis(mesh);
+#endif
 
   if ( abs(mesh->info.imprim) > 4 )
     fprintf(stdout,"  ** MESH ANALYSIS\n");

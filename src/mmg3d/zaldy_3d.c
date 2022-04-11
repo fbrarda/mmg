@@ -104,7 +104,11 @@ int MMG3D_newElt(MMG5_pMesh mesh) {
   if ( mesh->nenil > mesh->ne )  mesh->ne = mesh->nenil;
   mesh->nenil = mesh->tetra[curiel].v[3];
   mesh->tetra[curiel].v[3] = 0;
+
+#ifdef USE_STARPU
   mesh->tetra[curiel].color1 = 0;
+#endif
+
   mesh->tetra[curiel].mark=mesh->mark;
 
   return curiel;

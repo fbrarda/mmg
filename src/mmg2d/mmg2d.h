@@ -72,8 +72,18 @@ extern "C" {
 #define MMG2D_NEDMAX  100000
 #define MMG2D_NEMAX   100000
 
+#ifdef USE_STARPU
+
 /** For each given color: test if the element has the same color */
 #define MMG2D_EOK(pt,color1)       (pt && ((pt)->v[0] > 0) && ((pt)->color1==color1))  /**< Element OK */
+
+#else
+
+/** Ignore colors */
+#define MMG2D_EOK(pt,color1) MG_EOK(pt)
+#define MMG_NOCOLOR 0
+
+#endif
 
 /** \brief idir[i]: vertices of edge i for a quad */
 static const uint8_t MMG2D_idir_q[4][2] = { {0,1},{0,3},{1,2},{2,3} };
@@ -299,11 +309,8 @@ int MMG2D_grad2met_ani(MMG5_pMesh ,MMG5_pSol ,MMG5_pTria,int,int);
 int MMG2D_grad2metreq_ani(MMG5_pMesh ,MMG5_pSol ,MMG5_pTria,int,int);
 int MMG2D_gradsiz_ani(MMG5_pMesh ,MMG5_pSol );
 int MMG2D_gradsizreq_ani(MMG5_pMesh ,MMG5_pSol );
-void MMG2D_starpu_anaelt(void *buffers[], void *cl_arg);
 int MMG2D_anaelt(MMG5_pMesh ,MMG5_pSol,MMG5_Hash *hash,int,int );
-void MMG2D_starpu_colelt(void *buffers[], void *cl_arg);
 int MMG2D_colelt(MMG5_pMesh ,MMG5_pSol,int,int );
-void MMG2D_starpu_swpmsh(void *buffers[], void *cl_arg);
 int MMG2D_swpmsh(MMG5_pMesh ,MMG5_pSol,int,int );
 double MMG2D_lencurv_iso(MMG5_pMesh ,MMG5_pSol ,int ,int );
 double MMG2D_lencurv_ani(MMG5_pMesh ,MMG5_pSol ,int ,int );
@@ -324,11 +331,8 @@ int MMG2D_swapar(MMG5_pMesh ,int ,int8_t );
 int MMG5_interpmet22(MMG5_pMesh ,double *,double *,double ,double *);
 int MMG2D_intmet_iso(MMG5_pMesh ,MMG5_pSol ,int ,int8_t ,int ,double );
 int MMG2D_intmet_ani(MMG5_pMesh ,MMG5_pSol ,int ,int8_t ,int ,double );
-void MMG2D_starpu_adpspl(void *buffers[], void *cl_arg);
 int MMG2D_adpspl(MMG5_pMesh ,MMG5_pSol, int);
-void MMG2D_starpu_adpcol(void *buffers[], void *cl_arg);
 int MMG2D_adpcol(MMG5_pMesh ,MMG5_pSol,int);
-void MMG2D_starpu_movtri(void *buffers[], void *cl_arg);
 int MMG2D_movtri(MMG5_pMesh ,MMG5_pSol ,int ,int8_t,int);
 int MMG2D_chkspl(MMG5_pMesh ,MMG5_pSol ,int ,int8_t );
 int MMG2D_split1b(MMG5_pMesh ,int ,int8_t ,int );

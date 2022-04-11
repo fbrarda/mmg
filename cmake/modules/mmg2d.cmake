@@ -68,6 +68,14 @@ IF ( VTK_FOUND )
     ${COMMON_SOURCE_DIR}/vtkparser.cpp )
 ENDIF ( )
 
+IF ( NOT STARPU_FOUND )
+  LIST(REMOVE_ITEM mmg2d_library_files
+    ${MMG2D_SOURCE_DIR}/metis_mmg2d.c
+    ${MMG2D_SOURCE_DIR}/starpu_2d.c
+    ${REMOVE_FILE} )
+message(${mmg2d_library_files})
+ENDIF()
+
 FILE(
   GLOB
   mmg2d_main_file

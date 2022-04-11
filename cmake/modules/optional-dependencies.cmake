@@ -193,41 +193,42 @@ IF (NOT WIN32)
 
   ENDIF()
 
-  ############################################################################
-  #####
-  #####        Metis
-  #####
-  ############################################################################
+  IF ( STARPU_FOUND )
+    ############################################################################
+    #####
+    #####        Metis
+    #####
+    ############################################################################
 
-  # Find METIS library?
-  SET(METIS_DIR "" CACHE PATH "Installation directory for METIS")
-  SET ( USE_METIS "" CACHE STRING "Use the Metis graph partitionner (ON, OFF or <empty>)" )
-  SET_PROPERTY(CACHE USE_METIS PROPERTY STRINGS "ON" "OFF" " ")
+    # Find METIS library?
+    SET(METIS_DIR "" CACHE PATH "Installation directory for METIS")
+    SET ( USE_METIS "" CACHE STRING "Use the Metis graph partitionner (ON, OFF or <empty>)" )
+    SET_PROPERTY(CACHE USE_METIS PROPERTY STRINGS "ON" "OFF" " ")
 
-  IF ( NOT DEFINED USE_METIS OR USE_METIS STREQUAL ""  )
-    # Variable is not provided by user
-    FIND_PACKAGE(METIS QUIET)
+    IF ( NOT DEFINED USE_METIS OR USE_METIS STREQUAL ""  )
+      # Variable is not provided by user
+      FIND_PACKAGE(METIS QUIET)
 
-  ELSE ()
-    IF ( USE_METIS )
-      # User wants to use METIS
-      FIND_PACKAGE(METIS)
-      IF ( NOT METIS_FOUND )
-        MESSAGE ( FATAL_ERROR "METIS library not found:"
-          "If you have already installed METIS and want to use it, "
-          "please set the CMake variable or environment variable METIS_DIR "
-          "to your METIS directory.")
+    ELSE ()
+      IF ( USE_METIS )
+        # User wants to use METIS
+        FIND_PACKAGE(METIS)
+        IF ( NOT METIS_FOUND )
+          MESSAGE ( FATAL_ERROR "METIS library not found:"
+            "If you have already installed METIS and want to use it, "
+            "please set the CMake variable or environment variable METIS_DIR "
+            "to your METIS directory.")
+        ENDIF ( )
       ENDIF ( )
     ENDIF ( )
 
-  ENDIF ( )
+    If ( METIS_FOUND )
+      add_definitions(-DUSE_METIS)
 
-  If ( METIS_FOUND )
-    add_definitions(-DUSE_METIS)
+      MESSAGE(STATUS
+        "Compilation with METIS: ${METIS_LIBRARIES}")
+      SET( LIBRARIES ${METIS_LIBRARIES} ${LIBRARIES})
+    ENDIF()
 
-    MESSAGE(STATUS
-      "Compilation with METIS: ${METIS_LIBRARIES}")
-    SET( LIBRARIES ${METIS_LIBRARIES} ${LIBRARIES})
   ENDIF()
-
 ENDIF()

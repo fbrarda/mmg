@@ -21,11 +21,14 @@
 ** =============================================================================
 */
 #include "mmg2d.h"
-#include <starpu.h>
+#ifdef USE_STARPU
+#include "starpu.h"
+#endif
 
 #define KTA     7
 #define KTB    11
 
+#ifdef USE_STARPU
 /**
  * \param mesh pointer toward the mesh
  * \return 1 if success, 0 if fail
@@ -56,6 +59,7 @@ void MMG2D_starpu_hashTria(void *buffers[], void *cl_arg) {
 
   }
 }
+#endif
 
 int MMG2D_hashTria(MMG5_pMesh mesh) {
   MMG5_pTria     pt,pt1;
