@@ -182,11 +182,11 @@ int MMG2D_Set_iparameter(MMG5_pMesh mesh, MMG5_pSol sol, int iparam, int val){
     mesh->info.ncolors = val;
 #else
     if ( val != 1 ) {
-      fprintf(stderr,"\n  ## Error: %s"
+      fprintf(stderr,"\n  ## Warning: %s"
               " option unavailable (-ncolors): mesh partitionning is useless"
               " without StarPU.\n"
               " set the USE_STARPU CMake's flag to ON to enable "
-              " shared memory parallelization.\n",__func__);
+              " shared memory parallelization.\n  Ignored\n",__func__);
     }
 #endif
     break;
