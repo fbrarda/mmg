@@ -143,11 +143,11 @@ int MMG2D_part_meshElts2metis( MMG5_pMesh mesh)
   /** Build the graph */
   if ( !MMG_graph_meshElts2metis(mesh,&xadj,&adjncy ) )
     return 0;
- 
-  idx_t nproc=mesh->info.ncolors; 
+
+  idx_t nproc=mesh->info.ncolors;
   /*Allocate table part */
   MMG5_SAFE_CALLOC(part,mesh->nt,idx_t,return 0);
-  
+
   /** Call metis and get the partition array */
   if( nproc >= 8 ) {
     options[METIS_OPTION_CONTIG] = 1;
@@ -159,7 +159,7 @@ int MMG2D_part_meshElts2metis( MMG5_pMesh mesh)
     ier = METIS_PartGraphRecursive( &nelt,&ncon,xadj,adjncy,NULL,NULL, NULL,&nproc,
                                     NULL,NULL,NULL,&objval, part );
   }
-  
+
   for (i=0; i< mesh->nt; i++) {
     pt= &mesh->tria[i+1];
     pt->color1 = part[i];
