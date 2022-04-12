@@ -64,7 +64,6 @@ IF ( NOT STARPU_FOUND )
     ${MMG2D_SOURCE_DIR}/starpu_2d.c
     ${MMG3D_SOURCE_DIR}/partitionning_3d.c
     ${REMOVE_FILE} )
-message(${mmg2d_library_files})
 ENDIF()
 
 
