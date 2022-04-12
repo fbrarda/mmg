@@ -74,6 +74,6 @@ extern struct starpu_codelet izero_codelet;
 
 /** Dbg tool */
 void print_cpu(void *descr[], void *cl_arg);
-struct starpu_codelet print_codelet;
+extern struct starpu_codelet print_codelet;
 
 #endif
