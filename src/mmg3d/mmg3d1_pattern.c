@@ -41,7 +41,7 @@
 #ifdef USE_STARPU
 #include <pthread.h>
 #include <starpu.h>
-#include "metis_mmg3d.h"
+#include "partitionning_3d.h"
 #endif
 
 /**

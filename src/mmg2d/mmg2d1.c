@@ -36,7 +36,7 @@
 
 #ifdef USE_STARPU
 #include <pthread.h>
-#include "metis_mmg2d.h"
+#include "partitionning_2d.h"
 #include "starpu_2d.h"
 
 /* Mutex used for lock/unlock hash access */

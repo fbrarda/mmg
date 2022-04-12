@@ -84,7 +84,7 @@ ENDIF ( )
 
 IF ( NOT STARPU_FOUND )
   LIST(REMOVE_ITEM mmg3d_library_files
-    ${MMG3D_SOURCE_DIR}/metis_mmg3d.c
+    ${MMG3D_SOURCE_DIR}/partitionning_3d.c
     ${REMOVE_FILE} )
 ENDIF()
 

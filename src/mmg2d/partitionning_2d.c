@@ -22,14 +22,13 @@
 */
 
 /**
- * \file metis_MMG.c
- * \brief Partition mesh using metis
+ * \brief Mesh partitionning
  * \author Cécile Dobrzynski (Bx INP/Inria/UBordeaux)
  * \author Algiane Froehly (Inria/UBordeaux)
  * \version 5
  * \copyright GNU Lesser General Public License.
  */
-#include "metis_mmg2d.h"
+#include "partitionning_2d.h"
 
 /**
  * \param mesh pointer toward a MMG5 mesh structure

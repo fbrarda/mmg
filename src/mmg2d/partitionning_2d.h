@@ -22,8 +22,7 @@
 */
 
 /**
- * \file metis_MMG.h
- * \brief metis_MMG.c header file
+ * \brief partitionning_2d.c header file
  * \author Cécile Dobrzynski (Bx INP/Inria)
  * \author Algiane Froehly (Inria)
  * \version 5

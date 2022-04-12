@@ -70,7 +70,7 @@ ENDIF ( )
 
 IF ( NOT STARPU_FOUND )
   LIST(REMOVE_ITEM mmg2d_library_files
-    ${MMG2D_SOURCE_DIR}/metis_mmg2d.c
+    ${MMG2D_SOURCE_DIR}/partitionning_2d.c
     ${MMG2D_SOURCE_DIR}/starpu_2d.c
     ${REMOVE_FILE} )
 message(${mmg2d_library_files})
