@@ -157,7 +157,7 @@ IF (NOT WIN32)
   # Find STARPU library?
   SET(STARPU_DIR "" CACHE PATH "Installation directory for StarPU")
 
-  SET ( USE_STARPU "" CACHE STRING "Use the StarPU scheduler for shared memory parallelization (ON, OFF or <empty>)" )
+  SET ( USE_STARPU "" CACHE STRING "StarPU scheduler for shared memory parallelization (ON, OFF or <empty>)" )
   SET_PROPERTY(CACHE USE_STARPU PROPERTY STRINGS "ON" "OFF" " ")
 
   IF ( NOT DEFINED USE_STARPU OR USE_STARPU STREQUAL ""  )
@@ -179,8 +179,7 @@ IF (NOT WIN32)
 
   ENDIF ( )
 
-  If ( STARPU_FOUND )
-    add_definitions(-DUSE_STARPU)
+  IF ( STARPU_FOUND )
 
     MESSAGE(STATUS
       "Compilation with starPU: ${STARPU_LIBRARIES}")
@@ -191,44 +190,85 @@ IF (NOT WIN32)
       SET( LIBRARIES ${STARPU_LIBRARIES} ${LIBRARIES})
     ENDIF ()
 
-  ENDIF()
 
-  IF ( STARPU_FOUND )
-    ############################################################################
-    #####
-    #####        Metis
-    #####
-    ############################################################################
+    SET ( MMG_PARTITIONNER "SCOTCH" CACHE STRING
+      "Partitionner for shared memory parallelization (SCOTCH or METIS)" )
+    SET_PROPERTY(CACHE MMG_PARTITIONNER PROPERTY STRINGS "SCOTCH" "METIS")
 
-    # Find METIS library?
-    SET(METIS_DIR "" CACHE PATH "Installation directory for METIS")
-    SET ( USE_METIS "" CACHE STRING "Use the Metis graph partitionner (ON, OFF or <empty>)" )
-    SET_PROPERTY(CACHE USE_METIS PROPERTY STRINGS "ON" "OFF" " ")
-
-    IF ( NOT DEFINED USE_METIS OR USE_METIS STREQUAL ""  )
+    IF ( MMG_PARTITIONNER MATCHES "METIS" )
       # Variable is not provided by user
+
+
+      ############################################################################
+      #####
+      #####        Metis
+      #####
+      ############################################################################
+
+      # Find METIS library?
+      SET(METIS_DIR "" CACHE PATH "Installation directory for METIS")
+
+      # User wants to use METIS
       FIND_PACKAGE(METIS QUIET)
 
-    ELSE ()
-      IF ( USE_METIS )
-        # User wants to use METIS
-        FIND_PACKAGE(METIS)
-        IF ( NOT METIS_FOUND )
-          MESSAGE ( FATAL_ERROR "METIS library not found:"
+      IF ( METIS_FOUND )
+
+        add_definitions(-DUSE_STARPU)
+        add_definitions(-DUSE_METIS_PARTITIONNER)
+
+        MESSAGE(STATUS
+          "Compilation with METIS: ${METIS_LIBRARIES}")
+        SET( LIBRARIES ${METIS_LIBRARIES} ${LIBRARIES})
+
+      ELSE()
+        IF ( USE_STARPU MATCHES "ON" )
+          MESSAGE ( FATAL_ERROR "METIS library not found -> StarPU disabling:"
             "If you have already installed METIS and want to use it, "
             "please set the CMake variable or environment variable METIS_DIR "
             "to your METIS directory.")
-        ENDIF ( )
+        ENDIF()
+        # If StarPU is not explicitely asked and scotch is not found do not fail.
+
+      ENDIF()
+
+    ELSE ( )
+
+      ############################################################################
+      #####
+      #####        Scotch
+      #####
+      ############################################################################
+
+      # Scotch has already been searched if USE_SCOTCH is setted to ON or not provided.
+      IF ( NOT USE_SCOTCH )
+        # User wants to use scotch
+        FIND_PACKAGE(SCOTCH QUIET)
+
+        IF ( SCOTCH_FOUND )
+          MESSAGE(STATUS
+            "Compilation with scotch: ${SCOTCH_LIBRARIES}")
+          SET( LIBRARIES ${SCOTCH_LIBRARIES} ${LIBRARIES})
+        ENDIF()
       ENDIF ( )
-    ENDIF ( )
 
-    If ( METIS_FOUND )
-      add_definitions(-DUSE_METIS)
 
-      MESSAGE(STATUS
-        "Compilation with METIS: ${METIS_LIBRARIES}")
-      SET( LIBRARIES ${METIS_LIBRARIES} ${LIBRARIES})
+      IF ( SCOTCH_FOUND )
+        add_definitions(-DUSE_STARPU)
+        add_definitions(-DUSE_SCOTCH_PARTITIONNER)
+
+      ELSE()
+        IF ( USE_STARPU MATCHES "ON" )
+          MESSAGE ( FATAL_ERROR "SCOTCH library not found:"
+            " A graph partitionner is needed to use shared memory parallelization."
+            " SCOTCH or METIS can be used depending on the value of the"
+            " MMG_PARTITIONNER CMake's variable.")
+        ENDIF()
+
+        # If StarPU is not explicitely asked and scotch is not found do not fail.
+
+      ENDIF()
+
     ENDIF()
 
-  ENDIF()
-ENDIF()
+  ENDIF( STARPU_FOUND )
+ENDIF ( NOT WIN32 )
