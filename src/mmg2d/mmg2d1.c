@@ -1122,7 +1122,8 @@ int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
   /* Stage 0: mesh coloration with metis*/
   int status;
   int ret;
-  status=MMG2D_part_meshElts2metis(mesh);
+
+  status = MMG2D_part_meshElts(mesh);
 
   /* StarPU configuration: set the sceduling policy */
   struct starpu_conf conf;

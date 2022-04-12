@@ -29,42 +29,36 @@
  * \copyright GNU Lesser General Public License.
  */
 #include "partitionning_2d.h"
+#include "libmmg2d.h"
 
 /**
  * \param mesh pointer toward a MMG5 mesh structure
- * \param xadj pointer toward the position of the elt adjtcents in adjncy
+ * \param xadj pointer toward the position of adjacents elements in adjncy
  * \param adjncy pointer toward the list of the adjtcent of each elt
  *
  * \return  1 if success, 0 if fail
  *
- * Build the metis graph with the mesh elements as metis nodes.
+ * Build the mesh graph with the mesh elements as graph nodes.
  *
  * \warning the mesh must be packed
  *
  */
-int MMG_graph_meshElts2metis( MMG5_pMesh mesh,idx_t **xadj,idx_t **adjncy ) {
-  MMG5_pTria pt;
-  idx_t      nadjncy;
-  int        *adja;
-  int        j,k,iadr,jel,count,nbAdj,ier;
+int MMG2D_build_meshEltsGraph( MMG5_pMesh mesh,MMG_PART_INT **xadj,MMG_PART_INT **adjncy ) {
+  MMG5_pTria   pt;
+  MMG_PART_INT nadjncy;
+  int          *adja;
+  int          j,k,iadr,jel,count,nbAdj,ier;
 
   /** Step 1: mesh adjacency creation */
-  /*if ( (!mesh->adja) && (1 != MMG2D_hashTria(mesh) ) ) {
-    fprintf(stderr,"\n  ## Error: %s: unable to create "
-    "adjacency table.\n",__func__);
-    return 0;
-    }*/
-
-  /* create tria adjacency */
   if ( !MMG2D_hashTria(mesh) ) {
     fprintf(stderr,"\n  ## Error: %s: hashing problem (1). Exit program.\n",
             __func__);
     return 0;
   }
 
-  /** Step 2: build the metis graph */
+  /** Step 2: build the graph */
   /* allocate xadj */
-  MMG5_SAFE_CALLOC((*xadj),mesh->nt+1,idx_t,return 0);
+  MMG5_SAFE_CALLOC((*xadj),mesh->nt+1,MMG_PART_INT,return 0);
 
   /** 1) Count the number of adjacent of each elements and fill xadj */
   (*xadj)[0] = 0;
@@ -86,7 +80,7 @@ int MMG_graph_meshElts2metis( MMG5_pMesh mesh,idx_t **xadj,idx_t **adjncy ) {
   /** 2) List the adjacent of each elts in adjncy */
   ier = 1;
   ++nadjncy;
-  MMG5_SAFE_CALLOC((*adjncy), nadjncy, idx_t, ier=0;);
+  MMG5_SAFE_CALLOC((*adjncy), nadjncy, MMG_PART_INT, ier=0;);
   if( !ier ) {
     MMG5_DEL_MEM(mesh, (*xadj) );
     MMG5_DEL_MEM(mesh, (*adjncy));
@@ -114,80 +108,56 @@ int MMG_graph_meshElts2metis( MMG5_pMesh mesh,idx_t **xadj,idx_t **adjncy ) {
 }
 
 /**
- * \param mesh pointer toward the pmesh structure
- * \param part pointer of an array containing the partitions (at the end)
- * \param nproc number of partitions asked
+ * \param mesh pointer toward the MMG5_pMesh structure
  *
  * \return  1 if success, 0 if fail
  *
- * Use metis to partition the first mesh into nprocs
+ *  Mesh partitionning into mesh->ncolors partitions.
  *
+ * \remark the MMG_PART_INT type is defined by CMake to idx_t type with metis or
+ * SCOTCH_num type with scotch.
  */
-int MMG2D_part_meshElts2metis( MMG5_pMesh mesh)
+int MMG2D_part_meshElts( MMG5_pMesh mesh )
 {
-  idx_t      *xadj,*adjncy,*vwgt;
-  idx_t*     part;
-  MMG5_pTria pt;
-  idx_t      nelt = mesh->nt;
-  idx_t      ncon = 1; // number of balancing constraint
-  idx_t      options[METIS_NOPTIONS];
-  idx_t      objval = 0;
-  int        ier = 0;
-  int        status = 1;
-  int i;
+  MMG_PART_INT *xadj,*adjncy;
+  MMG_PART_INT nelt = mesh->nt;
+  MMG_PART_INT npart= mesh->info.ncolors;
+  MMG_PART_INT *part;
 
-  xadj = adjncy = vwgt = NULL;
-
-  METIS_SetDefaultOptions(options);
+  xadj = adjncy = NULL;
 
   /** Build the graph */
-  if ( !MMG_graph_meshElts2metis(mesh,&xadj,&adjncy ) )
+  if ( !MMG2D_build_meshEltsGraph(mesh,&xadj,&adjncy ) )
     return 0;
 
-  idx_t nproc=mesh->info.ncolors;
-  /*Allocate table part */
-  MMG5_SAFE_CALLOC(part,mesh->nt,idx_t,return 0);
+  /** Mesh partitioning */
+  /* Allocate partition table */
+  MMG5_SAFE_CALLOC(part,nelt,MMG_PART_INT,return 0);
 
-  /** Call metis and get the partition array */
-  if( nproc >= 8 ) {
-    options[METIS_OPTION_CONTIG] = 1;
-    ier = METIS_PartGraphKway( &nelt,&ncon,xadj,adjncy,NULL,NULL, NULL,&nproc,
-                               NULL,NULL,NULL,&objval, part );
-  }
-  else
-  {
-    ier = METIS_PartGraphRecursive( &nelt,&ncon,xadj,adjncy,NULL,NULL, NULL,&nproc,
-                                    NULL,NULL,NULL,&objval, part );
+  int status = MMG5_part_meshElts( nelt,xadj,adjncy,npart,part);
+
+  if ( status==1 ) {
+    int i;
+    /* Mesh partitionning succeed */
+    for (i=0; i< mesh->nt; i++) {
+      MMG5_pTria pt= &mesh->tria[i+1];
+      pt->color1 = part[i];
+    }
   }
 
+#ifndef NDEBUG
+  int i;
   for (i=0; i< mesh->nt; i++) {
-    pt= &mesh->tria[i+1];
-    pt->color1 = part[i];
+    MMG5_pTria pt= &mesh->tria[i+1];
+    part[i] = pt->ref;
     pt->ref = pt->color1;
   }
-
- /* Save result*/
-  if ( MMG2D_saveMesh(mesh, "metis.mesh") != 1 )
-    exit(EXIT_FAILURE);
-
-  if ( ier != METIS_OK ) {
-    switch ( ier ) {
-    case METIS_ERROR_INPUT:
-      fprintf(stderr, "METIS_ERROR_INPUT: input data error\n" );
-      break;
-    case METIS_ERROR_MEMORY:
-      fprintf(stderr, "METIS_ERROR_MEMORY: could not allocate memory error\n" );
-      break;
-    case METIS_ERROR:
-      fprintf(stderr, "METIS_ERROR: generic error\n" );
-      break;
-    default:
-      fprintf(stderr, "METIS_ERROR: update your METIS error handling\n" );
-      break;
-    }
-    status = 0;
+  MMG2D_saveMesh(mesh,"partition.mesh");
+  for (i=0; i< mesh->nt; i++) {
+    MMG5_pTria pt= &mesh->tria[i+1];
+    pt->ref = part[i];
   }
-
+#endif
 
   /*deallocate xadj, adjncy et part */
   MMG5_DEL_MEM(mesh, adjncy);

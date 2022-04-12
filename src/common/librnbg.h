@@ -29,10 +29,10 @@
  * \copyright GNU Lesser General Public License.
  */
 
-#ifdef USE_SCOTCH
-
 #ifndef __RENUM__
 #define __RENUM__
+
+#if (defined USE_SCOTCH || USE_SCOTCH_PARTITIONNER )
 
 #include <scotch.h>
 
@@ -48,6 +48,10 @@
 
 #define CHECK_SCOTCH(t,m,e) if(0!=t){perror(m);return e;}
 
+#endif
+
+#ifdef USE_SCOTCH
+
 typedef struct MeshGraphHash_ {
   int vertNum;
   int vertEnd;
@@ -57,5 +61,6 @@ int    _SCOTCHintSort2asc1(SCOTCH_Num * sortPartTb, int vertNbr);
 int    MMG5_kPartBoxCompute(SCOTCH_Graph*, int, int, SCOTCH_Num*,MMG5_pMesh);
 void   MMG5_swapNod(MMG5_pMesh,MMG5_pPoint, double*, MMG5_pSol,int*, int, int, int);
 
-#endif /* __RENUM__ */
 #endif
+
+#endif /* __RENUM__ */

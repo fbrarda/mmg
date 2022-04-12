@@ -63,6 +63,7 @@ IF ( NOT STARPU_FOUND )
     ${MMG2D_SOURCE_DIR}/partitionning_2d.c
     ${MMG2D_SOURCE_DIR}/starpu_2d.c
     ${MMG3D_SOURCE_DIR}/partitionning_3d.c
+    ${COMMON_SOURCE_DIR}/partitionning.c
     ${REMOVE_FILE} )
 ENDIF()
 

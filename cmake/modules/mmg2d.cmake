@@ -71,6 +71,7 @@ ENDIF ( )
 IF ( NOT STARPU_FOUND )
   LIST(REMOVE_ITEM mmg2d_library_files
     ${MMG2D_SOURCE_DIR}/partitionning_2d.c
+    ${COMMON_SOURCE_DIR}/partitionning.c
     ${MMG2D_SOURCE_DIR}/starpu_2d.c
     ${REMOVE_FILE} )
 ENDIF()

@@ -462,7 +462,7 @@ int MMG5_mmg3d1_pattern(MMG5_pMesh mesh,MMG5_pSol met,int *permNodGlob) {
 #ifdef USE_STARPU
   /* Stage 0: mesh coloration with metis*/
   int status;
-  status=MMG3D_part_meshElts2metis(mesh);
+  status=MMG3D_part_meshElts(mesh);
 #endif
 
   if ( abs(mesh->info.imprim) > 4 )

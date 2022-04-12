@@ -29,16 +29,14 @@
  * \copyright GNU Lesser General Public License.
  */
 
-#ifndef METIS_MMG3D_H
+#ifndef PARTITIONNING3D_H
 
-#define METIS_MMG3D_H
+#define PARTITIONNING3D_H
 
 #include "mmg3d.h"
-#include <metis.h>
+#include "partitionning.h"
 
-int MMG_graph_meshElts2metis( MMG5_pMesh mesh,idx_t **,idx_t **);
-
-int MMG3D_part_meshElts2metis( MMG5_pMesh mesh);
-
+int MMG3D_build_meshEltsGraph( MMG5_pMesh mesh,MMG_PART_INT **,MMG_PART_INT **);
+int MMG3D_part_meshElts( MMG5_pMesh mesh);
 
 #endif

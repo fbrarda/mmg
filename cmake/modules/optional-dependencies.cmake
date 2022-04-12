@@ -216,6 +216,10 @@ IF (NOT WIN32)
         add_definitions(-DUSE_STARPU)
         add_definitions(-DUSE_METIS_PARTITIONNER)
 
+        # New generic integer type pointing to scotch type or metis type
+        add_definitions(-DMMG_PART_INT=idx_t)
+
+
         MESSAGE(STATUS
           "Compilation with METIS: ${METIS_LIBRARIES}")
         SET( LIBRARIES ${METIS_LIBRARIES} ${LIBRARIES})
@@ -255,6 +259,9 @@ IF (NOT WIN32)
       IF ( SCOTCH_FOUND )
         add_definitions(-DUSE_STARPU)
         add_definitions(-DUSE_SCOTCH_PARTITIONNER)
+
+        # New generic integer type pointing to scotch type or metis type
+        add_definitions(-DMMG_PART_INT=SCOTCH_Num)
 
       ELSE()
         IF ( USE_STARPU MATCHES "ON" )

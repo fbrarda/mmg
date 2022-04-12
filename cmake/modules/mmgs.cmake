@@ -61,6 +61,7 @@ FILE(
   )
 LIST(REMOVE_ITEM mmgs_library_files
   ${MMGS_SOURCE_DIR}/mmgs.c
+  ${COMMON_SOURCE_DIR}/partitionning.c
   ${REMOVE_FILE} )
 
 IF ( VTK_FOUND )
