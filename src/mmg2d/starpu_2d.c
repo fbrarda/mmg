@@ -36,84 +36,6 @@
 
 #include "starpu_2d.h"
 
-
-/*
- *    Codelets
- */
-struct starpu_codelet colelt_codelet =
-{
-  .cpu_funcs = {MMG2D_starpu_colelt},
-  .cpu_funcs_name = {"MMG2D_starpu_colelt"},
-  .nbuffers = 3,
-  .modes = {STARPU_RW, STARPU_RW, STARPU_REDUX},
-  .specific_nodes = 1,
-  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
-  .where = STARPU_CPU,
-  .name = "colelt"
-};
-
-
-struct starpu_codelet swpmsh_codelet =
-{
-  .cpu_funcs = {MMG2D_starpu_swpmsh},
-  .cpu_funcs_name = {"MMG2D_starpu_swpmsh"},
-  .nbuffers = 3,
-  .modes = {STARPU_RW, STARPU_RW, STARPU_REDUX},
-  .specific_nodes = 1,
-  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
-  .where = STARPU_CPU,
-  .name = "swpmsh"
-};
-
-
-struct starpu_codelet anaelt_codelet =
-{
-  .cpu_funcs = {MMG2D_starpu_anaelt},
-  .cpu_funcs_name = {"MMG2D_starpu_anaelt"},
-  .nbuffers = 4,
-  .modes = {STARPU_RW, STARPU_RW, STARPU_RW, STARPU_REDUX},
-  .specific_nodes = 1,
-  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
-  .where = STARPU_CPU,
-  .name = "anaelt"
-};
-
-struct starpu_codelet movtri_codelet =
-{
-  .cpu_funcs = {MMG2D_starpu_movtri},
-  .cpu_funcs_name = {"MMG2D_starpu_movtri"},
-  .nbuffers = 3,
-  .modes = {STARPU_RW, STARPU_RW, STARPU_REDUX},
-  .specific_nodes = 1,
-  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
-  .where = STARPU_CPU,
-  .name = "movtri"
-};
-
-struct starpu_codelet adpspl_codelet =
-{
-  .cpu_funcs = {MMG2D_starpu_adpspl},
-  .cpu_funcs_name = {"MMG2D_starpu_adpspl"},
-  .nbuffers = 3,
-  .modes = {STARPU_RW, STARPU_RW, STARPU_REDUX},
-  .specific_nodes = 1,
-  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
-  .where = STARPU_CPU,
-  .name = "adpspl"
-};
-
-struct starpu_codelet adpcol_codelet =
-{
-  .cpu_funcs = {MMG2D_starpu_adpcol},
-  .cpu_funcs_name = {"MMG2D_starpu_adpcol"},
-  .nbuffers = 3,
-  .modes = {STARPU_RW, STARPU_RW, STARPU_REDUX},
-  .specific_nodes = 1,
-  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
-  .where = STARPU_CPU,
-  .name = "adpcol"
-};
-
 struct starpu_codelet hashTria_codelet =
 {
   .cpu_funcs = {MMG2D_starpu_hashTria},
@@ -138,31 +60,6 @@ struct starpu_codelet izero_codelet =
   .name = "izero"
 };
 
-/*
- *    Codelet to perform the reduction of two elements
- */
-struct starpu_codelet accumulate_codelet =
-{
-  .cpu_funcs = {accumulate_cpu},
-  .cpu_funcs_name = {"redux_cpu_func"},
-  .modes = {STARPU_RW|STARPU_COMMUTE, STARPU_R},
-  .nbuffers = 2,
-  .name = "redux"
-};
-
-
-/*
- *    Codelet to call print_cpu func.
- */
-struct starpu_codelet print_codelet =
-{
-  .cpu_funcs = {print_cpu},
-  .cpu_funcs_name = {"print_cpu_func"},
-  .modes = {STARPU_R},
-  .nbuffers = 1,
-  .name = "print"
-};
-
 /**
  * \param buffers Codelet buffers (to unpack)
  * \param cl_arg Codelet arguments (to unpack)
@@ -177,6 +74,18 @@ void izero_cpu(void *descr[], void *cl_arg)
 
   *a = 0;
 }
+
+/*
+ *    Codelet to perform the reduction of two elements
+ */
+struct starpu_codelet accumulate_codelet =
+{
+  .cpu_funcs = {accumulate_cpu},
+  .cpu_funcs_name = {"redux_cpu_func"},
+  .modes = {STARPU_RW|STARPU_COMMUTE, STARPU_R},
+  .nbuffers = 2,
+  .name = "redux"
+};
 
 /**
  * \param buffers Codelet buffers (to unpack)
@@ -194,13 +103,35 @@ void accumulate_cpu(void *descr[], void *cl_arg)
   *a = *a + *b;
 }
 
-
+/*
+ *    Codelet to call print_cpu func.
+ */
+struct starpu_codelet print_codelet =
+{
+  .cpu_funcs = {print_cpu},
+  .cpu_funcs_name = {"print_cpu_func"},
+  .modes = {STARPU_R},
+  .nbuffers = 1,
+  .name = "print"
+};
 
 void print_cpu(void *descr[], void *cl_arg)
 {
   (void)cl_arg;
   int *a = (int *)STARPU_VARIABLE_GET_PTR(descr[0]);
 }
+
+struct starpu_codelet anaelt_codelet =
+{
+  .cpu_funcs = {MMG2D_starpu_anaelt},
+  .cpu_funcs_name = {"MMG2D_starpu_anaelt"},
+  .nbuffers = 4,
+  .modes = {STARPU_RW, STARPU_RW, STARPU_RW, STARPU_REDUX},
+  .specific_nodes = 1,
+  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
+  .where = STARPU_CPU,
+  .name = "anaelt"
+};
 
 /**
  * \param buffers Codelet buffers (to unpack)
@@ -242,6 +173,18 @@ void MMG2D_starpu_anaelt(void *buffers[], void *cl_arg) {
   *ns += MMG2D_anaelt(mesh,met,hash,typchk,color);
 }
 
+struct starpu_codelet colelt_codelet =
+{
+  .cpu_funcs = {MMG2D_starpu_colelt},
+  .cpu_funcs_name = {"MMG2D_starpu_colelt"},
+  .nbuffers = 3,
+  .modes = {STARPU_RW, STARPU_RW, STARPU_REDUX},
+  .specific_nodes = 1,
+  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
+  .where = STARPU_CPU,
+  .name = "colelt"
+};
+
 /**
  * \param buffers Codelet buffers (to unpack)
  * \param cl_arg Codelet arguments (to unpack)
@@ -278,6 +221,18 @@ void MMG2D_starpu_colelt(void *buffers[], void *cl_arg) {
 
   *nc += MMG2D_colelt(mesh,met,typchk,color);
 }
+
+struct starpu_codelet swpmsh_codelet =
+{
+  .cpu_funcs = {MMG2D_starpu_swpmsh},
+  .cpu_funcs_name = {"MMG2D_starpu_swpmsh"},
+  .nbuffers = 3,
+  .modes = {STARPU_RW, STARPU_RW, STARPU_REDUX},
+  .specific_nodes = 1,
+  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
+  .where = STARPU_CPU,
+  .name = "swpmsh"
+};
 
 /**
  * \param buffers Codelet buffers (to unpack)
@@ -317,6 +272,18 @@ void MMG2D_starpu_swpmsh(void *buffers[], void *cl_arg) {
 
 }
 
+struct starpu_codelet adpspl_codelet =
+{
+  .cpu_funcs = {MMG2D_starpu_adpspl},
+  .cpu_funcs_name = {"MMG2D_starpu_adpspl"},
+  .nbuffers = 3,
+  .modes = {STARPU_RW, STARPU_RW, STARPU_REDUX},
+  .specific_nodes = 1,
+  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
+  .where = STARPU_CPU,
+  .name = "adpspl"
+};
+
 /**
  * \param buffers Codelet buffers (to unpack)
  * \param cl_arg Codelet arguments (to unpack)
@@ -355,6 +322,18 @@ void MMG2D_starpu_adpspl(void *buffers[], void *cl_arg) {
 
 }
 
+struct starpu_codelet adpcol_codelet =
+{
+  .cpu_funcs = {MMG2D_starpu_adpcol},
+  .cpu_funcs_name = {"MMG2D_starpu_adpcol"},
+  .nbuffers = 3,
+  .modes = {STARPU_RW, STARPU_RW, STARPU_REDUX},
+  .specific_nodes = 1,
+  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
+  .where = STARPU_CPU,
+  .name = "adpcol"
+};
+
 /**
  * \param buffers Codelet buffers (to unpack)
  * \param cl_arg Codelet arguments (to unpack)
@@ -390,6 +369,18 @@ void MMG2D_starpu_adpcol(void *buffers[], void *cl_arg) {
 
   *nc += MMG2D_adpcol(mesh,met,color);
 }
+
+struct starpu_codelet movtri_codelet =
+{
+  .cpu_funcs = {MMG2D_starpu_movtri},
+  .cpu_funcs_name = {"MMG2D_starpu_movtri"},
+  .nbuffers = 3,
+  .modes = {STARPU_RW, STARPU_RW, STARPU_REDUX},
+  .specific_nodes = 1,
+  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
+  .where = STARPU_CPU,
+  .name = "movtri"
+};
 
 /**
  * \param buffers Codelet buffers (to unpack)

@@ -107,7 +107,7 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
                                  STARPU_VALUE, &color, sizeof(color),
                                  0);
 
-        STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit");
+        STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_insert:anaelt_codelet");
       }
       starpu_data_acquire(handle_ns, STARPU_RW);
 #else
@@ -141,7 +141,7 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
                                  STARPU_VALUE, &color, sizeof(color),
                                  0);
 
-        STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit");
+        STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit:colelt_codelet");
       }
 
       starpu_data_acquire(handle_nc,STARPU_RW);
@@ -176,7 +176,7 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
                                  STARPU_VALUE, &typchk, sizeof(typchk),
                                  STARPU_VALUE, &color, sizeof(color),
                                  0);
-        STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit");
+        STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit:swpmsh_codelet");
       }
 
       starpu_data_acquire(handle_nsw,STARPU_RW);

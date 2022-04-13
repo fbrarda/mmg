@@ -48,9 +48,7 @@ void MMG2D_starpu_adpspl(void *buffers[], void *cl_arg);
 void MMG2D_starpu_adpcol(void *buffers[], void *cl_arg);
 void MMG2D_starpu_movtri(void *buffers[], void *cl_arg);
 
-/*
- *    Codelets
- */
+/** Codelets for main functions */
 extern struct starpu_codelet colelt_codelet;
 extern struct starpu_codelet swpmsh_codelet;
 extern struct starpu_codelet anaelt_codelet;
