@@ -418,4 +418,82 @@ void MMG2D_starpu_movtri(void *buffers[], void *cl_arg) {
   *nm += MMG2D_movtri(mesh,met,maxit,improve,color);
 
 }
+
+/*
+ * Codelet to compute dependencies between splitting tasks.
+ */
+struct starpu_codelet spldep_codelet =
+{
+  .cpu_funcs = {MMG2D_starpu_spldep},
+  .cpu_funcs_name = {"MMG2D_starpu_spldep"},
+  .nbuffers = 1,
+  .modes = {STARPU_R},
+  .specific_nodes = 1,
+  .nodes = {STARPU_SPECIFIC_NODE_CPU},
+  .where = STARPU_CPU,
+  .name = "spldep"
+};
+
+
+/**
+ * \param buffers Codelet buffers (to unpack)
+ * \param cl_arg Codelet arguments (to unpack)
+ *
+ * Compute split dependencies: we have dependencies between two colors if they
+ * are adjacent throug an edge.
+ *
+ */
+void MMG2D_starpu_spldep(void *buffers[], void *cl_arg) {
+
+  int nx_mesh;
+  struct starpu_vector_interface *vect_mesh;
+
+  MMG5_pMesh   mesh;
+  starpu_tag_t deps[MMG_NDEPSMAX];
+  int color;
+  int k;
+
+
+  vect_mesh = (struct starpu_vector_interface *) buffers[0];
+  mesh = (MMG5_pMesh)STARPU_VECTOR_GET_PTR(vect_mesh);
+  assert ( (nx_mesh = STARPU_VECTOR_GET_NX(vect_mesh)) == 1 );
+
+  starpu_codelet_unpack_args(cl_arg, &color);
+
+  assert ( mesh->adja );
+
+  int ndep = 0;
+  for ( k=1; k<=mesh->nt; ++k ) {
+    MMG5_pTria pt1, pt2;
+
+    pt1 = &mesh->tria[k];
+
+    if ( !MMG2D_EOK(pt1,color) ) continue;
+
+    /* Triangle has to be treated (it has the color treated by the task and is
+     * used) */
+    int i;
+    for ( i=0; i<3; ++i ) {
+      /* Search the color of adjacent triangles */
+      int k2 = mesh->adja [ 3*(k-1)+1+i ]/3;
+      if ( !k2 ) continue;
+
+      pt2 = &mesh->tria[k2];
+
+      if ( pt2->color1 != color ) {
+        if ( ndep > MMG_NDEPSMAX ) {
+          fprintf(stderr,"  # Error: %s: %d: number of dependencies exceed the"
+                  " maximal authorized value.\n",__func__,__LINE__);
+
+#warning replace this by a clean error handling
+          assert ( 666 );
+        }
+        /* Mark the dependency */
+        deps[ndep++] = color;
+      }
+    }
+  }
+  starpu_tag_declare_deps_array((starpu_tag_t)color, ndep, deps);
+}
+
 #endif

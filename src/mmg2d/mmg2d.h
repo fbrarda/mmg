@@ -74,13 +74,15 @@ extern "C" {
 
 #ifdef USE_STARPU
 
+#define MMG_NDEPSMAX 128
+
 /** For each given color: test if the element has the same color */
-#define MMG2D_EOK(pt,color1)       (pt && ((pt)->v[0] > 0) && ((pt)->color1==color1))  /**< Element OK */
+#define MMG2D_EOK(pt,color) ( (pt && ((pt)->v[0] > 0) ) && ((pt)->color1==color))  /**< Element OK */
 
 #else
 
 /** Ignore colors */
-#define MMG2D_EOK(pt,color1) MG_EOK(pt)
+#define MMG2D_EOK(pt,color) MG_EOK(pt)
 #define MMG_NOCOLOR 0
 
 #endif

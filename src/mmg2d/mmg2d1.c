@@ -59,7 +59,7 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
 
 #ifdef USE_STARPU
   int       color,ret;
-  starpu_data_handle_t vector_mesh, vector_met, vector_hash;
+  starpu_data_handle_t vector_mesh, vector_met, vector_hash, vector_deps;
   starpu_data_handle_t handle_ns, handle_nc, handle_nsw;
 
   starpu_vector_data_register(&vector_mesh, STARPU_MAIN_RAM, (uintptr_t)mesh, 1, sizeof(MMG5_pMesh));
@@ -85,6 +85,36 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
 // #warning Luca: check consistency with 3D
     }
     if ( !mesh->info.noinsert ) {
+
+#ifdef USE_STARPU
+      /* Set split dependencies */
+      for (color=0; color< mesh->info.ncolors; color++)
+      {
+        ret = starpu_task_insert(&spldep_codelet,
+                                 STARPU_R, vector_mesh,
+                                 STARPU_VALUE, &color, sizeof(color),
+                                 0);
+
+        STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit:spldep_codelet");
+      }
+      if ( 0 != starpu_task_wait_for_all() ) {
+        fprintf(stderr,"  # Error: %s: %d: error in computation of split dependencies.\n",
+                __func__,__LINE__);
+        starpu_data_release(handle_ns);
+        starpu_data_release(handle_nc);
+        starpu_data_release(handle_nsw);
+
+        starpu_data_unregister(vector_mesh);
+        starpu_data_unregister(vector_met);
+        starpu_data_unregister(vector_hash);
+        starpu_data_unregister(handle_ns);
+        starpu_data_unregister(handle_nc);
+        starpu_data_unregister(handle_nsw);
+        return 0;
+      }
+#endif
+
+
       /* Memory free */
       MMG5_DEL_MEM(mesh,mesh->adja);
       mesh->adja = 0;
@@ -99,6 +129,8 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
       for (color=0; color< mesh->info.ncolors; color++)
       {
         ret = starpu_task_insert(&anaelt_codelet,
+                                 STARPU_TAG, (starpu_tag_t)color,
+                                 STARPU_SEQUENTIAL_CONSISTENCY,0,
                                  STARPU_RW, vector_mesh,
                                  STARPU_RW, vector_met,
                                  STARPU_RW, vector_hash,
@@ -128,6 +160,7 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
       }
 
 #ifdef USE_STARPU
+
       nc = 0;
       starpu_data_release(handle_nc);
 

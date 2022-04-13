@@ -48,6 +48,9 @@ void MMG2D_starpu_adpspl(void *buffers[], void *cl_arg);
 void MMG2D_starpu_adpcol(void *buffers[], void *cl_arg);
 void MMG2D_starpu_movtri(void *buffers[], void *cl_arg);
 
+/** Task dependencies computation */
+void MMG2D_starpu_spldep(void *buffers[], void *cl_arg);
+
 /** Codelets for main functions */
 extern struct starpu_codelet colelt_codelet;
 extern struct starpu_codelet swpmsh_codelet;
@@ -56,6 +59,10 @@ extern struct starpu_codelet movtri_codelet;
 extern struct starpu_codelet adpspl_codelet;
 extern struct starpu_codelet adpcol_codelet;
 extern struct starpu_codelet hashTria_codelet;
+
+/** Codelets for dependencies */
+extern struct starpu_codelet spldep_codelet;
+
 
 /** For reduction */
 void izero_cpu(void *descr[], void *cl_arg);
