@@ -152,7 +152,7 @@ struct starpu_codelet accumulate_codelet =
 
 
 /*
- *    Codelet to perform the reduction of two elements
+ *    Codelet to call print_cpu func.
  */
 struct starpu_codelet print_codelet =
 {
@@ -163,7 +163,13 @@ struct starpu_codelet print_codelet =
   .name = "print"
 };
 
-
+/**
+ * \param buffers Codelet buffers (to unpack)
+ * \param cl_arg Codelet arguments (to unpack)
+ *
+ * Integer initializtion to 0 for StarPU codelet.
+ *
+ */
 void izero_cpu(void *descr[], void *cl_arg)
 {
   (void)cl_arg;
@@ -172,7 +178,13 @@ void izero_cpu(void *descr[], void *cl_arg)
   *a = 0;
 }
 
-
+/**
+ * \param buffers Codelet buffers (to unpack)
+ * \param cl_arg Codelet arguments (to unpack)
+ *
+ * Reduction by sum for StarPU codelet.
+ *
+ */
 void accumulate_cpu(void *descr[], void *cl_arg)
 {
   (void)cl_arg;
@@ -190,7 +202,13 @@ void print_cpu(void *descr[], void *cl_arg)
   int *a = (int *)STARPU_VARIABLE_GET_PTR(descr[0]);
 }
 
-
+/**
+ * \param buffers Codelet buffers (to unpack)
+ * \param cl_arg Codelet arguments (to unpack)
+ *
+ * Wrapper to anaelt function to be called inside StarPU codelet.
+ *
+ */
 void MMG2D_starpu_anaelt(void *buffers[], void *cl_arg) {
 
   int nx_mesh, nx_met;
@@ -224,6 +242,13 @@ void MMG2D_starpu_anaelt(void *buffers[], void *cl_arg) {
   *ns += MMG2D_anaelt(mesh,met,hash,typchk,color);
 }
 
+/**
+ * \param buffers Codelet buffers (to unpack)
+ * \param cl_arg Codelet arguments (to unpack)
+ *
+ * Wrapper to colelt function to be called inside StarPU codelet.
+ *
+ */
 void MMG2D_starpu_colelt(void *buffers[], void *cl_arg) {
 
   int nx_mesh, nx_met;
@@ -254,7 +279,13 @@ void MMG2D_starpu_colelt(void *buffers[], void *cl_arg) {
   *nc += MMG2D_colelt(mesh,met,typchk,color);
 }
 
-/* Travel triangles and swap edges to improve quality */
+/**
+ * \param buffers Codelet buffers (to unpack)
+ * \param cl_arg Codelet arguments (to unpack)
+ *
+ * Wrapper to swpmsh function to be called inside StarPU codelet.
+ *
+ */
 void MMG2D_starpu_swpmsh(void *buffers[], void *cl_arg) {
 
   int nx_mesh, nx_met;
@@ -286,6 +317,13 @@ void MMG2D_starpu_swpmsh(void *buffers[], void *cl_arg) {
 
 }
 
+/**
+ * \param buffers Codelet buffers (to unpack)
+ * \param cl_arg Codelet arguments (to unpack)
+ *
+ * Wrapper to adpspl function to be called inside StarPU codelet.
+ *
+ */
 void MMG2D_starpu_adpspl(void *buffers[], void *cl_arg) {
 
 
@@ -317,6 +355,13 @@ void MMG2D_starpu_adpspl(void *buffers[], void *cl_arg) {
 
 }
 
+/**
+ * \param buffers Codelet buffers (to unpack)
+ * \param cl_arg Codelet arguments (to unpack)
+ *
+ * Wrapper to adpcol function to be called inside StarPU codelet.
+ *
+ */
 void MMG2D_starpu_adpcol(void *buffers[], void *cl_arg) {
 
 
@@ -346,7 +391,13 @@ void MMG2D_starpu_adpcol(void *buffers[], void *cl_arg) {
   *nc += MMG2D_adpcol(mesh,met,color);
 }
 
-/* Analyze points to relocate them according to a quality criterion */
+/**
+ * \param buffers Codelet buffers (to unpack)
+ * \param cl_arg Codelet arguments (to unpack)
+ *
+ * Wrapper to movtri function to be called inside StarPU codelet.
+ *
+ */
 void MMG2D_starpu_movtri(void *buffers[], void *cl_arg) {
 
 
