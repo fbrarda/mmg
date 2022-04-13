@@ -155,12 +155,12 @@ void MMG2D_starpu_anaelt(void *buffers[], void *cl_arg) {
   MMG5_Hash *hash;
 
   vect_mesh = (struct starpu_vector_interface *) buffers[0];
-  nx_mesh = STARPU_VECTOR_GET_NX(vect_mesh);
   mesh = (MMG5_pMesh)STARPU_VECTOR_GET_PTR(vect_mesh);
+  assert ( (nx_mesh = STARPU_VECTOR_GET_NX(vect_mesh)) == 1 );
 
   vect_met = (struct starpu_vector_interface *) buffers[1];
-  nx_met = STARPU_VECTOR_GET_NX(vect_met);
   met = ( MMG5_pSol)STARPU_VECTOR_GET_PTR(vect_met);
+  assert ( (nx_met = STARPU_VECTOR_GET_NX(vect_met)) == 1 );
 
   handle_hash = (struct starpu_variable_interface *) buffers[2];
   hash = (MMG5_Hash *) STARPU_VARIABLE_GET_PTR(handle_hash);
@@ -207,12 +207,12 @@ void MMG2D_starpu_colelt(void *buffers[], void *cl_arg) {
   int *nc;
 
   vect_mesh = (struct starpu_vector_interface *) buffers[0];
-  nx_mesh = STARPU_VECTOR_GET_NX(vect_mesh);
   mesh = (MMG5_pMesh)STARPU_VECTOR_GET_PTR(vect_mesh);
+  assert ( (nx_mesh = STARPU_VECTOR_GET_NX(vect_mesh)) == 1 );
 
   vect_met = (struct starpu_vector_interface *) buffers[1];
-  nx_met = STARPU_VECTOR_GET_NX(vect_met);
   met = ( MMG5_pSol)STARPU_VECTOR_GET_PTR(vect_met);
+  assert ( (nx_met = STARPU_VECTOR_GET_NX(vect_met)) == 1 );
 
   handle_nc = (struct starpu_variable_interface *) buffers[2];
   nc = (int *)STARPU_VARIABLE_GET_PTR(handle_nc);
@@ -256,12 +256,12 @@ void MMG2D_starpu_swpmsh(void *buffers[], void *cl_arg) {
   int *nsw;
 
   vect_mesh = (struct starpu_vector_interface *) buffers[0];
-  nx_mesh = STARPU_VECTOR_GET_NX(vect_mesh);
   mesh = (MMG5_pMesh)STARPU_VECTOR_GET_PTR(vect_mesh);
+  assert ( (nx_mesh = STARPU_VECTOR_GET_NX(vect_mesh)) == 1 );
 
   vect_met = (struct starpu_vector_interface *) buffers[1];
-  nx_met = STARPU_VECTOR_GET_NX(vect_met);
   met = ( MMG5_pSol)STARPU_VECTOR_GET_PTR(vect_met);
+  assert ( (nx_met = STARPU_VECTOR_GET_NX(vect_met)) == 1 );
 
   handle_nsw = (struct starpu_variable_interface *) buffers[2];
   nsw = (int *)STARPU_VARIABLE_GET_PTR(handle_nsw);
@@ -305,13 +305,12 @@ void MMG2D_starpu_adpspl(void *buffers[], void *cl_arg) {
   int *ns;
 
   vect_mesh = (struct starpu_vector_interface *) buffers[0];
-  nx_mesh = STARPU_VECTOR_GET_NX(vect_mesh);
   mesh = (MMG5_pMesh)STARPU_VECTOR_GET_PTR(vect_mesh);
+  assert ( (nx_mesh = STARPU_VECTOR_GET_NX(vect_mesh)) == 1 );
 
   vect_met = (struct starpu_vector_interface *) buffers[1];
-  nx_met = STARPU_VECTOR_GET_NX(vect_met);
   met = ( MMG5_pSol)STARPU_VECTOR_GET_PTR(vect_met);
-
+  assert ( (nx_met = STARPU_VECTOR_GET_NX(vect_met)) == 1 );
 
   handle_ns = (struct starpu_variable_interface *) buffers[2];
   ns = (int *)STARPU_VARIABLE_GET_PTR(handle_ns);
@@ -355,12 +354,12 @@ void MMG2D_starpu_adpcol(void *buffers[], void *cl_arg) {
   int *nc;
 
   vect_mesh = (struct starpu_vector_interface *) buffers[0];
-  nx_mesh = STARPU_VECTOR_GET_NX(vect_mesh);
   mesh = (MMG5_pMesh)STARPU_VECTOR_GET_PTR(vect_mesh);
+  assert ( (nx_mesh = STARPU_VECTOR_GET_NX(vect_mesh)) == 1 );
 
   vect_met = (struct starpu_vector_interface *) buffers[1];
-  nx_met = STARPU_VECTOR_GET_NX(vect_met);
   met = ( MMG5_pSol)STARPU_VECTOR_GET_PTR(vect_met);
+  assert ( (nx_met = STARPU_VECTOR_GET_NX(vect_met)) == 1 );
 
   handle_nc = (struct starpu_variable_interface *) buffers[2];
   nc = (int *)STARPU_VARIABLE_GET_PTR(handle_nc);
@@ -404,12 +403,12 @@ void MMG2D_starpu_movtri(void *buffers[], void *cl_arg) {
   int *nm;
 
   vect_mesh = (struct starpu_vector_interface *) buffers[0];
-  nx_mesh = STARPU_VECTOR_GET_NX(vect_mesh);
   mesh = (MMG5_pMesh)STARPU_VECTOR_GET_PTR(vect_mesh);
+  assert ( (nx_mesh = STARPU_VECTOR_GET_NX(vect_mesh)) == 1 );
 
   vect_met = (struct starpu_vector_interface *) buffers[1];
-  nx_met = STARPU_VECTOR_GET_NX(vect_met);
   met = ( MMG5_pSol)STARPU_VECTOR_GET_PTR(vect_met);
+  assert ( (nx_met = STARPU_VECTOR_GET_NX(vect_met)) == 1 );
 
   handle_nm = (struct starpu_variable_interface *) buffers[2];
   nm = (int *)STARPU_VARIABLE_GET_PTR(handle_nm);
