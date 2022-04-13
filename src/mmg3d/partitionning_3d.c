@@ -118,7 +118,6 @@ int MMG3D_part_meshElts( MMG5_pMesh mesh)
   MMG_PART_INT       nelt = mesh->ne;
   MMG_PART_INT       npart= mesh->info.ncolors;
   MMG_PART_INT       *part;
-  int                i;
 
   xadj = adjncy = vwgt = NULL;
 
@@ -127,6 +126,9 @@ int MMG3D_part_meshElts( MMG5_pMesh mesh)
     return 0;
 
   /** Mesh partitioning */
+  /* Allocate partition table */
+  MMG5_SAFE_CALLOC(part,nelt,MMG_PART_INT,return 0);
+
   int status = MMG5_part_meshElts( nelt,xadj,adjncy,npart,part);
 
  if ( status==1 ) {
@@ -135,6 +137,35 @@ int MMG3D_part_meshElts( MMG5_pMesh mesh)
       MMG5_pTetra pt= &mesh->tetra[i+1];
       pt->color1 = part[i];
     }
+ }
+
+ /* Use environment variable to choose to save partition as it is a
+  * developper+debug tool */
+ if ( getenv("MMG_SAVE_PART") ) {
+   /* Save partition */
+   int i;
+   for ( i=0; i<mesh->ne; i++ ) {
+     MMG5_pTetra pt= &mesh->tetra[i+1];
+     part[i] = pt->ref;
+     pt->ref = pt->color1;
+   }
+
+   char *basename = MMG5_Get_basename(mesh->namein);
+   char *filename;
+
+   MMG5_SAFE_CALLOC(filename,strlen(basename)+11,char,return 0);
+   strncpy(filename,basename,strlen(basename));
+   strcat(filename,"_part.mesh");
+
+   MMG3D_saveMesh(mesh,filename);
+
+   free(basename);basename=0;
+   MMG5_SAFE_FREE(filename);
+
+   for ( i=0; i<mesh->ne; i++ ) {
+     MMG5_pTetra pt= &mesh->tetra[i+1];
+     pt->ref = part[i];
+   }
  }
 
   /*deallocate xadj, adjncy et part */

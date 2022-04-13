@@ -1123,6 +1123,9 @@ int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
   int status;
   int ret;
 
+  if ( abs(mesh->info.imprim) > 4 || mesh->info.ddebug )
+    fprintf(stdout,"  ** MESH PARTITIONNING\n");
+
   status = MMG2D_part_meshElts(mesh);
 
   /* StarPU configuration: set the sceduling policy */

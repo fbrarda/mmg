@@ -145,19 +145,34 @@ int MMG2D_part_meshElts( MMG5_pMesh mesh )
     }
   }
 
-#ifndef NDEBUG
-  int i;
-  for (i=0; i< mesh->nt; i++) {
-    MMG5_pTria pt= &mesh->tria[i+1];
-    part[i] = pt->ref;
-    pt->ref = pt->color1;
+  /* Use environment variable to choose to save partition as it is a
+   * developper+debug tool */
+  if ( getenv("MMG_SAVE_PART") ) {
+    /* Save partition */
+    int i;
+    for (i=0; i< mesh->nt; i++) {
+      MMG5_pTria pt= &mesh->tria[i+1];
+      part[i] = pt->ref;
+      pt->ref = pt->color1;
+    }
+
+    char *basename = MMG5_Get_basename(mesh->namein);
+    char *filename;
+
+    MMG5_SAFE_CALLOC(filename,strlen(basename)+11,char,return 0);
+    strncpy(filename,basename,strlen(basename));
+    strcat(filename,"_part.mesh");
+
+    MMG2D_saveMesh(mesh,filename);
+
+    free(basename);basename=0;
+    MMG5_SAFE_FREE(filename);
+
+    for (i=0; i< mesh->nt; i++) {
+      MMG5_pTria pt= &mesh->tria[i+1];
+      pt->ref = part[i];
+    }
   }
-  MMG2D_saveMesh(mesh,"partition.mesh");
-  for (i=0; i< mesh->nt; i++) {
-    MMG5_pTria pt= &mesh->tria[i+1];
-    pt->ref = part[i];
-  }
-#endif
 
   /*deallocate xadj, adjncy et part */
   MMG5_DEL_MEM(mesh, adjncy);
