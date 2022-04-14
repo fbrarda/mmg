@@ -638,6 +638,10 @@ void           MMG5_check_hminhmax(MMG5_pMesh mesh, int8_t sethmin, int8_t sethm
  int           MMG5_hashEdgeTag(MMG5_pMesh mesh,MMG5_Hash *hash,int a,int b,int16_t k);
  int           MMG5_hashGet(MMG5_Hash *hash,int a,int b);
  int           MMG5_hashNew(MMG5_pMesh mesh, MMG5_Hash *hash,int hsiz,int hmax);
+#ifdef USE_STARPU
+ int           MMG5_hashPNew(MMG5_pMesh mesh, MMG5_HashP *hash,int hsiz,int hmax);
+ int           MMG5_hashPoint(MMG5_pMesh mesh,MMG5_HashP *hash,int a,int k);
+#endif
  int           MMG5_intmetsavedir(MMG5_pMesh mesh, double *m,double *n,double *mr);
  int           MMG5_intridmet(MMG5_pMesh,MMG5_pSol,int,int,double,double*,double*);
  int           MMG5_mmgIntmet33_ani(double*,double*,double*,double);

@@ -66,15 +66,14 @@ extern struct starpu_codelet spldep_codelet;
 
 /** For reduction */
 void izero_cpu(void *descr[], void *cl_arg);
+void ione_cpu(void *descr[], void *cl_arg);
 void accumulate_cpu(void *descr[], void *cl_arg);
+void min_cpu(void *descr[], void *cl_arg);
 
 extern struct starpu_codelet accumulate_codelet;
 extern struct starpu_codelet izero_codelet;
-
-/*
- *    Codelet to neutral element initializer
- */
-extern struct starpu_codelet izero_codelet;
+extern struct starpu_codelet min_codelet;
+extern struct starpu_codelet ione_codelet;
 
 
 /** Dbg tool */

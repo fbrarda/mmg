@@ -58,9 +58,9 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
   maxit = 5;
 
 #ifdef USE_STARPU
-  int       color,ret;
+  int       color,ret,ier;
   starpu_data_handle_t vector_mesh, vector_met, vector_hash, vector_deps;
-  starpu_data_handle_t handle_ns, handle_nc, handle_nsw;
+  starpu_data_handle_t handle_ns, handle_nc, handle_nsw, handle_ier;
 
   starpu_vector_data_register(&vector_mesh, STARPU_MAIN_RAM, (uintptr_t)mesh, 1, sizeof(MMG5_pMesh));
   starpu_vector_data_register(&vector_met, STARPU_MAIN_RAM, (uintptr_t)met, 1, sizeof(MMG5_pSol));
@@ -70,10 +70,12 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
   starpu_variable_data_register(&handle_ns, STARPU_MAIN_RAM, (uintptr_t)&ns, sizeof(ns));
   starpu_variable_data_register(&handle_nc, STARPU_MAIN_RAM, (uintptr_t)&nc, sizeof(nc));
   starpu_variable_data_register(&handle_nsw, STARPU_MAIN_RAM, (uintptr_t)&nsw, sizeof(nsw));
+  starpu_variable_data_register(&handle_ier, STARPU_MAIN_RAM, (uintptr_t)&ier, sizeof(ier));
 
   starpu_data_set_reduction_methods ( handle_ns, &accumulate_codelet, &izero_codelet) ;
   starpu_data_set_reduction_methods ( handle_nc, &accumulate_codelet, &izero_codelet) ;
   starpu_data_set_reduction_methods ( handle_nsw, &accumulate_codelet, &izero_codelet) ;
+  starpu_data_set_reduction_methods ( handle_ier, &min_codelet, &ione_codelet) ;
 
   starpu_data_acquire(handle_ns, STARPU_W);
   starpu_data_acquire(handle_nc, STARPU_W);
@@ -88,16 +90,16 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
 
 #ifdef USE_STARPU
       /* Set split dependencies */
-      for (color=0; color< mesh->info.ncolors; color++)
+      for (color=1; color<=mesh->info.ncolors; color++)
       {
         ret = starpu_task_insert(&spldep_codelet,
-                                 STARPU_R, vector_mesh,
+                                 STARPU_R, vector_mesh,STARPU_REDUX, handle_ier,
                                  STARPU_VALUE, &color, sizeof(color),
                                  0);
 
         STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit:spldep_codelet");
       }
-      if ( 0 != starpu_task_wait_for_all() ) {
+      if ( 0 != starpu_task_wait_for_all() || !ier ) {
         fprintf(stderr,"  # Error: %s: %d: error in computation of split dependencies.\n",
                 __func__,__LINE__);
         starpu_data_release(handle_ns);
@@ -126,15 +128,32 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
       ns = 0;
       starpu_data_release(handle_ns);
 
-      for (color=0; color< mesh->info.ncolors; color++)
+      /* starpu_data_handle_t * per_color_handle = malloc(mesh->info.ncolors*sizeof(starpu_data_handle_t)); // XL */
+
+      /* char * colors = malloc(mesh->info.ncolors*sizeof(char)); */
+      /* for (color=1; color<=mesh->info.ncolors; color++) */
+      /*     starpu_variable_data_register(&per_color_handle[color], STARPU_MAIN_RAM, colors+color, sizeof(char)); */
+
+      for (color=1; color<=mesh->info.ncolors; color++)
       {
+
+// XL
+  /*       //create task_handles_list_from_deps */
+  /*       starpu_data_descr_t * task_handless =; */
+	/* for(i=0 ; i<dummy_big_cl.nbuffers ; i++) */
+	/* { */
+	/* 	descrs[i].handle = handle; */
+	/* 	descrs[i].mode = STARPU_RW; */
+	/* } */
+// END XL
         ret = starpu_task_insert(&anaelt_codelet,
                                  STARPU_TAG, (starpu_tag_t)color,
                                  STARPU_SEQUENTIAL_CONSISTENCY,0,
-                                 STARPU_RW, vector_mesh,
-                                 STARPU_RW, vector_met,
-                                 STARPU_RW, vector_hash,
+                                 STARPU_R, vector_mesh,
+                                 STARPU_R, vector_met,
+                                 STARPU_R, vector_hash,
                                  STARPU_REDUX, handle_ns,
+                                 //STARPU_DATA_MODE_ARRAY, task_handles, ndeps,
                                  STARPU_VALUE, &typchk, sizeof(typchk),
                                  STARPU_VALUE, &color, sizeof(color),
                                  0);
@@ -164,7 +183,7 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
       nc = 0;
       starpu_data_release(handle_nc);
 
-      for (color=0; color< mesh->info.ncolors; color++)
+      for (color=1; color<=mesh->info.ncolors; color++)
       {
         ret = starpu_task_insert(&colelt_codelet,
                                  STARPU_RW, vector_mesh,
@@ -200,7 +219,7 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
       nsw = 0;
       starpu_data_release(handle_nsw);
 
-      for (color=0; color< mesh->info.ncolors; color++)
+      for (color=1; color<=mesh->info.ncolors; color++)
       {
         ret = starpu_task_insert(&swpmsh_codelet,
                                  STARPU_RW, vector_mesh,
@@ -754,7 +773,7 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
       ns = 0;
       starpu_data_release(handle_ns);
 
-      for (color=0; color< mesh->info.ncolors; color++)
+      for (color=1; color<=mesh->info.ncolors; color++)
       {
         ret = starpu_task_insert(&adpspl_codelet,
                                  STARPU_RW, vector_mesh,
@@ -782,7 +801,7 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
       nc = 0;
       starpu_data_release(handle_nc);
 
-      for (color=0; color< mesh->info.ncolors; color++)
+      for (color=1; color<=mesh->info.ncolors; color++)
       {
         ret = starpu_task_insert(&adpcol_codelet,
                                  STARPU_RW, vector_mesh,
@@ -817,7 +836,7 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
       nsw = 0;
       starpu_data_release(handle_nsw);
 
-      for (color=0; color< mesh->info.ncolors; color++)
+      for (color=1; color<=mesh->info.ncolors; color++)
       {
 
         ret = starpu_task_insert(&swpmsh_codelet,
@@ -853,7 +872,7 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
       nm = 0;
       starpu_data_release(handle_nm);
 
-      for (color=0; color< mesh->info.ncolors; color++)
+      for (color=1; color<=mesh->info.ncolors; color++)
       {
         ret = starpu_task_insert(&movtri_codelet,
                                  STARPU_RW, vector_mesh,
@@ -903,7 +922,7 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
     nm = 0;
     starpu_data_release(handle_nm);
 
-    for (color=0; color< mesh->info.ncolors; color++)
+    for (color=1; color<=mesh->info.ncolors; color++)
     {
       ret = starpu_task_insert(&movtri_codelet,
                                STARPU_RW, vector_mesh,

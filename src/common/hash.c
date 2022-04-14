@@ -530,3 +530,83 @@ int MMG5_hashNew(MMG5_pMesh mesh,MMG5_Hash *hash,int hsiz,int hmax) {
     hash->item[k].nxt = k+1;
   return 1;
 }
+
+#ifdef USE_STARPU
+
+/**
+ * \param mesh pointer toward the mesh structure.
+ * \param hash pointer toward the hash table of edges.
+ * \param hsiz initial size of hash table.
+ * \param hmax maximal size of hash table.
+ * \return 1 if success, 0 if fail.
+ *
+ * Hash edges or faces.
+ *
+ * \remark if too long it could worth to bufferize access
+ */
+int MMG5_hashPNew(MMG5_pMesh mesh,MMG5_HashP *hash,int hsiz,int hmax) {
+  int   k;
+
+  /* adjust hash table params */
+  hash->siz  = hsiz+1;
+  hash->max  = hmax + 2;
+  hash->nxt  = hash->siz;
+
+  MMG5_ADD_MEM(mesh,(hash->max+1)*sizeof(MMG5_hpoint),"hash table",return 0);
+  MMG5_SAFE_CALLOC(hash->item,(hash->max+1),MMG5_hpoint,return 0);
+
+  for (k=hash->siz; k<hash->max; k++)
+    hash->item[k].nxt = k+1;
+
+  return 1;
+}
+
+/**
+ * \param mesh pointer toward the mesh structure.
+ * \param hash pointer toward the hash table of edges.
+ * \param a index of the first extremity of the edge.
+ * \param k index of point along the edge.
+ * \return 1 if success, 0 if fail.
+ *
+ * Adds data k to the point a of the hash table (if not already added).
+ *
+ */
+int MMG5_hashPoint(MMG5_pMesh mesh,MMG5_HashP *hash, int a,int k) {
+  MMG5_hpoint  *ph;
+  int          j;
+
+  ph  = &hash->item[a];
+
+  if ( ph->data == k )
+    return 1;
+  else if ( ph->data ) {
+    while ( ph->nxt && ph->nxt < hash->max ) {
+      ph = &hash->item[ph->nxt];
+      if ( ph->data == k ) return 1;
+    }
+
+    ph->nxt   = hash->nxt;
+    ph        = &hash->item[hash->nxt];
+    if ( hash->nxt >= hash->max-1 ) {
+      if ( mesh->info.ddebug )
+        fprintf(stderr,"\n  ## Warning: %s: memory alloc problem (edge):"
+                " %d\n",__func__,hash->max);
+
+      MMG5_TAB_RECALLOC(mesh,hash->item,hash->max,MMG5_GAP,MMG5_hpoint,
+                         "MMG5_edge",return 0);
+      /* ph pointer may be false after realloc */
+      ph        = &hash->item[hash->nxt];
+
+      for (j=ph->nxt; j<hash->max; j++)  hash->item[j].nxt = j+1;
+    }
+    hash->nxt = ph->nxt;
+  }
+
+  /* insert new point */
+  ph->data = k;
+  ph->nxt = 0;
+
+  return 1;
+}
+
+#endif

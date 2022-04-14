@@ -135,7 +135,7 @@ int MMG3D_part_meshElts( MMG5_pMesh mesh)
     int i;
     for (i=0; i< mesh->ne; i++) {
       MMG5_pTetra pt= &mesh->tetra[i+1];
-      pt->color1 = part[i];
+      pt->color1 = part[i]+1;
     }
  }
 

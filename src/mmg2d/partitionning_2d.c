@@ -141,7 +141,7 @@ int MMG2D_part_meshElts( MMG5_pMesh mesh )
     /* Mesh partitionning succeed */
     for (i=0; i< mesh->nt; i++) {
       MMG5_pTria pt= &mesh->tria[i+1];
-      pt->color1 = part[i];
+      pt->color1 = part[i]+1;
     }
   }
 

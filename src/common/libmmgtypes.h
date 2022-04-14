@@ -577,6 +577,25 @@ typedef struct {
   MMG5_hedge  *item;
 } MMG5_Hash;
 
+#ifdef USE_STARPU
+/**
+ * \struct MMG5_hpoint
+ * \brief Used to hash points
+ */
+typedef struct {
+  int   data,nxt;
+} MMG5_hpoint;
+
+/**
+ * \struct MMG5_HashP
+ * \brief Hash table for points
+ */
+typedef struct {
+  int         siz,max,nxt;
+  MMG5_hpoint  *item;
+} MMG5_HashP;
+#endif
+
 /* Global hash table used by task-based algo to allow each task to see nodes inserted by other ones */
 typedef MMG5_Hash * MMG5_pHash;
 
