@@ -31,6 +31,8 @@
 #include "partitionning_2d.h"
 #include "libmmg2d.h"
 
+#ifdef USE_STARPU
+
 /**
  * \param mesh pointer toward a MMG5 mesh structure
  * \param xadj pointer toward the position of adjacents elements in adjncy
@@ -181,3 +183,5 @@ int MMG2D_part_meshElts( MMG5_pMesh mesh )
 
   return status;
 }
+
+#endif

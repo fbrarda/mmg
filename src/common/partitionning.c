@@ -21,6 +21,8 @@
 ** =============================================================================
 */
 
+#ifdef USE_STARPU
+
 /**
  * \brief Mesh partitionning
  * \author Cécile Dobrzynski (Bx INP/Inria/UBordeaux)
@@ -95,3 +97,5 @@ int MMG5_part_meshElts( MMG_PART_INT nelt,MMG_PART_INT*xadj,MMG_PART_INT*adjncy,
 
   return status;
 }
+
+#endif

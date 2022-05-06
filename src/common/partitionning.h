@@ -21,6 +21,8 @@
 ** =============================================================================
 */
 
+#ifdef USE_STARPU
+
 /**
  * \brief definitions for mesh partitionning.
  * \author Cécile Dobrzynski (Bx INP/Inria)
@@ -69,5 +71,7 @@
 #endif
 
 int MMG5_part_meshElts( MMG_PART_INT,MMG_PART_INT*,MMG_PART_INT*,MMG_PART_INT,MMG_PART_INT*);
+
+#endif
 
 #endif

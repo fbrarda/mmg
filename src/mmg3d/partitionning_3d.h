@@ -21,6 +21,8 @@
 ** =============================================================================
 */
 
+#ifdef USE_STARPU
+
 /**
  * \brief partitionning_3d.c header file
  * \author Cécile Dobrzynski (Bx INP/Inria)
@@ -38,5 +40,7 @@
 
 int MMG3D_build_meshEltsGraph( MMG5_pMesh mesh,MMG_PART_INT **,MMG_PART_INT **);
 int MMG3D_part_meshElts( MMG5_pMesh mesh);
+
+#endif
 
 #endif
