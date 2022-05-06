@@ -28,39 +28,6 @@
 #define KTA     7
 #define KTB    11
 
-#ifdef USE_STARPU
-/**
- * \param mesh pointer toward the mesh
- * \return 1 if success, 0 if fail
- *
- * Create adjacency relations between the triangles dein the mesh
- *
- * \warning unused: insertion inside the hash table can't be done in parallel using tasks
- */
-
-void MMG2D_starpu_hashTria(void *buffers[], void *cl_arg) {
-
-  int nx_mesh;
-  struct starpu_vector_interface *vect_mesh;
-
-  MMG5_pMesh mesh;
-
-  int ret;
-
-  vect_mesh = (struct starpu_vector_interface *) buffers[0];
-  nx_mesh = STARPU_VECTOR_GET_NX(vect_mesh);
-  mesh = (MMG5_pMesh)STARPU_VECTOR_GET_PTR(vect_mesh);
-
-  ret=MMG2D_hashTria(mesh);
-
-  if (ret<0)
-  {
-    fprintf(stdout,"  ## Hashing problem. Exit program.\n");
-
-  }
-}
-#endif
-
 int MMG2D_hashTria(MMG5_pMesh mesh) {
   MMG5_pTria     pt,pt1;
   int            k,kk,pp,l,ll,mins,mins1,maxs,maxs1;

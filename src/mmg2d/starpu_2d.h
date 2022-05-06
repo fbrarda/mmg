@@ -39,19 +39,34 @@
 #include "starpu.h"
 #include "mmg2d.h"
 
+#define MMG2D_NCOLOR_MAX 1048576
+
 /** Main functions */
-void MMG2D_starpu_anaelt(void *buffers[], void *cl_arg);
-void MMG2D_starpu_colelt(void *buffers[], void *cl_arg);
-void MMG2D_starpu_swpmsh(void *buffers[], void *cl_arg);
-void MMG2D_starpu_swpmsh(void *buffers[], void *cl_arg);
-void MMG2D_starpu_adpspl(void *buffers[], void *cl_arg);
-void MMG2D_starpu_adpcol(void *buffers[], void *cl_arg);
-void MMG2D_starpu_movtri(void *buffers[], void *cl_arg);
+int MMG2D_starpu_anaelt ( MMG5_pMesh mesh,starpu_data_handle_t *handle_mesh,
+                          starpu_data_handle_t *handle_met,
+                          starpu_data_handle_t *handle_per_colors,
+                          starpu_data_handle_t *handle_hash,
+                          starpu_data_handle_t *handle_ns,
+                          int typchk,int color );
+
+
+/** Task wrappers */
+void MMG2D_hashTria_task(void *buffers[], void *cl_arg);
+void MMG2D_anaelt_task(void *buffers[], void *cl_arg);
+void MMG2D_colelt_task(void *buffers[], void *cl_arg);
+void MMG2D_swpmsh_task(void *buffers[], void *cl_arg);
+void MMG2D_swpmsh_task(void *buffers[], void *cl_arg);
+void MMG2D_adpspl_task(void *buffers[], void *cl_arg);
+void MMG2D_adpcol_task(void *buffers[], void *cl_arg);
+void MMG2D_movtri_task(void *buffers[], void *cl_arg);
 
 /** Task dependencies computation */
-void MMG2D_starpu_spldep(void *buffers[], void *cl_arg);
+void MMG2D_spldep_task(void *buffers[], void *cl_arg);
 
-/** Codelets for main functions */
+/** Tools */
+int MMG2D_spldeps ( MMG5_pMesh mesh,int *deps,int color);
+
+/** Codelets for needed functions */
 extern struct starpu_codelet colelt_codelet;
 extern struct starpu_codelet swpmsh_codelet;
 extern struct starpu_codelet anaelt_codelet;

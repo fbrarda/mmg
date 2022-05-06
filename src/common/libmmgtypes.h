@@ -28,6 +28,10 @@
 #include <stdarg.h>
 #include <stddef.h>
 
+#ifdef USE_STARPU
+#include <pthread.h>
+#endif
+
 #include "mmgcmakedefines.h"
 #include "mmgversion.h"
 
@@ -655,6 +659,9 @@ typedef struct {
   MMG5_Info      info; /*!< \ref MMG5_Info structure */
   char           *namein; /*!< Input mesh name */
   char           *nameout; /*!< Output mesh name */
+#ifdef USE_STARPU
+  pthread_mutex_t lock; /*!> To lock access to the mesh */
+#endif
 
 } MMG5_Mesh;
 typedef MMG5_Mesh  * MMG5_pMesh;
