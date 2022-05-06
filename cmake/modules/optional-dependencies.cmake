@@ -230,6 +230,10 @@ IF (NOT WIN32)
             "If you have already installed METIS and want to use it, "
             "please set the CMake variable or environment variable METIS_DIR "
             "to your METIS directory.")
+        ELSEIF ( STARPU_FOUND )
+          # If StarPU is not explicitely asked and scotch is not found do not
+          # fail but print a warning saying that starPU is disabled.
+          MESSAGE ( STATUS "No partitionner found: StarPU disabling" )
         ENDIF()
         # If StarPU is not explicitely asked and scotch is not found do not fail.
 
@@ -245,7 +249,7 @@ IF (NOT WIN32)
 
       # Scotch has already been searched if USE_SCOTCH is setted to ON or not provided.
       IF ( NOT USE_SCOTCH )
-        # User wants to use scotch
+        # scotch has not been searched but we need it!
         FIND_PACKAGE(SCOTCH QUIET)
 
         IF ( SCOTCH_FOUND )
@@ -254,7 +258,6 @@ IF (NOT WIN32)
           SET( LIBRARIES ${SCOTCH_LIBRARIES} ${LIBRARIES})
         ENDIF()
       ENDIF ( )
-
 
       IF ( SCOTCH_FOUND )
         add_definitions(-DUSE_STARPU)
@@ -269,9 +272,12 @@ IF (NOT WIN32)
             " A graph partitionner is needed to use shared memory parallelization."
             " SCOTCH or METIS can be used depending on the value of the"
             " MMG_PARTITIONNER CMake's variable.")
-        ENDIF()
 
-        # If StarPU is not explicitely asked and scotch is not found do not fail.
+        ELSEIF ( STARPU_FOUND )
+          # If StarPU is not explicitely asked and scotch is not found do not
+          # fail but print a warning saying that starPU is disabled.
+          MESSAGE ( STATUS "No partitionner found: StarPU disabling" )
+        ENDIF()
 
       ENDIF()
 
