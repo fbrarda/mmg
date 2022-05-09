@@ -39,8 +39,6 @@
 #include "starpu.h"
 #include "mmg2d.h"
 
-#define MMG2D_NCOLOR_MAX 1048576
-
 /** Main functions */
 int MMG2D_starpu_anaelt ( MMG5_pMesh mesh,starpu_data_handle_t *handle_mesh,
                           starpu_data_handle_t *handle_met,
@@ -48,6 +46,13 @@ int MMG2D_starpu_anaelt ( MMG5_pMesh mesh,starpu_data_handle_t *handle_mesh,
                           starpu_data_handle_t *handle_hash,
                           starpu_data_handle_t *handle_ns,
                           int typchk,int color );
+
+int MMG2D_starpu_movtri ( MMG5_pMesh mesh,MMG5_HashP *hash,
+                          starpu_data_handle_t *handle_mesh,
+                          starpu_data_handle_t *handle_met,
+                          starpu_data_handle_t *handle_per_colors,
+                          starpu_data_handle_t *handle_nm,
+                          int maxit_mov,int8_t improve,int color );
 
 
 /** Task wrappers */
@@ -65,6 +70,10 @@ void MMG2D_spldep_task(void *buffers[], void *cl_arg);
 
 /** Tools */
 int MMG2D_spldeps ( MMG5_pMesh mesh,int *deps,int color);
+int MMG2D_movdeps ( MMG5_pMesh mesh,MMG5_HashP*,int *deps,int color);
+
+int MMG2D_movdeps_pointColor(MMG5_pMesh mesh,MMG5_HashP *hash);
+int MMG2D_movdeps_pointColor_1edg(MMG5_pMesh,MMG5_HashP*,MMG5_HashP*);
 
 /** Codelets for needed functions */
 extern struct starpu_codelet colelt_codelet;

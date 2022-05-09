@@ -148,22 +148,20 @@ static const unsigned int MMG2D_idir[5] = {0,1,2,0,1};
 static const unsigned int MMG2D_inxt[5] = {1,2,0,1,2};
 
 
-//#ifdef USE_STARPU
-//
-//#warning lock don't work: to debug'
-//#define MMG2D_LOCK(lock) do { \
-//    puts("lock mesh");        \
-//    pthread_mutex_lock(lock); \
-//  }while(0)
-//
-//#define MMG2D_UNLOCK(lock) do { \
-//    pthread_mutex_unlock(lock); \
-//  }while(0)
-//
-//#else
+#ifdef USE_STARPU
+
+#define MMG2D_LOCK(lock) do { \
+    pthread_mutex_lock(lock); \
+  }while(0)
+
+#define MMG2D_UNLOCK(lock) do { \
+    pthread_mutex_unlock(lock); \
+  }while(0)
+
+#else
 #define MMG2D_LOCK(lock)
 #define MMG2D_UNLOCK(lock)
-//#endif
+#endif
 
 /** Reallocation of point table and sol table and creation
     of point ip with coordinates o and tag tag*/

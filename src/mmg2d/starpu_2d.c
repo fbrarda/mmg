@@ -442,10 +442,11 @@ struct starpu_codelet movtri_codelet =
 {
   .cpu_funcs = {MMG2D_movtri_task},
   .cpu_funcs_name = {"MMG2D_movtri_task"},
-  .nbuffers = 3,
-  .modes = {STARPU_RW, STARPU_RW, STARPU_REDUX},
+  .nbuffers = STARPU_VARIABLE_NBUFFERS,
+  .modes = {STARPU_R, STARPU_R, STARPU_REDUX,STARPU_DATA_MODE_ARRAY},
   .specific_nodes = 1,
-  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
+  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU,
+            STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
   .where = STARPU_CPU,
   .name = "movtri"
 };
@@ -594,6 +595,13 @@ int MMG2D_spldeps ( MMG5_pMesh mesh,int *deps,int color) {
     }
   }
 
+  // debug
+  /* printf(" Color %d -- %d deps:\n",color,ndeps); */
+  /* for ( i=1; i<=ndeps; ++i ) { */
+  /*   printf(" %d",deps[i]); */
+  /* } */
+  /* printf("\n"); */
+
   return ndeps;
 }
 
@@ -632,13 +640,6 @@ int MMG2D_starpu_anaelt ( MMG5_pMesh mesh,starpu_data_handle_t *handle_mesh,
   MMG5_SAFE_CALLOC(deps,mesh->info.ncolors+1,int,return 0);
   ndeps = MMG2D_spldeps (mesh,deps,color);
 
-  // debug
-  /* printf(" Color %d -- %d deps:\n",color,ndeps); */
-  /* for ( i=1; i<=ndeps; ++i ) { */
-  /*   printf(" %d",deps[i]); */
-  /* } */
-  /* printf("\n"); */
-
   /** Step 2: Create task_handles list from dependencies */
   struct starpu_data_descr *task_handles;
   MMG5_SAFE_CALLOC(task_handles,ndeps+1,struct starpu_data_descr,return 0);
@@ -670,164 +671,223 @@ int MMG2D_starpu_anaelt ( MMG5_pMesh mesh,starpu_data_handle_t *handle_mesh,
   return 1;
 }
 
+/**
+ * \param mesh pointer toward the mesh structure
+ * \param hash point hash table (to fill by the list of colors of each point)
+ *
+ * \return \a 1 if success, 0 if fail.
+ *
+ * List the colors to which each vertex belongs (using a hash table)
+ *
+ * \todo A future improvement can be to build in // this hashtable and to
+ * synchronize threads.
+ *
+ */
+int MMG2D_movdeps_pointColor(MMG5_pMesh mesh,MMG5_HashP *hash) {
+  MMG5_pTria   pt;
+  int          k, i;
+  MMG5_hpoint  *ph;
 
-/* /\* */
-/*  * Codelet to compute dependencies between move tasks. */
-/*  *\/ */
-/* struct starpu_codelet movdep_codelet = */
-/* { */
-/*   .cpu_funcs = {MMG2D_movdep_task}, */
-/*   .cpu_funcs_name = {"MMG2D_movdep_task"}, */
-/*   .nbuffers = 2, */
-/*   .modes = {STARPU_R,STARPU_W}, */
-/*   .specific_nodes = 2, */
-/*   .nodes = {STARPU_SPECIFIC_NODE_CPU,STARPU_SPECIFIC_NODE_CPU}, */
-/*   .where = STARPU_CPU, */
-/*   .name = "movdep" */
-/* }; */
+  /** Step 1: Store list of colors to which each point belong (primary hash
+   * table) */
+  if ( !MMG5_hashPNew( mesh,hash,mesh->np, 3.01*mesh->np) ) return 0;
+
+  for ( k=1; k<=mesh->nt; ++k ) {
+    pt = &mesh->tria[k];
+
+    if ( !MG_EOK(pt) ) continue;
+
+    for ( i=0; i<3; ++i ) {
+      MMG5_hashPoint(mesh,hash,pt->v[i],pt->color1);
+    }
+  }
+  return 1;
+}
+
+/**
+ * \param mesh pointer toward the mesh structure
+ * \param hash primary point hash table (contains the list of colors of each point)
+ * \param hash secondary point hash table (to fill by the list of colors to
+ * which each point is connected either directly, or through an edge)
+ *
+ * \return \a 1 if success, 0 if fail.
+ *
+ * List the colors to which each vertex belongs or is connected through 1 edge
+ * (using a hash table)
+ *
+ * \todo A future improvement can be to build in // this hashtable and to
+ * synchronize threads.
+ *
+ */
+int MMG2D_movdeps_pointColor_1edg(MMG5_pMesh mesh,MMG5_HashP *hash,MMG5_HashP *hash2) {
+  MMG5_pTria   pt;
+  int          k, i;
+  MMG5_hpoint  *ph;
+
+  if ( !MMG5_hashPNew( mesh,hash2,mesh->np, 6.01*mesh->np) ) return 0;
+
+  for ( k=1; k<=mesh->nt; ++k ) {
+
+    pt = &mesh->tria[k];
+    if ( !MG_EOK(pt) ) continue;
+
+    for ( i=0; i<3; ++i ) {
+      int ip1  = pt->v[i];
+      int ip2  = pt->v[MMG5_inxt2[i]];
+
+      assert ( hash->item[ip1].data && hash->item[ip2].data && "no color");
+
+      /* Append colors of point 2 to point 1 */
+      ph = &hash->item[ip2];
+      while ( ph->nxt ) {
+        MMG5_hashPoint(mesh,hash2,ip1,ph->data);
+        ph = &hash->item[ph->nxt];
+      }
+
+      /* Append colors of point 1 to point 2 */
+      ph = &hash->item[ip1];
+      while ( ph->nxt ) {
+        MMG5_hashPoint(mesh,hash2,ip2,ph->data);
+        ph = &hash->item[ph->nxt];
+      }
+    }
+  }
+  MMG5_DEL_MEM(mesh,hash->item);
+
+  return 1;
+}
 
 
-/* /\** */
-/*  * \param buffers Codelet buffers (to unpack) */
-/*  * \param cl_arg Codelet arguments (to unpack) */
-/*  * */
-/*  * Compute move dependencies: we have dependencies between two colors if they */
-/*  * are connected by an edge (i.e. it exist an edge such as one of the extremity */
-/*  * of the edge belongs to one color and the other extremity to the other color). */
-/*  * */
-/*  *\/ */
-/* void MMG2D_movdep_task(void *buffers[], void *cl_arg) { */
+/**
+ * \param mesh pointer toward the mesh structure
+ * \param hash2 point hash table listing the colors to which each point is
+ * directly connected or connected through 1 edge.
+ * \param deps array to store colors dependencies (has to be of size ncolors+1)
+ * \param color color on which we compute deps
+ *
+ * \return \a ndeps, the number of dependencies for current color.
+ *
+ * Compute deps for move operator: for now each color travels the entire mesh to
+ * build its deps.
+ *
+ */
+int MMG2D_movdeps(MMG5_pMesh mesh,MMG5_HashP *hash2,int *deps,int color) {
+  MMG5_pTria   pt;
+  int          k, i;
+  MMG5_hpoint  *ph;
 
-/*   struct starpu_variable_interface *handle_mesh; */
-/*   struct starpu_variable_interface *handle_ier; */
+  /** Step 1: Fill \a deps[i] by \a i if color \a color has a dependency with color \a
+   * i */
+  for ( k=1; k<=mesh->nt; ++k ) {
 
-/*   MMG5_pMesh   mesh; */
-/*   starpu_tag_t deps[MMG_NDEPSMAX]; */
-/*   int color; */
-/*   int k; */
-/*   int *ier; */
+    pt = &mesh->tria[k];
+    if ( !MMG2D_EOK(pt,color) ) continue;
 
-/*   handle_mesh = (struct starpu_variable_interface *) buffers[0]; */
-/*   mesh = (MMG5_pMesh)STARPU_VARIABLE_GET_PTR(handle_mesh); */
+    pt = &mesh->tria[k];
+    for ( i=0; i<3; ++i ) {
+      int ip1 = pt->v[i];
+      ph = &hash2->item[ip1];
+      deps[ph->data] = ph->data;
+      while ( ph->nxt ) {
+        ph = &hash2->item[ph->nxt];
+        deps[ph->data] = ph->data;
+      }
+    }
+  }
 
-/*   handle_ier = (struct starpu_variable_interface *) buffers[1]; */
-/*   ier = (int *)STARPU_VARIABLE_GET_PTR(handle_ier); */
+  /** Step 2: pack the array of dependencies and count number of dependencies */
+  k     = 0;
+  int ndeps = mesh->info.ncolors;
 
-/*   starpu_codelet_unpack_args(cl_arg, &color); */
+  /* Search for the last mark color */
+  while ( !deps[ndeps] && ndeps > 0 ) --ndeps;
 
-/*   assert ( mesh->adja ); */
+  while ( ++k < ndeps ) {
+    if ( !deps[k] ) {
+      /* copy dependency stored in last position in the empty place */
+      deps[k]     = deps[ndeps];
+      deps[ndeps] = 0;
 
-/*   int ndep = 0; */
-/*   memset(deps,0x0,MMG_NDEPSMAX*sizeof(starpu_tag_t)); */
+      /* Search the last marked color */
+      while ( !deps[ndeps] ) --ndeps;
+    }
+  }
 
-/*   *ier = 1; */
-/*   for ( k=1; k<=mesh->nt; ++k ) { */
-/*     MMG5_pTria pt1, pt2; */
+  // debug
+  /* printf(" Color %d -- %d deps:\n",color,ndeps); */
+  /* for ( i=1; i<=ndeps; ++i ) { */
+  /*   printf(" %d",deps[i]); */
+  /* } */
+  /* printf("\n"); */
 
-/*     pt1 = &mesh->tria[k]; */
+  return ndeps;
+}
 
-/*     if ( !MMG2D_EOK(pt1,color) ) continue; */
 
-/*     /\* Triangle has to be treated (it has the color treated by the task and is */
-/*      * used) *\/ */
-/*     int i; */
-/*     for ( i=0; i<3; ++i ) { */
-/*       /\* Search the color of adjacent triangles *\/ */
-/*       int k2 = mesh->adja [ 3*(k-1)+1+i ]/3; */
-/*       if ( !k2 ) continue; */
+/**
+ * \param mesh pointer toward the mesh structure
+ * \param hash2 point hash table listing the colors to which each point is
+ * directly connected or connected through 1 edge.
+ * \param handle_mesh starpu handle toward the mesh structure
+ * \param handle_met starpu handle toward the metric structure
+ * \param handle_per_color array to have 1 starpu handle per color
+ * \param handle_nm starpu_handle toward the number of moves
+ * \param maxit_mov maximal number of iteration of moves.
+ * \param improve 1 for last waves of move
+ * \param color color to process
+ *
+ * \return 1 if success, 0 otherwise
+ *
+ * Compute dependencies of color \a color for the moving operator and submit
+ * movtri task for this color to starPU.
+ *
+ * \remark For the splitting operator: there is a dependency between two
+ * colors if an edge that connects points belonging to each colors exist.
+ *
+ */
+int MMG2D_starpu_movtri ( MMG5_pMesh mesh,MMG5_HashP *hash,
+                          starpu_data_handle_t *handle_mesh,
+                          starpu_data_handle_t *handle_met,
+                          starpu_data_handle_t *handle_per_colors,
+                          starpu_data_handle_t *handle_nm,
+                          int maxit_mov,int8_t improve,int color ) {
 
-/*       pt2 = &mesh->tria[k2]; */
+  starpu_data_handle_t handle_deps;
 
-/*       if ( pt2->color1 != color ) { */
-/*         if ( ndep >= MMG_NDEPSMAX ) { */
-/*           fprintf(stderr,"  # Error: %s: %d: number of dependencies exceed the" */
-/*                   " maximal authorized value.\n",__func__,__LINE__); */
+  int i,ndeps,*deps;
 
-/*           *ier = 0; */
-/*           return; */
-/*         } */
+  /** Step 1: Find colors that have dependencies with current color */
+  MMG5_SAFE_CALLOC(deps,mesh->info.ncolors+1,int,return 0);
+  ndeps = MMG2D_movdeps (mesh,hash,deps,color);
 
-/*         /\* Mark the dependency *\/ */
-/*         deps[pt2->color1] = pt2->color1; */
-/*       } */
-/*     } */
-/*   } */
+  /** Step 2: Create task_handles list from dependencies */
+  struct starpu_data_descr *task_handles;
+  MMG5_SAFE_CALLOC(task_handles,ndeps+1,struct starpu_data_descr,return 0);
 
-/*   starpu_tag_declare_deps_array((starpu_tag_t)color, ndep, &deps[1]); */
-/* } */
+  task_handles[0].handle = handle_per_colors[color];
+  task_handles[0].mode   = STARPU_W|STARPU_COMMUTE;
+  for ( i=1; i<=ndeps; i++ ) {
+    task_handles[i].handle = handle_per_colors[deps[i]];
+    task_handles[i].mode   = STARPU_W|STARPU_COMMUTE;
+  }
+  MMG5_SAFE_FREE(deps);
 
-/* /\** */
-/*  * Compute deps for move operator: for now each color travels the entire mesh to */
-/*  * build its deps. A future improvement can be to build in // the primary hash */
-/*  * table (\hash), to synchronize threads, then to build the second hash table, */
-/*  * to synchronize threads and last to build the color deps. */
-/*  *\/ */
-/* int MMG2D_movdep(MMG5_pMesh mesh, int color) { */
-/*   MMG5_pTria   pt; */
-/*   int          k, i; */
-/* #warning don't build on MSVC */
-/*   starpu_tag_t deps[mesh->ncolors]; */
+  /** Step 3: Insert starpu task */
+  int ret = starpu_task_insert(&movtri_codelet,
+                               STARPU_R, *handle_mesh,
+                               STARPU_R, *handle_met,
+                               STARPU_REDUX, *handle_nm,
+                               STARPU_VALUE, &maxit_mov, sizeof(maxit_mov),
+                               STARPU_DATA_MODE_ARRAY, task_handles, ndeps+1,
+                               STARPU_VALUE, &improve, sizeof(improve),
+                               STARPU_VALUE, &color, sizeof(color),
+                               0);
 
-/*   /\* Store list of colors per points using a hashtable *\/ */
-/*   MMG5_HashP *hash; */
+  STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_insert");
 
-/*   if ( !MMG5_hashNew( mesh,&hash,mesh->np, 3.01*mesh->np) ) return 0; */
+  MMG5_SAFE_FREE(task_handles);
 
-/*   for ( k=1; k<=mesh->nt; ++k ) { */
-/*     pt = &mesh->tria[k]; */
-
-/*     if ( !MG_EOK(pt) ) continue; */
-
-/*     for ( i=0; i<3; ++i ) { */
-/*       MMG5_hashPoint(mesh,&hash,pt->v[i],pt->color1); */
-/*     } */
-/*   } */
-
-/*   /\* Append to each point the colors of points that are */
-/*    * connected to the current point by an edge. *\/ */
-
-/*   if ( !MMG5_hashNew( mesh,&hash2,mesh->np, 6.01*mesh->np) ) return 0; */
-
-/*   for ( k=1; k<=mesh->nt; ++k ) { */
-
-/*     if ( !MG_EOK(pt) ) continue; */
-
-/*     pt = &mesh->tria[k]; */
-/*     for ( i=0; i<3; ++i ) { */
-/*       int ip1  = pt->v[i]; */
-/*       int ip2  = pt->v[MMG5_inxt2[i]]; */
-
-/*       assert ( hash->item[ip1] && hash->item[ip2] && "no color"); */
-
-/*       /\* Append colors of point 2 to point 1 *\/ */
-/*       MMG5_hpoint  *ph = &hash->item[ip2]; */
-/*       while ( ph->nxt ) { */
-/*         MMG5_hashPoint(mesh,&hash2,ip1,ph->data); */
-/*         ph = &hash->item[ph->nxt]; */
-/*       } */
-
-/*       /\* Append colors of point 1 to point 2 *\/ */
-/*       MMG5_hpoint  *ph = &hash->item[ip1]; */
-/*       while ( ph->nxt ) { */
-/*         MMG5_hashPoint(mesh,&hash2,ip2,ph->data); */
-/*         ph = &hash->item[ph->nxt]; */
-/*       } */
-/*     } */
-/*   } */
-
-/*   /\* Declare dependencies for color \a color *\/ */
-/*   for ( k=1; k<=mesh->nt; ++k ) { */
-
-/*     if ( !MMG2D_EOK(pt) ) continue; */
-
-/*     pt = &mesh->tria[k]; */
-/*     for ( i=0; i<3; ++i ) { */
-/*       ip1 = pt->v[i]; */
-/*       depx[] */
-/*     } */
-/*   } */
-
-/*   return 1; */
-/* } */
+  return 1;
+}
 
 #endif
