@@ -30,6 +30,7 @@
 
 #ifdef USE_STARPU
 #include <pthread.h>
+#include <starpu.h>
 #endif
 
 #include "mmgcmakedefines.h"

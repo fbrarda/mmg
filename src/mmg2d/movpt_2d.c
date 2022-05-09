@@ -57,7 +57,13 @@ int MMG2D_movedgpt(MMG5_pMesh mesh,MMG5_pSol met,int ilist,int *list, int8_t imp
   int8_t             i,i1,i2;
   static int8_t      mmgWarn0=0,mmgWarn1=0;
 
-  pt0 = &mesh->tria[0];
+#ifdef USE_STARPU
+  int zero_idx = -starpu_worker_get_id();
+#else
+  int zero_idx = 0;
+#endif
+
+  pt0 = &mesh->tria[zero_idx];
   step = 0.1;
   ip1 = ip2 = it1 = it2 = 0;
   calold = calnew = DBL_MAX;
@@ -164,7 +170,7 @@ int MMG2D_movedgpt(MMG5_pMesh mesh,MMG5_pSol met,int ilist,int *list, int8_t imp
   else MMG2D_bezierCurv(mesh,iel,i,1.0-step,o,no);
 
   /* Evaluate resulting configuration */
-  ppt = &mesh->point[0];
+  ppt = &mesh->point[zero_idx];
   ppt->c[0] = o[0];
   ppt->c[1] = o[1];
   ppt->n[0] = no[0];
@@ -216,8 +222,14 @@ int MMG2D_movintpt(MMG5_pMesh mesh,MMG5_pSol met,int ilist,int *list,int8_t impr
   int               k,iel;
   int8_t            i,i1,i2;
 
-  ppt0 = &mesh->point[0];
-  pt0  = &mesh->tria[0];
+#ifdef USE_STARPU
+  int zero_idx = -starpu_worker_get_id();
+#else
+  int zero_idx = 0;
+#endif
+
+  ppt0 = &mesh->point[zero_idx];
+  pt0  = &mesh->tria[zero_idx];
 
   volbal = 0.0;
   b[0] = b[1] = 0.0;

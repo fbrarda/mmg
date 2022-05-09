@@ -268,14 +268,42 @@ int MMG2D_memOption(MMG5_pMesh mesh) {
 int MMG2D_setMeshSize_alloc( MMG5_pMesh mesh ) {
   int k;
 
+#ifdef USE_STARPU
+  pthread_mutex_init(&mesh->lock,NULL);
+
+  /* StarPU configuration: set the sceduling policy */
+  struct starpu_conf conf;
+  starpu_conf_init(&conf);
+  conf.sched_policy_name = "eager";
+
+  /* StarPU initialization method */
+  int ret = starpu_init(&conf);
+  if (ret == -ENODEV) return 0;
+  STARPU_CHECK_RETURN_VALUE(ret, "starpu_init");
+
+  /* STARPU task profiling info */
+  starpu_profiling_status_set(STARPU_PROFILING_ENABLE);
+
+  /* Keep space so each thread can simulate operators in different memory slots. */
+  int nbadd_pos = starpu_worker_get_count();
+#else
+  int nbadd_pos = 0;
+#endif
+
   MMG5_ADD_MEM(mesh,(mesh->npmax+1)*sizeof(MMG5_Point),"initial vertices",
                 printf("  Exit program.\n");
                 return 0);
-  MMG5_SAFE_CALLOC(mesh->point,mesh->npmax+1,MMG5_Point,return 0);
+  MMG5_SAFE_CALLOC(mesh->point,(mesh->npmax+nbadd_pos)+1,MMG5_Point,return 0);
+  /* Now shift pointer so 0 position allow to access to \a nbadd_pos. Previous
+   * memory slots will be used by the threads to simulate operators */
+  mesh->point += nbadd_pos;
 
   MMG5_ADD_MEM(mesh,(mesh->ntmax+1)*sizeof(MMG5_Tria),"initial triangles",return 0);
-  MMG5_SAFE_CALLOC(mesh->tria,mesh->ntmax+1,MMG5_Tria,return 0);
-  memset(&mesh->tria[0],0,sizeof(MMG5_Tria));
+  MMG5_SAFE_CALLOC(mesh->tria,(mesh->ntmax+nbadd_pos)+1,MMG5_Tria,return 0);
+
+  /* Now shift pointer so 0 position allow to access to \a nbadd_pos. Previous
+   * memory slots will be used by the threads to simulate operators */
+  mesh->tria += nbadd_pos;
 
   if ( mesh->nquad ) {
     MMG5_ADD_MEM(mesh,(mesh->nquad+1)*sizeof(MMG5_Quad),"initial quadrilaterals",return 0);

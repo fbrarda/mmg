@@ -59,8 +59,14 @@ int MMG2D_chkspl(MMG5_pMesh mesh,MMG5_pSol met,int k,int8_t i) {
   calseuil = 1e-4 / MMG2D_ALPHAD;
   npinit = mesh->np;
 
+#ifdef USE_STARPU
+  int zero_idx = -starpu_worker_get_id();
+#else
+  int zero_idx = 0;
+#endif
+
   pt  = &mesh->tria[k];
-  pt0 = &mesh->tria[0];
+  pt0 = &mesh->tria[zero_idx];
   i1  = MMG5_inxt2[i];
   i2  = MMG5_iprv2[i];
 
@@ -344,8 +350,14 @@ int MMG2D_split1_sim(MMG5_pMesh mesh, MMG5_pSol sol, int k, int vx[3]) {
   double      cal;
   uint8_t     tau[3];
 
+#ifdef USE_STARPU
+  int zero_idx = -starpu_worker_get_id();
+#else
+  int zero_idx = 0;
+#endif
+
   pt = &mesh->tria[k];
-  pt0 = &mesh->tria[0];
+  pt0 = &mesh->tria[zero_idx];
   memcpy(pt0,pt,sizeof(MMG5_Tria));
 
   /* Set permutation from the reference configuration (case 1: edge 0 is splitted) to the actual one */
@@ -455,8 +467,14 @@ int MMG2D_split2_sim(MMG5_pMesh mesh, MMG5_pSol sol, int k, int vx[3]) {
   double      cal;
   uint8_t     tau[3];
 
+#ifdef USE_STARPU
+  int zero_idx = -starpu_worker_get_id();
+#else
+  int zero_idx = 0;
+#endif
+
   pt = &mesh->tria[k];
-  pt0 = &mesh->tria[0];
+  pt0 = &mesh->tria[zero_idx];
   memcpy(pt0,pt,sizeof(MMG5_Tria));
 
   /* Set permutation from the reference configuration (case 6: edges 1,2 are splitted) to the actual one */
@@ -590,8 +608,14 @@ int MMG2D_split3_sim(MMG5_pMesh mesh, MMG5_pSol sol, int k, int vx[3]) {
   MMG5_pTria         pt,pt0;
   double             cal;
 
+#ifdef USE_STARPU
+  int zero_idx = -starpu_worker_get_id();
+#else
+  int zero_idx = 0;
+#endif
+
   pt = &mesh->tria[k];
-  pt0 = &mesh->tria[0];
+  pt0 = &mesh->tria[zero_idx];
   memcpy(pt0,pt,sizeof(MMG5_Tria));
 
   pt0->v[1] = vx[2] ; pt0->v[2] = vx[1];
@@ -723,8 +747,14 @@ int MMG2D_splitbar(MMG5_pMesh mesh,int k,int ip) {
   int8_t             j2,j0;
   double             cal,calseuil;
 
+#ifdef USE_STARPU
+  int zero_idx = -starpu_worker_get_id();
+#else
+  int zero_idx = 0;
+#endif
+
   pt  = &mesh->tria[k];
-  pt0 = &mesh->tria[0];
+  pt0 = &mesh->tria[zero_idx];
   ppt = &mesh->point[ip];
   ip0 = pt->v[0];
   p0  = &mesh->point[ip0];

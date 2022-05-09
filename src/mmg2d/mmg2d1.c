@@ -1255,7 +1255,6 @@ int MMG2D_movtri(MMG5_pMesh mesh,MMG5_pSol met,int maxit,int8_t improve, int col
 int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
 
 #ifdef USE_STARPU
-  pthread_mutex_init(&mesh->lock,NULL);
 
   /* Stage 0: mesh coloration with metis*/
   int status;
@@ -1266,18 +1265,6 @@ int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
 
   status = MMG2D_part_meshElts(mesh);
 
-  /* StarPU configuration: set the sceduling policy */
-  struct starpu_conf conf;
-  starpu_conf_init(&conf);
-  conf.sched_policy_name = "eager";
-
-  /* StarPU initialization method */
-  ret = starpu_init(&conf);
-  if (ret == -ENODEV) return 0;
-  STARPU_CHECK_RETURN_VALUE(ret, "starpu_init");
-
-  /* STARPU task profiling info */
-  starpu_profiling_status_set(STARPU_PROFILING_ENABLE);
 #endif
 
   /* Stage 1: creation of a geometric mesh */
@@ -1320,13 +1307,6 @@ int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
     fprintf(stderr,"  ## Unable to make fine improvements. Exit program.\n");
     return 0;
   }
-
-#ifdef USE_STARPU
-  pthread_mutex_destroy(&mesh->lock);
-
-  /* Terminate StarPU */
-  starpu_shutdown();
-#endif
 
   return 1;
 }

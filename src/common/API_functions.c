@@ -463,8 +463,16 @@ int MMG5_Free_allSols(MMG5_pMesh mesh,MMG5_pSol *sol) {
  */
 void MMG5_Free_structures(MMG5_pMesh mesh,MMG5_pSol sol){
 
-  if ( mesh->point )
+#ifdef USE_STARPU
+  int nbadd_pos = starpu_worker_get_count();
+#else
+  int nbadd_pos = 0;
+#endif
+
+  if ( mesh->point ) {
+    mesh->point -= nbadd_pos;
     MMG5_DEL_MEM(mesh,mesh->point);
+  }
 
   if ( mesh->xpoint )
     MMG5_DEL_MEM(mesh,mesh->xpoint);
@@ -475,8 +483,11 @@ void MMG5_Free_structures(MMG5_pMesh mesh,MMG5_pSol sol){
   if ( mesh->adja )
     MMG5_DEL_MEM(mesh,mesh->adja);
 
-  if ( mesh->tria )
+#warning don't work in 3D
+  if ( mesh->tria ) {
+    mesh->tria -= nbadd_pos;
     MMG5_DEL_MEM(mesh,mesh->tria);
+  }
 
   if ( mesh->adjt )
     MMG5_DEL_MEM(mesh,mesh->adjt);

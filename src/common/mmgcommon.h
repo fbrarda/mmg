@@ -173,6 +173,19 @@ extern "C" {
 #define MMG5_SW 4
 #define MMG5_SD 8
 
+#ifdef USE_STARPU
+#define MMG_STARPU_SHUTDOWN(mesh)do             \
+  {                                             \
+    pthread_mutex_destroy(&mesh->lock);         \
+                                                \
+    /* Terminate StarPU */                      \
+    starpu_shutdown();                          \
+  }while(0)
+#else
+#define MMG_STARPU_SHUTDOWN(mesh)
+#endif
+
+
 /** Reset the customized signals and set the internal counters of points, edges,
  * tria and tetra to the suitable value (needed by users to recover their mesh
  * using the API) */

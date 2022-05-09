@@ -359,7 +359,7 @@ struct starpu_codelet adpspl_codelet =
   .nbuffers = STARPU_VARIABLE_NBUFFERS,
   .modes = {STARPU_RW, STARPU_RW, STARPU_REDUX,STARPU_DATA_MODE_ARRAY},
   .specific_nodes = 1,
-  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU,
+  .nodes = {STARPU_SPECIFIC_NODE_CPU,STARPU_SPECIFIC_NODE_CPU,
             STARPU_SPECIFIC_NODE_CPU,STARPU_SPECIFIC_NODE_CPU},
   .where = STARPU_CPU,
   .name = "adpspl"

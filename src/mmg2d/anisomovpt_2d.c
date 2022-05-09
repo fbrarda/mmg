@@ -43,8 +43,14 @@ int MMG2D_movintpt_ani(MMG5_pMesh mesh,MMG5_pSol met,int ilist,int *list,int8_t 
   int8_t             i,i1,i2;
   static int8_t      mmgWarn0=0;
 
-  pt0 = &mesh->tria[0];
-  ppt0 = &mesh->point[0];
+#ifdef USE_STARPU
+  int zero_idx = -starpu_worker_get_id();
+#else
+  int zero_idx = 0;
+#endif
+
+  pt0 = &mesh->tria[zero_idx];
+  ppt0 = &mesh->point[zero_idx];
   gr[0] = gr[1] = 0.0;
   calold = calnew = DBL_MAX;
   step = 0.1;
