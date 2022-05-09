@@ -49,7 +49,6 @@ pthread_mutex_t lock;
    typchk = 1 -> adaptation based on edge lengths
    typchk = 2 -> adaptation based on lengths calculated in metric met */
 int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
-  MMG5_HashP hash2;
   MMG5_Hash  hash;
   int        it,maxit,ns,nc,nsw,nns,nnc,nnsw;
 
@@ -59,7 +58,8 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
   maxit = 5;
 
 #ifdef USE_STARPU
-  int       color,ret,ier;
+  MMG5_HashP hash2;
+  int        color,ret,ier;
   starpu_data_handle_t handle_mesh,handle_met,handle_hash,handle_deps;
   starpu_data_handle_t handle_ns,handle_nc,handle_nsw,handle_ier;
 
@@ -753,7 +753,6 @@ int MMG2D_swpmsh(MMG5_pMesh mesh,MMG5_pSol met,int typchk, int color1) {
 /* Mesh adaptation routine for the final stage of the algorithm: intertwine splitting
  based on patterns, collapses, swaps and vertex relocations.*/
 int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
-  MMG5_HashP           hash2;
   int                  maxit,it,nns,ns,nnc,nc,nnsw,nsw,nnm,nm;
   int                  typchk;
   int                  maxit_mov;
@@ -763,6 +762,7 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
   maxit = 5;
 
 #ifdef USE_STARPU
+  MMG5_HashP           hash2;
   int                  color;
   int                  ret,i;
   starpu_data_handle_t handle_mesh,handle_met,handle_ns,handle_nc,handle_nsw,handle_nm;
