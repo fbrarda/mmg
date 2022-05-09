@@ -654,7 +654,7 @@ int MMG2D_starpu_colelt ( MMG5_pMesh mesh,MMG5_HashP *hash,
 
   /** Step 1: Find colors that have dependencies with current color */
   MMG5_SAFE_CALLOC(deps,mesh->info.ncolors+1,int,return 0);
-  ndeps = MMG2D_movdeps (mesh,hash,deps,color);
+  ndeps = MMG2D_1edgdeps (mesh,hash,deps,color);
 
   /** Step 2: Create task_handles list from dependencies */
   struct starpu_data_descr *task_handles;
@@ -884,7 +884,7 @@ int MMG2D_pointColor_1edg(MMG5_pMesh mesh,MMG5_HashP *hash2) {
  * build its deps.
  *
  */
-int MMG2D_movdeps(MMG5_pMesh mesh,MMG5_HashP *hash2,int *deps,int color) {
+int MMG2D_1edgdeps(MMG5_pMesh mesh,MMG5_HashP *hash2,int *deps,int color) {
   MMG5_pTria   pt;
   int          k, i;
   MMG5_hpoint  *ph;
@@ -968,7 +968,7 @@ int MMG2D_starpu_adpcol ( MMG5_pMesh mesh,MMG5_HashP *hash,
 
   /** Step 1: Find colors that have dependencies with current color */
   MMG5_SAFE_CALLOC(deps,mesh->info.ncolors+1,int,return 0);
-  ndeps = MMG2D_movdeps (mesh,hash,deps,color);
+  ndeps = MMG2D_1edgdeps (mesh,hash,deps,color);
 
   /** Step 2: Create task_handles list from dependencies */
   struct starpu_data_descr *task_handles;
@@ -1032,7 +1032,7 @@ int MMG2D_starpu_swpmsh ( MMG5_pMesh mesh,MMG5_HashP *hash,
 
   /** Step 1: Find colors that have dependencies with current color */
   MMG5_SAFE_CALLOC(deps,mesh->info.ncolors+1,int,return 0);
-  ndeps = MMG2D_movdeps (mesh,hash,deps,color);
+  ndeps = MMG2D_1edgdeps (mesh,hash,deps,color);
 
   /** Step 2: Create task_handles list from dependencies */
   struct starpu_data_descr *task_handles;
@@ -1097,7 +1097,7 @@ int MMG2D_starpu_movtri ( MMG5_pMesh mesh,MMG5_HashP *hash,
 
   /** Step 1: Find colors that have dependencies with current color */
   MMG5_SAFE_CALLOC(deps,mesh->info.ncolors+1,int,return 0);
-  ndeps = MMG2D_movdeps (mesh,hash,deps,color);
+  ndeps = MMG2D_1edgdeps (mesh,hash,deps,color);
 
   /** Step 2: Create task_handles list from dependencies */
   struct starpu_data_descr *task_handles;
