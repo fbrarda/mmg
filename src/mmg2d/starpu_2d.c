@@ -42,8 +42,6 @@ struct starpu_codelet hashTria_codelet =
   .cpu_funcs_name = {"MMG2D_hashTria_task"},
   .nbuffers = 1,
   .modes = {STARPU_RW},
-  .specific_nodes = 1,
-  .nodes = {STARPU_SPECIFIC_NODE_CPU},
   .where = STARPU_CPU,
   .name = "hashTria"
 };
@@ -182,10 +180,6 @@ struct starpu_codelet anaelt_codelet =
   .cpu_funcs_name = {"MMG2D_anaelt_task"},
   .nbuffers = STARPU_VARIABLE_NBUFFERS,
   .modes = {STARPU_RW, STARPU_RW, STARPU_RW,STARPU_REDUX,STARPU_DATA_MODE_ARRAY},
-  .specific_nodes = 1,
-  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU,
-            STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU,
-            STARPU_SPECIFIC_NODE_CPU},
   .where = STARPU_CPU,
   .name = "anaelt"
 };
@@ -264,9 +258,6 @@ struct starpu_codelet colelt_codelet =
   .cpu_funcs_name = {"MMG2D_colelt_task"},
   .nbuffers = STARPU_VARIABLE_NBUFFERS,
   .modes = {STARPU_R, STARPU_R, STARPU_REDUX,STARPU_DATA_MODE_ARRAY},
-  .specific_nodes = 1,
-  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU,
-            STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
   .where = STARPU_CPU,
   .name = "colelt"
 };
@@ -311,9 +302,6 @@ struct starpu_codelet swpmsh_codelet =
   .cpu_funcs_name = {"MMG2D_swpmsh_task"},
   .nbuffers = STARPU_VARIABLE_NBUFFERS,
   .modes = {STARPU_RW, STARPU_RW, STARPU_REDUX,STARPU_DATA_MODE_ARRAY},
-  .specific_nodes = 1,
-  .nodes = {STARPU_SPECIFIC_NODE_CPU,STARPU_SPECIFIC_NODE_CPU,
-            STARPU_SPECIFIC_NODE_CPU,STARPU_SPECIFIC_NODE_CPU},
   .where = STARPU_CPU,
   .name = "swpmsh"
 };
@@ -358,9 +346,6 @@ struct starpu_codelet adpspl_codelet =
   .cpu_funcs_name = {"MMG2D_adpspl_task"},
   .nbuffers = STARPU_VARIABLE_NBUFFERS,
   .modes = {STARPU_RW, STARPU_RW, STARPU_REDUX,STARPU_DATA_MODE_ARRAY},
-  .specific_nodes = 1,
-  .nodes = {STARPU_SPECIFIC_NODE_CPU,STARPU_SPECIFIC_NODE_CPU,
-            STARPU_SPECIFIC_NODE_CPU,STARPU_SPECIFIC_NODE_CPU},
   .where = STARPU_CPU,
   .name = "adpspl"
 };
@@ -403,9 +388,6 @@ struct starpu_codelet adpcol_codelet =
   .cpu_funcs_name = {"MMG2D_adpcol_task"},
   .nbuffers = STARPU_VARIABLE_NBUFFERS,
   .modes = {STARPU_R, STARPU_R, STARPU_REDUX,STARPU_DATA_MODE_ARRAY},
-  .specific_nodes = 1,
-  .nodes = {STARPU_SPECIFIC_NODE_CPU,STARPU_SPECIFIC_NODE_CPU,
-            STARPU_SPECIFIC_NODE_CPU,STARPU_SPECIFIC_NODE_CPU},
   .where = STARPU_CPU,
   .name = "adpcol"
 };
@@ -448,9 +430,6 @@ struct starpu_codelet movtri_codelet =
   .cpu_funcs_name = {"MMG2D_movtri_task"},
   .nbuffers = STARPU_VARIABLE_NBUFFERS,
   .modes = {STARPU_R, STARPU_R, STARPU_REDUX,STARPU_DATA_MODE_ARRAY},
-  .specific_nodes = 1,
-  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU,
-            STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
   .where = STARPU_CPU,
   .name = "movtri"
 };
