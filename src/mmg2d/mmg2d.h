@@ -147,29 +147,38 @@ static const int MMG2D_iopp[3][2] = {{1,2},{0,2},{0,1}};
 static const unsigned int MMG2D_idir[5] = {0,1,2,0,1};
 static const unsigned int MMG2D_inxt[5] = {1,2,0,1,2};
 
-
 #ifdef USE_STARPU
-
-#define MMG2D_LOCK(lock) do { \
-    pthread_mutex_lock(lock); \
+/** We can't allow realloc with shared mem parallelization as threads may want
+ * to acces to the mesh while it is reallocated (and it is impossible to
+ * efficiently proctect against concurrency access) */
+#define MMG2D_POINT_REALLOC(mesh,sol,ip,wantedGap,law,o,tag ) do        \
+  {                                                                     \
+    static int warn = 0;                                                \
+                                                                        \
+    MMG5_LOCK(&mesh->lock);                                             \
+                                                                        \
+    if ( !warn ) {                                                      \
+      fprintf(stderr,"  ## Error: Point reallocation not possible using" \
+              " shared memory parallelization.\n");                     \
+      warn = 1;                                                         \
+    }                                                                   \
+    MMG5_UNLOCK(&mesh->lock);                                           \
+    law;                                                                \
   }while(0)
 
-#define MMG2D_UNLOCK(lock) do { \
-    pthread_mutex_unlock(lock); \
+#define MMG2D_TRIA_REALLOC(mesh,jel,wantedGap,law ) do                  \
+  {                                                                     \
+    fprintf(stderr,"  ## Error: Triangle reallocation not possible using" \
+            " shared memory parallelization.\n");                       \
+    law;                                                                \
   }while(0)
 
 #else
-#define MMG2D_LOCK(lock)
-#define MMG2D_UNLOCK(lock)
-#endif
-
 /** Reallocation of point table and sol table and creation
     of point ip with coordinates o and tag tag*/
 #define MMG2D_POINT_REALLOC(mesh,sol,ip,wantedGap,law,o,tag ) do        \
   {                                                                     \
     int klink;                                                          \
-                                                                        \
-    MMG2D_LOCK(&mesh->lock);                                            \
                                                                         \
     assert ( mesh && mesh->point );                                     \
     MMG5_TAB_RECALLOC(mesh,mesh->point,mesh->npmax,wantedGap,MMG5_Point, \
@@ -191,8 +200,6 @@ static const unsigned int MMG2D_inxt[5] = {1,2,0,1,2};
       sol->npmax = mesh->npmax;                                         \
     }                                                                   \
                                                                         \
-    MMG2D_UNLOCK(&mesh->lock);                                          \
-                                                                        \
     /* We try again to add the point */                                 \
     ip = MMG2D_newPt(mesh,o,tag);                                       \
     if ( !ip ) {law;}                                                   \
@@ -203,9 +210,6 @@ static const unsigned int MMG2D_inxt[5] = {1,2,0,1,2};
 #define MMG2D_TRIA_REALLOC(mesh,jel,wantedGap,law ) do                  \
   {                                                                     \
    int klink,oldSiz;                                                    \
-                                                                        \
-                                                                        \
-   MMG2D_LOCK(&mesh->lock);                                             \
                                                                         \
    oldSiz = mesh->ntmax;                                                \
    MMG5_TAB_RECALLOC(mesh,mesh->tria,mesh->ntmax,wantedGap,MMG5_Tria,   \
@@ -223,12 +227,11 @@ static const unsigned int MMG2D_inxt[5] = {1,2,0,1,2};
                          ,"larger adja table",law);                     \
    }                                                                    \
                                                                         \
-   MMG2D_UNLOCK(&mesh->lock);                                           \
-                                                                        \
    /* We try again to add the point */                                  \
    jel = MMG2D_newElt(mesh);                                            \
    if ( !jel ) {law;}                                                   \
    }while(0)
+#endif
 
 /* Prototypes */
 /*zaldy*/
