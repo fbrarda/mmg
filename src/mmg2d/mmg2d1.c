@@ -122,10 +122,10 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
 
       for (color=1; color<=mesh->info.ncolors; color++)
       {
-        /* Call anaelt-like function for partition \a color. Wrap it into a task
-         * to run in // (in this case, we can gain some alloc/unalloc using a
-         * STARPU_SCRATCH handle and letting Starpu deal with the local array \a
-         * deps ) */
+        /* Call anaelt-like function for partition \a color. Can be wrapped into
+         * a task to be run in // (in this case, we can gain some alloc/unalloc
+         * using a STARPU_SCRATCH handle and letting Starpu deal with the local
+         * array \a deps ) */
         int ier = MMG2D_starpu_anaelt(mesh,&handle_mesh,&handle_met,handle_per_colors,
                                       &handle_hash,&handle_ns,typchk,color);
 
@@ -781,15 +781,17 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
 
       for (color=1; color<=mesh->info.ncolors; color++)
       {
-        ret = starpu_task_insert(&adpspl_codelet,
-                                 STARPU_RW, handle_mesh,
-                                 STARPU_RW, handle_met,
-                                 STARPU_REDUX, handle_ns,
-                                 STARPU_VALUE, &color, sizeof(color),
-                                 0);
+        /* Call adpspl-like function for partition \a color. Can be wrapped into
+         * a task to be run in // (in this case, we can gain some
+         * alloc/unalloc using a STARPU_SCRATCH handle and letting Starpu deal
+         * with the local array \a deps ) */
+        int ier = MMG2D_starpu_adpspl(mesh,&handle_mesh,&handle_met,handle_per_colors,
+                                      &handle_ns,color);
 
-        STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_insert");
-
+        if ( ier < 1 ) {
+          fprintf(stderr,"  ## Unable to submit adpspl task to starPU. Exit program.\n");
+          return 0;
+        }
       }
 
       starpu_data_acquire(handle_ns, STARPU_RW);
@@ -812,6 +814,7 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
         ret = starpu_task_insert(&adpcol_codelet,
                                  STARPU_RW, handle_mesh,
                                  STARPU_RW, handle_met,
+                                 STARPU_R,handle_per_colors,
                                  STARPU_REDUX, handle_nc,
                                  STARPU_VALUE, &color, sizeof(color),
                                  0);

@@ -47,6 +47,12 @@ int MMG2D_starpu_anaelt ( MMG5_pMesh mesh,starpu_data_handle_t *handle_mesh,
                           starpu_data_handle_t *handle_ns,
                           int typchk,int color );
 
+int MMG2D_starpu_adpspl ( MMG5_pMesh mesh,starpu_data_handle_t *handle_mesh,
+                          starpu_data_handle_t *handle_met,
+                          starpu_data_handle_t *handle_per_colors,
+                          starpu_data_handle_t *handle_ns,
+                          int color );
+
 int MMG2D_starpu_movtri ( MMG5_pMesh mesh,MMG5_HashP *hash,
                           starpu_data_handle_t *handle_mesh,
                           starpu_data_handle_t *handle_met,

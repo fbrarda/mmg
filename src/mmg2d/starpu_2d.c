@@ -354,8 +354,8 @@ struct starpu_codelet adpspl_codelet =
 {
   .cpu_funcs = {MMG2D_adpspl_task},
   .cpu_funcs_name = {"MMG2D_adpspl_task"},
-  .nbuffers = 3,
-  .modes = {STARPU_RW, STARPU_RW, STARPU_REDUX},
+  .nbuffers = STARPU_VARIABLE_NBUFFERS,
+  .modes = {STARPU_R, STARPU_R, STARPU_REDUX},
   .specific_nodes = 1,
   .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
   .where = STARPU_CPU,
@@ -665,6 +665,64 @@ int MMG2D_starpu_anaelt ( MMG5_pMesh mesh,starpu_data_handle_t *handle_mesh,
                                0);
 
   STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_insert:anaelt_codelet");
+
+  MMG5_SAFE_FREE(task_handles);
+
+  return 1;
+}
+
+/**
+ * \param mesh pointer toward the mesh structure
+ * \param handle_mesh starpu handle toward the mesh structure
+ * \param handle_met starpu handle toward the metric structure
+ * \param handle_ns starpu_handle toward the number of splits
+ * \param color color to process
+ *
+ * \return 1 if success, 0 otherwise
+ *
+ * Compute dependencies of color \a color for the splitting operator and submit
+ * adpspl task for this color to starPU.
+ *
+ * \remark For the splitting operator: there is a dependency between two
+ * colors if they are adjacent.
+ *
+ */
+int MMG2D_starpu_adpspl ( MMG5_pMesh mesh,starpu_data_handle_t *handle_mesh,
+                          starpu_data_handle_t *handle_met,
+                          starpu_data_handle_t *handle_per_colors,
+                          starpu_data_handle_t *handle_ns,
+                          int color ) {
+
+  starpu_data_handle_t handle_deps;
+
+  int i,ndeps,*deps;
+
+  /** Step 1: Find colors that have dependencies with current color */
+  MMG5_SAFE_CALLOC(deps,mesh->info.ncolors+1,int,return 0);
+  ndeps = MMG2D_spldeps (mesh,deps,color);
+
+  /** Step 2: Create task_handles list from dependencies */
+  struct starpu_data_descr *task_handles;
+  MMG5_SAFE_CALLOC(task_handles,ndeps+1,struct starpu_data_descr,return 0);
+
+  task_handles[0].handle = handle_per_colors[color];
+  task_handles[0].mode   = STARPU_W|STARPU_COMMUTE;
+  for ( i=1; i<=ndeps; i++ ) {
+    task_handles[i].handle = handle_per_colors[deps[i]];
+    task_handles[i].mode   = STARPU_W|STARPU_COMMUTE;
+  }
+  MMG5_SAFE_FREE(deps);
+
+  /** Step 3: Insert starpu task */
+  int ret = starpu_task_insert(&adpspl_codelet,
+                               STARPU_R, *handle_mesh,
+                               STARPU_R, *handle_met,
+                               STARPU_REDUX, *handle_ns,
+                               STARPU_DATA_MODE_ARRAY, task_handles, ndeps+1,
+                               STARPU_VALUE, &color, sizeof(color),
+                               0);
+
+  STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_insert:adpspl_codelet");
 
   MMG5_SAFE_FREE(task_handles);
 
