@@ -96,6 +96,7 @@ int MMG2D_newElt(MMG5_pMesh mesh) {
   MMG5_LOCK(&mesh->lock);
 
   if ( !mesh->nenil ) {
+    MMG5_UNLOCK(&mesh->lock);
     return 0;
   }
   curiel = mesh->nenil;
