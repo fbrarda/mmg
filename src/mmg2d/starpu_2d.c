@@ -263,9 +263,10 @@ struct starpu_codelet colelt_codelet =
   .cpu_funcs = {MMG2D_colelt_task},
   .cpu_funcs_name = {"MMG2D_colelt_task"},
   .nbuffers = STARPU_VARIABLE_NBUFFERS,
-  .modes = {STARPU_R, STARPU_R, STARPU_REDUX},
+  .modes = {STARPU_R, STARPU_R, STARPU_REDUX,STARPU_DATA_MODE_ARRAY},
   .specific_nodes = 1,
-  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
+  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU,
+            STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
   .where = STARPU_CPU,
   .name = "colelt"
 };
@@ -309,9 +310,10 @@ struct starpu_codelet swpmsh_codelet =
   .cpu_funcs = {MMG2D_swpmsh_task},
   .cpu_funcs_name = {"MMG2D_swpmsh_task"},
   .nbuffers = STARPU_VARIABLE_NBUFFERS,
-  .modes = {STARPU_R, STARPU_R, STARPU_REDUX},
+  .modes = {STARPU_R, STARPU_R, STARPU_REDUX,STARPU_DATA_MODE_ARRAY},
   .specific_nodes = 1,
-  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
+  .nodes = {STARPU_SPECIFIC_NODE_CPU,STARPU_SPECIFIC_NODE_CPU,
+            STARPU_SPECIFIC_NODE_CPU,STARPU_SPECIFIC_NODE_CPU},
   .where = STARPU_CPU,
   .name = "swpmsh"
 };
@@ -355,9 +357,10 @@ struct starpu_codelet adpspl_codelet =
   .cpu_funcs = {MMG2D_adpspl_task},
   .cpu_funcs_name = {"MMG2D_adpspl_task"},
   .nbuffers = STARPU_VARIABLE_NBUFFERS,
-  .modes = {STARPU_R, STARPU_R, STARPU_REDUX},
+  .modes = {STARPU_R, STARPU_R, STARPU_REDUX,STARPU_DATA_MODE_ARRAY},
   .specific_nodes = 1,
-  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
+  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU,
+            STARPU_SPECIFIC_NODE_CPU,STARPU_SPECIFIC_NODE_CPU},
   .where = STARPU_CPU,
   .name = "adpspl"
 };
@@ -399,9 +402,10 @@ struct starpu_codelet adpcol_codelet =
   .cpu_funcs = {MMG2D_adpcol_task},
   .cpu_funcs_name = {"MMG2D_adpcol_task"},
   .nbuffers = STARPU_VARIABLE_NBUFFERS,
-  .modes = {STARPU_R, STARPU_R, STARPU_REDUX},
+  .modes = {STARPU_R, STARPU_R, STARPU_REDUX,STARPU_DATA_MODE_ARRAY},
   .specific_nodes = 1,
-  .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
+  .nodes = {STARPU_SPECIFIC_NODE_CPU,STARPU_SPECIFIC_NODE_CPU,
+            STARPU_SPECIFIC_NODE_CPU,STARPU_SPECIFIC_NODE_CPU},
   .where = STARPU_CPU,
   .name = "adpcol"
 };
