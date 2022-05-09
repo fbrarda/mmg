@@ -262,8 +262,8 @@ struct starpu_codelet colelt_codelet =
 {
   .cpu_funcs = {MMG2D_colelt_task},
   .cpu_funcs_name = {"MMG2D_colelt_task"},
-  .nbuffers = 3,
-  .modes = {STARPU_RW, STARPU_RW, STARPU_REDUX},
+  .nbuffers = STARPU_VARIABLE_NBUFFERS,
+  .modes = {STARPU_R, STARPU_R, STARPU_REDUX},
   .specific_nodes = 1,
   .nodes = {STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU, STARPU_SPECIFIC_NODE_CPU},
   .where = STARPU_CPU,
@@ -485,59 +485,6 @@ void MMG2D_movtri_task(void *buffers[], void *cl_arg) {
 
 }
 
-/*
- * Codelet to compute dependencies between splitting tasks.
- *
- *\warning unused: to remove if still unused when poc will be ended
- */
-struct starpu_codelet spldep_codelet =
-{
-  .cpu_funcs = {MMG2D_spldep_task},
-  .cpu_funcs_name = {"MMG2D_spldep_task"},
-  .nbuffers = 3,
-  .modes = {STARPU_R,STARPU_W,STARPU_W},
-  .specific_nodes = 2,
-  .nodes = {STARPU_SPECIFIC_NODE_CPU,STARPU_SPECIFIC_NODE_CPU},
-  .where = STARPU_CPU,
-  .name = "spldep"
-};
-
-
-/**
- * \param buffers Codelet buffers (to unpack)
- * \param cl_arg Codelet arguments (to unpack)
- *
- * StarPU wrapper for the computation of split deps.
- *
- * \warning unused: to remove if still unused when implementation will be ended
- */
-void MMG2D_spldep_task(void *buffers[], void *cl_arg) {
-
-  struct starpu_variable_interface *handle_mesh;
-  struct starpu_vector_interface   *handle_deps;
-  struct starpu_variable_interface *handle_ndeps;
-
-  MMG5_pMesh mesh;
-  int       *deps,*ndeps;
-  int        color;
-
-  handle_mesh = (struct starpu_variable_interface  *) buffers[0];
-  mesh = (MMG5_pMesh)STARPU_VARIABLE_GET_PTR(handle_mesh);
-
-  handle_deps = (struct starpu_vector_interface *) buffers[1];
-  deps = (int *)STARPU_VECTOR_GET_PTR(handle_deps);
-  assert ( STARPU_VECTOR_GET_NX(handle_deps) == mesh->info.ncolors+1 );
-
-  handle_ndeps = (struct starpu_variable_interface *) buffers[2];
-  ndeps = (int *)STARPU_VARIABLE_GET_PTR(handle_ndeps);
-
-  starpu_codelet_unpack_args(cl_arg, &color);
-
-  assert ( mesh->adja && "Adjacency array has to be allocated." );
-
-  *ndeps = MMG2D_spldeps ( mesh,deps,color );
-}
-
 /**
  * \param mesh pointer toward the mesh structure
  * \param deps array to store colors dependencies (has to be of size ncolors+1)
@@ -672,6 +619,72 @@ int MMG2D_starpu_anaelt ( MMG5_pMesh mesh,starpu_data_handle_t *handle_mesh,
 
   return 1;
 }
+
+/**
+ * \param mesh pointer toward the mesh structure
+ * \param hash point hash table listing the colors to which each point is
+ * directly connected or connected through 1 edge.
+ * \param handle_mesh starpu handle toward the mesh structure
+ * \param handle_met starpu handle toward the metric structure
+ * \param handle_per_color array to have 1 starpu handle per color
+ * \param handle_nc starpu_handle toward the number of moves
+ * \param typchk 1 if edge lengths are computed using euclidean norm, 2 if
+ * computed using input metric.
+ * \param color color to process
+ *
+ * \return 1 if success, 0 otherwise
+ *
+ * Compute dependencies of color \a color for the collapse operator and submit
+ * colelt task for this color to starPU.
+ *
+ * \remark For the collapse operator: there is a dependency between two
+ * colors if an edge that connects points belonging to each colors exist.
+ *
+ */
+int MMG2D_starpu_colelt ( MMG5_pMesh mesh,MMG5_HashP *hash,
+                          starpu_data_handle_t *handle_mesh,
+                          starpu_data_handle_t *handle_met,
+                          starpu_data_handle_t *handle_per_colors,
+                          starpu_data_handle_t *handle_nc,
+                          int typchk,int color ) {
+
+  starpu_data_handle_t handle_deps;
+
+  int i,ndeps,*deps;
+
+  /** Step 1: Find colors that have dependencies with current color */
+  MMG5_SAFE_CALLOC(deps,mesh->info.ncolors+1,int,return 0);
+  ndeps = MMG2D_movdeps (mesh,hash,deps,color);
+
+  /** Step 2: Create task_handles list from dependencies */
+  struct starpu_data_descr *task_handles;
+  MMG5_SAFE_CALLOC(task_handles,ndeps+1,struct starpu_data_descr,return 0);
+
+  task_handles[0].handle = handle_per_colors[color];
+  task_handles[0].mode   = STARPU_W|STARPU_COMMUTE;
+  for ( i=1; i<=ndeps; i++ ) {
+    task_handles[i].handle = handle_per_colors[deps[i]];
+    task_handles[i].mode   = STARPU_W|STARPU_COMMUTE;
+  }
+  MMG5_SAFE_FREE(deps);
+
+  /** Step 3: Insert starpu task */
+  int ret = starpu_task_insert(&colelt_codelet,
+                               STARPU_R, *handle_mesh,
+                               STARPU_R, *handle_met,
+                               STARPU_REDUX, *handle_nc,
+                               STARPU_DATA_MODE_ARRAY, task_handles, ndeps+1,
+                               STARPU_VALUE, &typchk, sizeof(typchk),
+                               STARPU_VALUE, &color, sizeof(color),
+                               0);
+
+  STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_insert");
+
+  MMG5_SAFE_FREE(task_handles);
+
+  return 1;
+}
+
 
 /**
  * \param mesh pointer toward the mesh structure

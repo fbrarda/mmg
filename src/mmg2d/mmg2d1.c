@@ -49,8 +49,9 @@ pthread_mutex_t lock;
    typchk = 1 -> adaptation based on edge lengths
    typchk = 2 -> adaptation based on lengths calculated in metric met */
 int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
-  MMG5_Hash hash;
-  int       it,maxit,ns,nc,nsw,nns,nnc,nnsw;
+  MMG5_HashP hash2;
+  MMG5_Hash  hash;
+  int        it,maxit,ns,nc,nsw,nns,nnc,nnsw;
 
   /* Main routine; intertwine split, collapse and swaps */
   nns = nnc = nnsw = 0;
@@ -162,6 +163,21 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
       }
 
 #ifdef USE_STARPU
+      /** Even if splitting operator don't change deps, it is needed to
+       * recompute them as now, 2 domains connected by an edge can't be remeshed
+       * at the same time (which was allowed for splits). Note that a possible
+       * improvement can be to directly compute the collapse dependencies for
+       * the splitting operator (it reduces the split parallelization but splits
+       * are fast) and it save 1 deps computation. */
+
+      /** For each point, compute the list of colors that can be reach directly
+       * or by a 1 edge connection. */
+      if ( !MMG2D_pointColor_1edg(mesh,&hash2) ) {
+        fprintf(stderr,"  ## Problem in second step of dependencies construction"
+                " for moving operator."
+                "Unable to complete mesh. Exit program.\n");
+        return 0;
+      }
 
       nc = 0;
       starpu_data_release(handle_nc);
@@ -179,6 +195,7 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
         STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_insert:colelt_codelet");
       }
 
+      MMG5_DEL_MEM(mesh,hash2.item);
       starpu_data_acquire(handle_nc,STARPU_RW);
 #else
       nc = MMG2D_colelt(mesh,met,typchk,MMG_NOCOLOR);
@@ -199,20 +216,33 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
     if ( !mesh->info.noswap ) {
 
 #ifdef USE_STARPU
+      /** Collapse operators modifty the connection between colors so it is
+       * mandatory to recompute deps here. */
+      /** For each point, compute the list of colors that can be reach directly
+       * or by a 1 edge connection. */
+      if ( !MMG2D_pointColor_1edg(mesh,&hash2) ) {
+        fprintf(stderr,"  ## Problem in second step of dependencies construction"
+                " for moving operator."
+                "Unable to complete mesh. Exit program.\n");
+        return 0;
+      }
+
       nsw = 0;
       starpu_data_release(handle_nsw);
 
       for (color=1; color<=mesh->info.ncolors; color++)
       {
-        ret = starpu_task_insert(&swpmsh_codelet,
-                                 STARPU_RW, handle_mesh,
-                                 STARPU_RW, handle_met,
-                                 STARPU_REDUX, handle_nsw,
-                                 STARPU_VALUE, &typchk, sizeof(typchk),
-                                 STARPU_VALUE, &color, sizeof(color),
-                                 0);
-        STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_insert:swpmsh_codelet");
+        /* Call swpmsh-like function that compute dependencies (from points hash
+         * table) and submit movtri task for partition \a color. */
+        int ier = MMG2D_starpu_swpmsh(mesh,&hash2,&handle_mesh,&handle_met,
+                                      handle_per_colors,
+                                      &handle_nsw,typchk,color);
+        if ( ier < 1 ) {
+          fprintf(stderr,"  ## Unable to submit swpmsh task to starPU. Exit program.\n");
+          return 0;
+        }
       }
+      MMG5_DEL_MEM(mesh,hash2.item);
 
       starpu_data_acquire(handle_nsw,STARPU_RW);
 #else
@@ -875,7 +905,7 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
       for (color=1; color<=mesh->info.ncolors; color++)
       {
 
-        /* Call adpcol-like function that compute dependencies (from points hash
+        /* Call swpmsh-like function that compute dependencies (from points hash
          * table) and submit movtri task for partition \a color. */
         int ier = MMG2D_starpu_swpmsh(mesh,&hash2,&handle_mesh,&handle_met,
                                       handle_per_colors,
