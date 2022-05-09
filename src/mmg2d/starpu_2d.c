@@ -624,6 +624,8 @@ int MMG2D_spldeps ( MMG5_pMesh mesh,int *deps,int color) {
  * \remark For the splitting operator: there is a dependency between two
  * colors if they are adjacent.
  *
+ * \todo Improvement: move temporary arrays outside the function to not
+ * reallocate them at each call.
  */
 int MMG2D_starpu_anaelt ( MMG5_pMesh mesh,starpu_data_handle_t *handle_mesh,
                           starpu_data_handle_t *handle_met,
@@ -686,6 +688,8 @@ int MMG2D_starpu_anaelt ( MMG5_pMesh mesh,starpu_data_handle_t *handle_mesh,
  * \remark For the splitting operator: there is a dependency between two
  * colors if they are adjacent.
  *
+ * \todo Improvement: move temporary arrays outside the function to not
+ * reallocate them at each call.
  */
 int MMG2D_starpu_adpspl ( MMG5_pMesh mesh,starpu_data_handle_t *handle_mesh,
                           starpu_data_handle_t *handle_met,
@@ -741,7 +745,7 @@ int MMG2D_starpu_adpspl ( MMG5_pMesh mesh,starpu_data_handle_t *handle_mesh,
  * synchronize threads.
  *
  */
-int MMG2D_movdeps_pointColor(MMG5_pMesh mesh,MMG5_HashP *hash) {
+int MMG2D_pointColor(MMG5_pMesh mesh,MMG5_HashP *hash) {
   MMG5_pTria   pt;
   int          k, i;
   MMG5_hpoint  *ph;
@@ -777,7 +781,7 @@ int MMG2D_movdeps_pointColor(MMG5_pMesh mesh,MMG5_HashP *hash) {
  * synchronize threads.
  *
  */
-int MMG2D_movdeps_pointColor_1edg(MMG5_pMesh mesh,MMG5_HashP *hash,MMG5_HashP *hash2) {
+int MMG2D_pointColor_to_1edgColor(MMG5_pMesh mesh,MMG5_HashP *hash,MMG5_HashP *hash2) {
   MMG5_pTria   pt;
   int          k, i;
   MMG5_hpoint  *ph;
@@ -814,6 +818,44 @@ int MMG2D_movdeps_pointColor_1edg(MMG5_pMesh mesh,MMG5_HashP *hash,MMG5_HashP *h
 
   return 1;
 }
+
+/**
+ * \param mesh pointer toward the mesh structure
+ * \param hash secondary point hash table (to fill by the list of colors to
+ * which each point is connected either directly, or through an edge)
+ *
+ * \return \a 1 if success, 0 if fail.
+ *
+ * List the colors to which each vertex belongs or is connected through 1 edge
+ * (using a hash table)
+ *
+ * \todo A future improvement can be to build in // this hashtable and to
+ * synchronize threads.
+ *
+ */
+int MMG2D_pointColor_1edg(MMG5_pMesh mesh,MMG5_HashP *hash2) {
+  MMG5_HashP  hash;
+
+  /** Step 1: Store list of colors to which each point belongs (primary hash
+   * table) */
+  if ( !MMG2D_pointColor(mesh,&hash) ) {
+    fprintf(stderr,"  ## Problem in first step of dependencies construction"
+            " for moving operator."
+            "Unable to complete mesh. Exit program.\n");
+    return 0;
+  }
+
+  /** Step 2: Append to each point the colors of points that are
+   * connected to the current point by an edge (secondary hash table). */
+  if ( !MMG2D_pointColor_to_1edgColor(mesh,&hash,hash2) ) {
+    fprintf(stderr,"  ## Problem in second step of dependencies construction"
+            " for moving operator."
+            "Unable to complete mesh. Exit program.\n");
+    return 0;
+  }
+  return 1;
+}
+
 
 
 /**

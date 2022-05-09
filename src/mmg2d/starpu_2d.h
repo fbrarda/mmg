@@ -78,8 +78,9 @@ void MMG2D_spldep_task(void *buffers[], void *cl_arg);
 int MMG2D_spldeps ( MMG5_pMesh mesh,int *deps,int color);
 int MMG2D_movdeps ( MMG5_pMesh mesh,MMG5_HashP*,int *deps,int color);
 
-int MMG2D_movdeps_pointColor(MMG5_pMesh mesh,MMG5_HashP *hash);
-int MMG2D_movdeps_pointColor_1edg(MMG5_pMesh,MMG5_HashP*,MMG5_HashP*);
+int MMG2D_pointColor(MMG5_pMesh mesh,MMG5_HashP *hash);
+int MMG2D_pointColor_to_1edgColor(MMG5_pMesh,MMG5_HashP*,MMG5_HashP*);
+int MMG2D_pointColor_1edg(MMG5_pMesh,MMG5_HashP*);
 
 /** Codelets for needed functions */
 extern struct starpu_codelet colelt_codelet;

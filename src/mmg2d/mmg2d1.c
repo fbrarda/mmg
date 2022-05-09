@@ -879,35 +879,22 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
 
 #ifdef USE_STARPU
 
-      /** Step 1: Store list of colors to which each point belong (primary hash
-       * table) */
-      MMG5_HashP hash;
-      if ( !MMG2D_movdeps_pointColor(mesh,&hash) ) {
-        fprintf(stderr,"  ## Problem in first step of dependencies construction"
-                " for moving operator."
-                "Unable to complete mesh. Exit program.\n");
-        return 0;
-      }
-
-      /** Step 2: Append to each point the colors of points that are
-       * connected to the current point by an edge (secondary hash table). */
-      if ( !MMG2D_movdeps_pointColor_1edg(mesh,&hash,&hash2) ) {
+      /** For each point, compute the list of colors that can be reach directly
+       * or by a 1 edge connection. */
+      if ( !MMG2D_pointColor_1edg(mesh,&hash2) ) {
         fprintf(stderr,"  ## Problem in second step of dependencies construction"
                 " for moving operator."
                 "Unable to complete mesh. Exit program.\n");
         return 0;
       }
 
-      /** Step 3: Travel secondary hash table to store dependencies for color \a
-       * color and submit movtri task (this step can be easily wrapped into a
-       * task). */
       nm = 0;
       starpu_data_release(handle_nm);
 
       for (color=1; color<=mesh->info.ncolors; color++)
       {
-        /* Call movtri-like function that compute dependencies and submit movtri
-         * task for partition \a color. */
+        /* Call movtri-like function that compute dependencies (from points hash
+         * table) and submit movtri task for partition \a color. */
         int ier = MMG2D_starpu_movtri(mesh,&hash2,&handle_mesh,&handle_met,handle_per_colors,
                                       &handle_nm,maxit_mov,improve,color);
 
