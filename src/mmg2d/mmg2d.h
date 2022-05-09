@@ -68,9 +68,17 @@ extern "C" {
 #define MMG2D_LOPTL      1.4
 #define MMG2D_LOPTS     0.71
 
+#ifdef USE_STARPU
+#define MMG2D_NPMAX   500000
+#define MMG2D_NEDMAX  500000
+#define MMG2D_NEMAX   1000000
+
+#else
+// Algiane: I don't know why we have so small values here....
 #define MMG2D_NPMAX   50000
 #define MMG2D_NEDMAX  100000
 #define MMG2D_NEMAX   100000
+#endif
 
 #ifdef USE_STARPU
 

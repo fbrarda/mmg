@@ -39,7 +39,10 @@ int MMG2D_newPt(MMG5_pMesh mesh,double c[2],int16_t tag) {
   MMG5_pPoint  ppt;
   int     curpt;
 
-  if ( !mesh->npnil )  return 0;
+#warning concurrency access lead to reset npnil (use of point curpt) while trying to access it, as a 0 npnil means that we don't have anymore memory, it raises a realloc issue
+  // For now, we solve this using locks. These locks have to be removed once the
+  // list will be parallelized
+  MMG5_LOCK(&mesh->lock);
 
   curpt = mesh->npnil;
   if ( mesh->npnil > mesh->np )  mesh->np = mesh->npnil;
@@ -49,6 +52,8 @@ int MMG2D_newPt(MMG5_pMesh mesh,double c[2],int16_t tag) {
   mesh->npnil = ppt->tmp;
   ppt->tmp    = 0;
   ppt->tag = tag;
+
+  MMG5_UNLOCK(&mesh->lock);
 
   return curpt;
 }
@@ -85,6 +90,11 @@ void MMG5_delEdge(MMG5_pMesh mesh,int iel) {
 int MMG2D_newElt(MMG5_pMesh mesh) {
   int     curiel;
 
+#warning concurrency access lead to reset ntnil (use of tria curiel) while trying to access it, as a 0 npnil means that we don't have anymore memory, it raises a realloc issue
+  // For now, we solve this using locks. These locks have to be removed once the
+  // list will be parallelized
+  MMG5_LOCK(&mesh->lock);
+
   if ( !mesh->nenil ) {
     return 0;
   }
@@ -102,6 +112,8 @@ int MMG2D_newElt(MMG5_pMesh mesh) {
   mesh->tria[curiel].edg[0] = 0;
   mesh->tria[curiel].edg[1] = 0;
   mesh->tria[curiel].edg[2] = 0;
+
+  MMG5_UNLOCK(&mesh->lock);
 
   return curiel;
 }
@@ -165,10 +177,10 @@ int MMG2D_memOption_memSet(MMG5_pMesh mesh) {
 
   MMG5_memOption_memSet(mesh);
 
-  /* init allocation need MMG5_MEMMIN B */
+  /** init allocation need MMG5_MEMMIN B */
   reservedMem = MMG5_MEMMIN + mesh->nquad*sizeof(MMG5_Quad);
 
-  /* Compute the needed initial memory */
+  /** Compute the needed initial memory */
   usedMem = reservedMem + (mesh->np+1)*sizeof(MMG5_Point)
     + (mesh->nt+1)*sizeof(MMG5_Tria) + (3*mesh->nt+1)*sizeof(int)
     + (mesh->na+1)*sizeof(MMG5_Edge) + (mesh->np+1)*sizeof(double);
@@ -183,7 +195,7 @@ int MMG2D_memOption_memSet(MMG5_pMesh mesh) {
 
   ctri = 2;
 
-  /* Euler-poincare: ne = 6*np; nt = 2*np; na = np/5 *
+  /** Euler-poincare: ne = 6*np; nt = 2*np; na = np/5 *
    * point+tria+edges+adjt+ aniso sol */
   bytes = sizeof(MMG5_Point) +
     2*sizeof(MMG5_Tria) + 3*2*sizeof(int)
@@ -191,14 +203,27 @@ int MMG2D_memOption_memSet(MMG5_pMesh mesh) {
 
   avMem = mesh->memMax-usedMem;
 
-  /* If npadd is exactly the maximum memory available, we will use all the
-   * memory and the analysis step will fail. As arrays may be reallocated, we
-   * can have smaller values for npmax and ntmax (npadd/2). */
   npadd = avMem/(2*bytes);
+#ifdef USE_STARPU
+  /* We want to use the max possible memory because realloc is not available */
+  if ( mesh->info.mem < 0 ) {
+    mesh->npmax = MG_MAX(mesh->npmax,mesh->np+npadd);
+    mesh->ntmax = MG_MAX(mesh->ntmax,ctri*npadd+mesh->nt);
+    mesh->namax = MG_MAX(mesh->namax,ctri*npadd+mesh->na);
+  }
+  else {
+    mesh->npmax = MG_MAX(1.5*mesh->np,mesh->np+npadd);
+    mesh->ntmax = MG_MAX(1.5*mesh->nt,ctri*npadd+mesh->nt);
+    mesh->namax = MG_MAX(mesh->na,ctri*npadd+mesh->na);
+  }
+
+#else
+  /* Realloc is available, we don't want to allocate too large arrays in a first
+   * guess */
   mesh->npmax = MG_MIN(mesh->npmax,mesh->np+npadd);
   mesh->ntmax = MG_MIN(mesh->ntmax,ctri*npadd+mesh->nt);
   mesh->namax = MG_MIN(mesh->namax,ctri*npadd+mesh->na);
-
+#endif
   if ( abs(mesh->info.imprim) > 4 || mesh->info.ddebug ) {
     fprintf(stdout,"  MAXIMUM MEMORY AUTHORIZED (MB)    %zu\n",
             mesh->memMax/MMG5_MILLION);
