@@ -173,6 +173,19 @@ extern "C" {
 #define MMG5_SW 4
 #define MMG5_SD 8
 
+#ifdef USE_STARPU
+#define MMG_STARPU_SHUTDOWN(mesh)do             \
+  {                                             \
+    pthread_mutex_destroy(&mesh->lock);         \
+                                                \
+    /* Terminate StarPU */                      \
+    starpu_shutdown();                          \
+  }while(0)
+#else
+#define MMG_STARPU_SHUTDOWN(mesh)
+#endif
+
+
 /** Reset the customized signals and set the internal counters of points, edges,
  * tria and tetra to the suitable value (needed by users to recover their mesh
  * using the API) */
@@ -234,6 +247,21 @@ void * mymalloc(size_t s) {
     return (void*)ptr;
   }
 }
+
+#ifdef USE_STARPU
+
+#define MMG5_LOCK(lock) do { \
+    pthread_mutex_lock(lock); \
+  }while(0)
+
+#define MMG5_UNLOCK(lock) do { \
+    pthread_mutex_unlock(lock); \
+  }while(0)
+
+#else
+#define MMG5_LOCK(lock)
+#define MMG5_UNLOCK(lock)
+#endif
 
 static inline
 void * myrealloc(void * ptr_in, size_t s, size_t oldsize) {
@@ -324,12 +352,15 @@ size_t myfree(void *ptr) {
     type* tmp;                                                          \
     size_t size_to_allocate = (newSize)*sizeof(type);                   \
                                                                         \
+    MMG5_LOCK(&mesh->lock);                                             \
+                                                                        \
     tmp = (type *)myrealloc((ptr),size_to_allocate,(prevSize)*sizeof(type)); \
     if ( !tmp ) {                                                       \
       MMG5_SAFE_FREE(ptr);                                             \
       perror(" ## Memory problem: realloc");                            \
       law;                                                              \
     }                                                                   \
+    MMG5_UNLOCK(&mesh->lock);                                           \
                                                                         \
     (ptr) = tmp;                                                        \
   }while(0)
@@ -339,6 +370,8 @@ size_t myfree(void *ptr) {
   {                                                                     \
     type* tmp;                                                          \
     size_t size_to_allocate = (newSize)*sizeof(type);                   \
+                                                                        \
+    MMG5_LOCK(&mesh->lock);                                             \
                                                                         \
     tmp = (type *)myrealloc((ptr),size_to_allocate,(prevSize)*sizeof(type)); \
     if ( !tmp ) {                                                       \
@@ -353,6 +386,8 @@ size_t myfree(void *ptr) {
         memset(&((ptr)[prevSize]),0,((newSize)-(prevSize))*sizeof(type)); \
       }                                                                 \
     }                                                                   \
+    MMG5_UNLOCK(&mesh->lock);                                           \
+                                                                        \
   }while(0)
 
 /** Reallocation of ptr of type type at size (initSize+wantedGap*initSize)
@@ -638,6 +673,10 @@ void           MMG5_check_hminhmax(MMG5_pMesh mesh, int8_t sethmin, int8_t sethm
  int           MMG5_hashEdgeTag(MMG5_pMesh mesh,MMG5_Hash *hash,int a,int b,int16_t k);
  int           MMG5_hashGet(MMG5_Hash *hash,int a,int b);
  int           MMG5_hashNew(MMG5_pMesh mesh, MMG5_Hash *hash,int hsiz,int hmax);
+#ifdef USE_STARPU
+ int           MMG5_hashPNew(MMG5_pMesh mesh, MMG5_HashP *hash,int hsiz,int hmax);
+ int           MMG5_hashPoint(MMG5_pMesh mesh,MMG5_HashP *hash,int a,int k);
+#endif
  int           MMG5_intmetsavedir(MMG5_pMesh mesh, double *m,double *n,double *mr);
  int           MMG5_intridmet(MMG5_pMesh,MMG5_pSol,int,int,double,double*,double*);
  int           MMG5_mmgIntmet33_ani(double*,double*,double*,double);

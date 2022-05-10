@@ -42,6 +42,12 @@ int MMG2D_swapdelone(MMG5_pMesh mesh,MMG5_pSol sol,int k,int8_t i,double crit,in
   int                *adja,*adja1,k1,k2,k3,vo2,vo3,num1,numa1;
   int8_t             i1,i2,j,j1,j2;
 
+#ifdef USE_STARPU
+  int zero_idx = -starpu_worker_get_id();
+#else
+  int zero_idx = 0;
+#endif
+
   adja = &mesh->adja[3*(k-1)+1];
   k1  = adja[i] / 3;
   if ( !k1 ) return 0;
@@ -49,7 +55,7 @@ int MMG2D_swapdelone(MMG5_pMesh mesh,MMG5_pSol sol,int k,int8_t i,double crit,in
   j    = adja[i] % 3;
   j1    = MMG5_inxt2[j];
   j2    = MMG5_iprv2[j];
-  pt0  = &mesh->tria[0];
+  pt0  = &mesh->tria[zero_idx];
   pt   = &mesh->tria[k];
   pt1  = &mesh->tria[k1];
 
@@ -131,7 +137,13 @@ int MMG2D_chkswp(MMG5_pMesh mesh, MMG5_pSol met,int k,int8_t i,int8_t typchk) {
   int                 *adja,ip,ip1,ip2,iq,kk;
   uint8_t             i1,i2,ii,ii1,ii2;
 
-  pt0 = &mesh->tria[0];
+#ifdef USE_STARPU
+  int zero_idx = -starpu_worker_get_id();
+#else
+  int zero_idx = 0;
+#endif
+
+  pt0 = &mesh->tria[zero_idx];
   pt  = &mesh->tria[k];
   i1 = MMG5_inxt2[i];
   i2 = MMG5_iprv2[i];

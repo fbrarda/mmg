@@ -40,15 +40,70 @@
 #include "mmg2d.h"
 
 /** Main functions */
-void MMG2D_starpu_anaelt(void *buffers[], void *cl_arg);
-void MMG2D_starpu_colelt(void *buffers[], void *cl_arg);
-void MMG2D_starpu_swpmsh(void *buffers[], void *cl_arg);
-void MMG2D_starpu_swpmsh(void *buffers[], void *cl_arg);
-void MMG2D_starpu_adpspl(void *buffers[], void *cl_arg);
-void MMG2D_starpu_adpcol(void *buffers[], void *cl_arg);
-void MMG2D_starpu_movtri(void *buffers[], void *cl_arg);
+int MMG2D_starpu_anaelt ( MMG5_pMesh mesh,starpu_data_handle_t *handle_mesh,
+                          starpu_data_handle_t *handle_met,
+                          starpu_data_handle_t *handle_per_colors,
+                          starpu_data_handle_t *handle_hash,
+                          starpu_data_handle_t *handle_ns,
+                          int typchk,int color );
 
-/** Codelets for main functions */
+int MMG2D_starpu_colelt ( MMG5_pMesh mesh,MMG5_HashP *hash,
+                          starpu_data_handle_t *handle_mesh,
+                          starpu_data_handle_t *handle_met,
+                          starpu_data_handle_t *handle_per_colors,
+                          starpu_data_handle_t *handle_nc,
+                          int typchk,int color );
+
+int MMG2D_starpu_adpspl ( MMG5_pMesh mesh,starpu_data_handle_t *handle_mesh,
+                          starpu_data_handle_t *handle_met,
+                          starpu_data_handle_t *handle_per_colors,
+                          starpu_data_handle_t *handle_ns,
+                          int color );
+
+int MMG2D_starpu_adpcol ( MMG5_pMesh mesh,MMG5_HashP *hash,
+                          starpu_data_handle_t *handle_mesh,
+                          starpu_data_handle_t *handle_met,
+                          starpu_data_handle_t *handle_per_colors,
+                          starpu_data_handle_t *handle_nc,
+                          int color );
+
+int MMG2D_starpu_swpmsh ( MMG5_pMesh mesh,MMG5_HashP *hash,
+                          starpu_data_handle_t *handle_mesh,
+                          starpu_data_handle_t *handle_met,
+                          starpu_data_handle_t *handle_per_colors,
+                          starpu_data_handle_t *handle_nsw,
+                          int typchk,int color );
+
+int MMG2D_starpu_movtri ( MMG5_pMesh mesh,MMG5_HashP *hash,
+                          starpu_data_handle_t *handle_mesh,
+                          starpu_data_handle_t *handle_met,
+                          starpu_data_handle_t *handle_per_colors,
+                          starpu_data_handle_t *handle_nm,
+                          int maxit_mov,int8_t improve,int color );
+
+
+/** Task wrappers */
+void MMG2D_hashTria_task(void *buffers[], void *cl_arg);
+void MMG2D_anaelt_task(void *buffers[], void *cl_arg);
+void MMG2D_colelt_task(void *buffers[], void *cl_arg);
+void MMG2D_swpmsh_task(void *buffers[], void *cl_arg);
+void MMG2D_swpmsh_task(void *buffers[], void *cl_arg);
+void MMG2D_adpspl_task(void *buffers[], void *cl_arg);
+void MMG2D_adpcol_task(void *buffers[], void *cl_arg);
+void MMG2D_movtri_task(void *buffers[], void *cl_arg);
+
+/** Task dependencies computation */
+void MMG2D_spldep_task(void *buffers[], void *cl_arg);
+
+/** Tools */
+int MMG2D_spldeps ( MMG5_pMesh mesh,int *deps,int color);
+int MMG2D_1edgdeps ( MMG5_pMesh mesh,MMG5_HashP*,int *deps,int color);
+
+int MMG2D_pointColor(MMG5_pMesh mesh,MMG5_HashP *hash);
+int MMG2D_pointColor_to_1edgColor(MMG5_pMesh,MMG5_HashP*,MMG5_HashP*);
+int MMG2D_pointColor_1edg(MMG5_pMesh,MMG5_HashP*);
+
+/** Codelets for needed functions */
 extern struct starpu_codelet colelt_codelet;
 extern struct starpu_codelet swpmsh_codelet;
 extern struct starpu_codelet anaelt_codelet;
@@ -57,17 +112,20 @@ extern struct starpu_codelet adpspl_codelet;
 extern struct starpu_codelet adpcol_codelet;
 extern struct starpu_codelet hashTria_codelet;
 
+/** Codelets for dependencies */
+extern struct starpu_codelet spldep_codelet;
+
+
 /** For reduction */
 void izero_cpu(void *descr[], void *cl_arg);
+void ione_cpu(void *descr[], void *cl_arg);
 void accumulate_cpu(void *descr[], void *cl_arg);
+void min_cpu(void *descr[], void *cl_arg);
 
 extern struct starpu_codelet accumulate_codelet;
 extern struct starpu_codelet izero_codelet;
-
-/*
- *    Codelet to neutral element initializer
- */
-extern struct starpu_codelet izero_codelet;
+extern struct starpu_codelet min_codelet;
+extern struct starpu_codelet ione_codelet;
 
 
 /** Dbg tool */

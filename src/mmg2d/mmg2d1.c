@@ -49,8 +49,8 @@ pthread_mutex_t lock;
    typchk = 1 -> adaptation based on edge lengths
    typchk = 2 -> adaptation based on lengths calculated in metric met */
 int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
-  MMG5_Hash hash;
-  int       it,maxit,ns,nc,nsw,nns,nnc,nnsw;
+  MMG5_Hash  hash;
+  int        it,maxit,ns,nc,nsw,nns,nnc,nnsw;
 
   /* Main routine; intertwine split, collapse and swaps */
   nns = nnc = nnsw = 0;
@@ -58,36 +58,61 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
   maxit = 5;
 
 #ifdef USE_STARPU
-  int       color,ret;
-  starpu_data_handle_t vector_mesh, vector_met, vector_hash;
-  starpu_data_handle_t handle_ns, handle_nc, handle_nsw;
+  MMG5_HashP hash2;
+  int        color,ret,ier;
+  starpu_data_handle_t handle_mesh,handle_met,handle_hash,handle_deps;
+  starpu_data_handle_t handle_ns,handle_nc,handle_nsw,handle_ier;
 
-  starpu_vector_data_register(&vector_mesh, STARPU_MAIN_RAM, (uintptr_t)mesh, 1, sizeof(MMG5_pMesh));
-  starpu_vector_data_register(&vector_met, STARPU_MAIN_RAM, (uintptr_t)met, 1, sizeof(MMG5_pSol));
+  starpu_variable_data_register(&handle_mesh, STARPU_MAIN_RAM, (uintptr_t)mesh, sizeof(MMG5_pMesh));
+  starpu_variable_data_register(&handle_met , STARPU_MAIN_RAM, (uintptr_t)met , sizeof(MMG5_pSol));
 
-  starpu_variable_data_register(&vector_hash, STARPU_MAIN_RAM, (uintptr_t)&hash, sizeof(MMG5_Hash));
+  starpu_variable_data_register(&handle_hash, STARPU_MAIN_RAM, (uintptr_t)&hash, sizeof(MMG5_Hash));
 
-  starpu_variable_data_register(&handle_ns, STARPU_MAIN_RAM, (uintptr_t)&ns, sizeof(ns));
-  starpu_variable_data_register(&handle_nc, STARPU_MAIN_RAM, (uintptr_t)&nc, sizeof(nc));
-  starpu_variable_data_register(&handle_nsw, STARPU_MAIN_RAM, (uintptr_t)&nsw, sizeof(nsw));
+  starpu_variable_data_register(&handle_ns  , STARPU_MAIN_RAM, (uintptr_t)&ns  , sizeof(ns));
+  starpu_variable_data_register(&handle_nc  , STARPU_MAIN_RAM, (uintptr_t)&nc  , sizeof(nc));
+  starpu_variable_data_register(&handle_nsw , STARPU_MAIN_RAM, (uintptr_t)&nsw , sizeof(nsw));
+  starpu_variable_data_register(&handle_ier , STARPU_MAIN_RAM, (uintptr_t)&ier , sizeof(ier));
 
-  starpu_data_set_reduction_methods ( handle_ns, &accumulate_codelet, &izero_codelet) ;
-  starpu_data_set_reduction_methods ( handle_nc, &accumulate_codelet, &izero_codelet) ;
-  starpu_data_set_reduction_methods ( handle_nsw, &accumulate_codelet, &izero_codelet) ;
+  starpu_data_set_reduction_methods(handle_ns , &accumulate_codelet, &izero_codelet) ;
+  starpu_data_set_reduction_methods(handle_nc , &accumulate_codelet, &izero_codelet) ;
+  starpu_data_set_reduction_methods(handle_nsw, &accumulate_codelet, &izero_codelet) ;
+  starpu_data_set_reduction_methods(handle_ier, &min_codelet       , &ione_codelet) ;
 
-  starpu_data_acquire(handle_ns, STARPU_W);
-  starpu_data_acquire(handle_nc, STARPU_W);
+  starpu_data_acquire(handle_ns , STARPU_W);
+  starpu_data_acquire(handle_nc , STARPU_W);
   starpu_data_acquire(handle_nsw, STARPU_W);
+
+  /*  Creation of a useless array to have one data per task. This data is
+      only used as a tool to express the task dependencie (alloc is done here as
+      I think that we will use a variable number of colors in the future). */
+  char *colors;
+  MMG5_SAFE_MALLOC(colors,mesh->info.ncolors+1,char,return 0);
+
+  /* Creation of an array of handle toward the colors array. */
+  starpu_data_handle_t *handle_per_colors;
+  MMG5_SAFE_MALLOC(handle_per_colors,mesh->info.ncolors+1,starpu_data_handle_t,return 0);
+
+  /* Make handle point toward color data */
+  for (color=0; color<=mesh->info.ncolors; color++) {
+    starpu_variable_data_register(&handle_per_colors[color], STARPU_MAIN_RAM,
+                                  (uintptr_t)&colors[color], sizeof(char));
+  }
 #endif
 
   do {
     if ( typchk == 2 && it == 0 ) {
 // #warning Luca: check consistency with 3D
     }
+
+#warning add mesh coloration here (each waves of remeshing unbalance the color repartition)?
+
     if ( !mesh->info.noinsert ) {
+
+#ifndef USE_STARPU
       /* Memory free */
       MMG5_DEL_MEM(mesh,mesh->adja);
       mesh->adja = 0;
+#endif
 
       /* Split long edges according to patterns */
       if ( !MMG5_hashNew(mesh,&hash,mesh->np,3*mesh->np) ) return 0;
@@ -96,20 +121,30 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
       ns = 0;
       starpu_data_release(handle_ns);
 
-      for (color=0; color< mesh->info.ncolors; color++)
+      for (color=1; color<=mesh->info.ncolors; color++)
       {
-        ret = starpu_task_insert(&anaelt_codelet,
-                                 STARPU_RW, vector_mesh,
-                                 STARPU_RW, vector_met,
-                                 STARPU_RW, vector_hash,
-                                 STARPU_REDUX, handle_ns,
-                                 STARPU_VALUE, &typchk, sizeof(typchk),
-                                 STARPU_VALUE, &color, sizeof(color),
-                                 0);
+        /* Call anaelt-like function for partition \a color. Can be wrapped into
+         * a task to be run in // (in this case, we can gain some alloc/unalloc
+         * using a STARPU_SCRATCH handle and letting Starpu deal with the local
+         * array \a deps ) */
+        int ier = MMG2D_starpu_anaelt(mesh,&handle_mesh,&handle_met,handle_per_colors,
+                                      &handle_hash,&handle_ns,typchk,color);
 
-        STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_insert:anaelt_codelet");
+        if ( ier < 1 ) {
+          fprintf(stderr,"  ## Unable to submit anaelt task to starPU. Exit program.\n");
+          return 0;
+        }
       }
+
+      /* Remark: adja array is not needed for anaelt_codelet but is needed to
+       * compute dependencies inside the \a MMG2D_starpu_anaelt. To avoid
+       * concurrency at adja deallocation, it is deallocated outside the color
+       * loop. */
+      MMG5_DEL_MEM(mesh,mesh->adja);
+      mesh->adja = 0;
+
       starpu_data_acquire(handle_ns, STARPU_RW);
+
 #else
       ns = MMG2D_anaelt(mesh,met,&hash,typchk,MMG_NOCOLOR);
 #endif
@@ -128,22 +163,39 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
       }
 
 #ifdef USE_STARPU
+      /** Even if splitting operator don't change deps, it is needed to
+       * recompute them as now, 2 domains connected by an edge can't be remeshed
+       * at the same time (which was allowed for splits). Note that a possible
+       * improvement can be to directly compute the collapse dependencies for
+       * the splitting operator (it reduces the split parallelization but splits
+       * are fast) and it save 1 deps computation. */
+
+      /** For each point, compute the list of colors that can be reach directly
+       * or by a 1 edge connection. */
+      if ( !MMG2D_pointColor_1edg(mesh,&hash2) ) {
+        fprintf(stderr,"  ## Problem in second step of dependencies construction"
+                " for moving operator."
+                "Unable to complete mesh. Exit program.\n");
+        return 0;
+      }
+
       nc = 0;
       starpu_data_release(handle_nc);
 
-      for (color=0; color< mesh->info.ncolors; color++)
+      for (color=1; color<=mesh->info.ncolors; color++)
       {
-        ret = starpu_task_insert(&colelt_codelet,
-                                 STARPU_RW, vector_mesh,
-                                 STARPU_RW, vector_met,
-                                 STARPU_REDUX, handle_nc,
-                                 STARPU_VALUE, &typchk, sizeof(typchk),
-                                 STARPU_VALUE, &color, sizeof(color),
-                                 0);
-
-        STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit:colelt_codelet");
+        /* Call colelt-like function that compute dependencies (from points hash
+         * table) and submit movtri task for partition \a color. */
+        int ier = MMG2D_starpu_colelt(mesh,&hash2,&handle_mesh,&handle_met,
+                                      handle_per_colors,
+                                      &handle_nc,typchk,color);
+        if ( ier < 1 ) {
+          fprintf(stderr,"  ## Unable to submit swpmsh task to starPU. Exit program.\n");
+          return 0;
+        }
       }
 
+      MMG5_DEL_MEM(mesh,hash2.item);
       starpu_data_acquire(handle_nc,STARPU_RW);
 #else
       nc = MMG2D_colelt(mesh,met,typchk,MMG_NOCOLOR);
@@ -164,20 +216,33 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
     if ( !mesh->info.noswap ) {
 
 #ifdef USE_STARPU
+      /** Collapse operators modifty the connection between colors so it is
+       * mandatory to recompute deps here. */
+      /** For each point, compute the list of colors that can be reach directly
+       * or by a 1 edge connection. */
+      if ( !MMG2D_pointColor_1edg(mesh,&hash2) ) {
+        fprintf(stderr,"  ## Problem in second step of dependencies construction"
+                " for moving operator."
+                "Unable to complete mesh. Exit program.\n");
+        return 0;
+      }
+
       nsw = 0;
       starpu_data_release(handle_nsw);
 
-      for (color=0; color< mesh->info.ncolors; color++)
+      for (color=1; color<=mesh->info.ncolors; color++)
       {
-        ret = starpu_task_insert(&swpmsh_codelet,
-                                 STARPU_RW, vector_mesh,
-                                 STARPU_RW, vector_met,
-                                 STARPU_REDUX, handle_nsw,
-                                 STARPU_VALUE, &typchk, sizeof(typchk),
-                                 STARPU_VALUE, &color, sizeof(color),
-                                 0);
-        STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit:swpmsh_codelet");
+        /* Call swpmsh-like function that compute dependencies (from points hash
+         * table) and submit movtri task for partition \a color. */
+        int ier = MMG2D_starpu_swpmsh(mesh,&hash2,&handle_mesh,&handle_met,
+                                      handle_per_colors,
+                                      &handle_nsw,typchk,color);
+        if ( ier < 1 ) {
+          fprintf(stderr,"  ## Unable to submit swpmsh task to starPU. Exit program.\n");
+          return 0;
+        }
       }
+      MMG5_DEL_MEM(mesh,hash2.item);
 
       starpu_data_acquire(handle_nsw,STARPU_RW);
 #else
@@ -206,13 +271,22 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
   }
 
 #ifdef USE_STARPU
+
+  for (color=0; color<=mesh->info.ncolors; color++) {
+   // printf("color %d\n",color);
+    starpu_data_unregister(handle_per_colors[color]);
+  }
+
+  MMG5_SAFE_FREE(colors);
+  MMG5_SAFE_FREE(handle_per_colors);
+
   starpu_data_release(handle_ns);
   starpu_data_release(handle_nc);
   starpu_data_release(handle_nsw);
 
-  starpu_data_unregister(vector_mesh);
-  starpu_data_unregister(vector_met);
-  starpu_data_unregister(vector_hash);
+  starpu_data_unregister(handle_mesh);
+  starpu_data_unregister(handle_met);
+  starpu_data_unregister(handle_hash);
   starpu_data_unregister(handle_ns);
   starpu_data_unregister(handle_nc);
   starpu_data_unregister(handle_nsw);
@@ -235,9 +309,6 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
   ns = 0;
   npinit = mesh->np;
 
-  /* Return the identifier of the current worker, i.e the one associated to the calling thread */
-  /* int worker_id = starpu_worker_get_id();*/
-
   /* Step 1: travel mesh, check edges, and tag those to be split; create the new vertices in hash */
   for (k=1; k<=mesh->nt; k++) {
     pt = &mesh->tria[k];
@@ -251,7 +322,7 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
     if ( typchk == 1) {
       if ( !MMG2D_chkedg(mesh,k) ) continue;
     }
-    /* typchk =2 : split on basis of edge lengths in the metric */
+    /* typchk=2 : split on basis of edge lengths in the metric */
     else if ( typchk ==2 ) {
       for (i=0; i<3; i++) {
         i1 = MMG5_inxt2[i];
@@ -683,8 +754,6 @@ int MMG2D_swpmsh(MMG5_pMesh mesh,MMG5_pSol met,int typchk, int color1) {
  based on patterns, collapses, swaps and vertex relocations.*/
 int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
   int                  maxit,it,nns,ns,nnc,nc,nnsw,nsw,nnm,nm;
-  int                  color;
-  int                  ret, i;
   int                  typchk;
   int                  maxit_mov;
   int8_t               improve;
@@ -693,25 +762,44 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
   maxit = 5;
 
 #ifdef USE_STARPU
-  starpu_data_handle_t vector_mesh,vector_met, handle_ns, handle_nc,handle_nsw,handle_nm;
+  MMG5_HashP           hash2;
+  int                  color;
+  int                  ret,i;
+  starpu_data_handle_t handle_mesh,handle_met,handle_ns,handle_nc,handle_nsw,handle_nm;
 
-  starpu_vector_data_register(&vector_mesh, STARPU_MAIN_RAM, (uintptr_t)mesh, 1, sizeof(MMG5_pMesh));
-  starpu_vector_data_register(&vector_met, STARPU_MAIN_RAM, (uintptr_t)met, 1, sizeof(MMG5_pSol));
+  starpu_variable_data_register(&handle_mesh, STARPU_MAIN_RAM, (uintptr_t)mesh, sizeof(MMG5_pMesh));
+  starpu_variable_data_register(&handle_met , STARPU_MAIN_RAM, (uintptr_t)met , sizeof(MMG5_pSol));
 
-  starpu_variable_data_register(&handle_ns, STARPU_MAIN_RAM, (uintptr_t)&ns, sizeof(ns));
-  starpu_variable_data_register(&handle_nc, STARPU_MAIN_RAM, (uintptr_t)&nc, sizeof(nc));
-  starpu_variable_data_register(&handle_nsw, STARPU_MAIN_RAM, (uintptr_t)&nsw, sizeof(nsw));
-  starpu_variable_data_register(&handle_nm, STARPU_MAIN_RAM, (uintptr_t)&nm, sizeof(nsw));
+  starpu_variable_data_register(&handle_ns  , STARPU_MAIN_RAM, (uintptr_t)&ns , sizeof(ns));
+  starpu_variable_data_register(&handle_nc  , STARPU_MAIN_RAM, (uintptr_t)&nc , sizeof(nc));
+  starpu_variable_data_register(&handle_nsw , STARPU_MAIN_RAM, (uintptr_t)&nsw, sizeof(nsw));
+  starpu_variable_data_register(&handle_nm  , STARPU_MAIN_RAM, (uintptr_t)&nm , sizeof(nsw));
 
-  starpu_data_set_reduction_methods ( handle_ns, &accumulate_codelet, &izero_codelet) ;
-  starpu_data_set_reduction_methods ( handle_nc, &accumulate_codelet, &izero_codelet) ;
-  starpu_data_set_reduction_methods ( handle_nsw, &accumulate_codelet, &izero_codelet) ;
-  starpu_data_set_reduction_methods ( handle_nm, &accumulate_codelet, &izero_codelet) ;
+  starpu_data_set_reduction_methods(handle_ns , &accumulate_codelet, &izero_codelet) ;
+  starpu_data_set_reduction_methods(handle_nc , &accumulate_codelet, &izero_codelet) ;
+  starpu_data_set_reduction_methods(handle_nsw, &accumulate_codelet, &izero_codelet) ;
+  starpu_data_set_reduction_methods(handle_nm , &accumulate_codelet, &izero_codelet) ;
 
   starpu_data_acquire(handle_ns,  STARPU_W);
   starpu_data_acquire(handle_nc,  STARPU_W);
   starpu_data_acquire(handle_nsw, STARPU_W);
   starpu_data_acquire(handle_nm,  STARPU_W);
+
+  /*  Creation of a useless array to have one data per task. This data is
+      only used as a tool to express the task dependencie (alloc is done here as
+      I think that we will use a variable number of colors in the future). */
+  char *colors;
+  MMG5_SAFE_MALLOC(colors,mesh->info.ncolors+1,char,return 0);
+
+  /* Creation of an array of handle toward the colors array. */
+  starpu_data_handle_t *handle_per_colors;
+  MMG5_SAFE_MALLOC(handle_per_colors,mesh->info.ncolors+1,starpu_data_handle_t,return 0);
+
+  /* Make handle point toward color data */
+  for (color=0; color<=mesh->info.ncolors; color++) {
+    starpu_variable_data_register(&handle_per_colors[color], STARPU_MAIN_RAM,
+                                  (uintptr_t)&colors[color], sizeof(char));
+  }
 #endif
 
   do {
@@ -721,17 +809,19 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
       ns = 0;
       starpu_data_release(handle_ns);
 
-      for (color=0; color< mesh->info.ncolors; color++)
+      for (color=1; color<=mesh->info.ncolors; color++)
       {
-        ret = starpu_task_insert(&adpspl_codelet,
-                                 STARPU_RW, vector_mesh,
-                                 STARPU_RW, vector_met,
-                                 STARPU_REDUX, handle_ns,
-                                 STARPU_VALUE, &color, sizeof(color),
-                                 0);
+        /* Call adpspl-like function for partition \a color. Can be wrapped into
+         * a task to be run in // (in this case, we can gain some
+         * alloc/unalloc using a STARPU_SCRATCH handle and letting Starpu deal
+         * with the local array \a deps ) */
+        int ier = MMG2D_starpu_adpspl(mesh,&handle_mesh,&handle_met,handle_per_colors,
+                                      &handle_ns,color);
 
-        STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit");
-
+        if ( ier < 1 ) {
+          fprintf(stderr,"  ## Unable to submit adpspl task to starPU. Exit program.\n");
+          return 0;
+        }
       }
 
       starpu_data_acquire(handle_ns, STARPU_RW);
@@ -746,21 +836,38 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
       }
 
 #ifdef USE_STARPU
+      /** Even if splitting operator don't change deps, it is needed to
+       * recompute them as now, 2 domains connected by an edge can't be remeshed
+       * at the same time (which was allowed for splits). Note that a possible
+       * improvement can be to directly compute the collapse dependencies for
+       * the splitting operator (it reduces the split parallelization but splits
+       * are fast) and it save 1 deps computation. */
+
+      /** For each point, compute the list of colors that can be reach directly
+       * or by a 1 edge connection. */
+      if ( !MMG2D_pointColor_1edg(mesh,&hash2) ) {
+        fprintf(stderr,"  ## Problem in second step of dependencies construction"
+                " for moving operator."
+                "Unable to complete mesh. Exit program.\n");
+        return 0;
+      }
+
       nc = 0;
       starpu_data_release(handle_nc);
 
-      for (color=0; color< mesh->info.ncolors; color++)
+      for (color=1; color<=mesh->info.ncolors; color++)
       {
-        ret = starpu_task_insert(&adpcol_codelet,
-                                 STARPU_RW, vector_mesh,
-                                 STARPU_RW, vector_met,
-                                 STARPU_REDUX, handle_nc,
-                                 STARPU_VALUE, &color, sizeof(color),
-                                 0);
+        /* Call adpcol-like function that compute dependencies (from points hash
+         * table) and submit movtri task for partition \a color. */
+        int ier = MMG2D_starpu_adpcol(mesh,&hash2,&handle_mesh,&handle_met,
+                                      handle_per_colors,&handle_nc,color);
 
-        STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit");
-
+        if ( ier < 1 ) {
+          fprintf(stderr,"  ## Unable to submit adpcol task to starPU. Exit program.\n");
+          return 0;
+        }
       }
+      MMG5_DEL_MEM(mesh,hash2.item);
       starpu_data_acquire(handle_nc,STARPU_RW);
 #else
       nc = MMG2D_adpcol(mesh,met,MMG_NOCOLOR);
@@ -781,23 +888,34 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
       typchk=2;
 
 #ifdef USE_STARPU
+      /** Collapse operators modifty the connection between colors so it is
+       * mandatory to recompute deps here. */
+      /** For each point, compute the list of colors that can be reach directly
+       * or by a 1 edge connection. */
+      if ( !MMG2D_pointColor_1edg(mesh,&hash2) ) {
+        fprintf(stderr,"  ## Problem in second step of dependencies construction"
+                " for moving operator."
+                "Unable to complete mesh. Exit program.\n");
+        return 0;
+      }
+
       nsw = 0;
       starpu_data_release(handle_nsw);
 
-      for (color=0; color< mesh->info.ncolors; color++)
+      for (color=1; color<=mesh->info.ncolors; color++)
       {
 
-        ret = starpu_task_insert(&swpmsh_codelet,
-                                 STARPU_RW, vector_mesh,
-                                 STARPU_RW, vector_met,
-                                 STARPU_REDUX, handle_nsw,
-                                 STARPU_VALUE, &typchk, sizeof(typchk),
-                                 STARPU_VALUE, &color, sizeof(color),
-                                 0);
-
-        STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit");
-
+        /* Call swpmsh-like function that compute dependencies (from points hash
+         * table) and submit movtri task for partition \a color. */
+        int ier = MMG2D_starpu_swpmsh(mesh,&hash2,&handle_mesh,&handle_met,
+                                      handle_per_colors,
+                                      &handle_nsw,typchk,color);
+        if ( ier < 1 ) {
+          fprintf(stderr,"  ## Unable to submit swpmsh task to starPU. Exit program.\n");
+          return 0;
+        }
       }
+      MMG5_DEL_MEM(mesh,hash2.item);
       starpu_data_acquire(handle_nsw,STARPU_RW);
 #else
       nsw = MMG2D_swpmsh(mesh,met,typchk,MMG_NOCOLOR);
@@ -817,22 +935,30 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
       improve = 0;
 
 #ifdef USE_STARPU
+
+      /** For each point, compute the list of colors that can be reach directly
+       * or by a 1 edge connection. */
+      if ( !MMG2D_pointColor_1edg(mesh,&hash2) ) {
+        fprintf(stderr,"  ## Problem in second step of dependencies construction"
+                " for moving operator."
+                "Unable to complete mesh. Exit program.\n");
+        return 0;
+      }
+
       nm = 0;
       starpu_data_release(handle_nm);
 
-      for (color=0; color< mesh->info.ncolors; color++)
+      for (color=1; color<=mesh->info.ncolors; color++)
       {
-        ret = starpu_task_insert(&movtri_codelet,
-                                 STARPU_RW, vector_mesh,
-                                 STARPU_RW, vector_met,
-                                 STARPU_REDUX, handle_nm,
-                                 STARPU_VALUE, &maxit_mov, sizeof(maxit_mov),
-                                 STARPU_VALUE, &improve, sizeof(improve),
-                                 STARPU_VALUE, &color, sizeof(color),
-                                 0);
+        /* Call movtri-like function that compute dependencies (from points hash
+         * table) and submit movtri task for partition \a color. */
+        int ier = MMG2D_starpu_movtri(mesh,&hash2,&handle_mesh,&handle_met,handle_per_colors,
+                                      &handle_nm,maxit_mov,improve,color);
 
-        STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit");
-
+        if ( ier < 1 ) {
+          fprintf(stderr,"  ## Unable to submit movtri task to starPU. Exit program.\n");
+          return 0;
+        }
       }
 
       starpu_data_acquire(handle_nm,STARPU_RW);
@@ -870,21 +996,23 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
     nm = 0;
     starpu_data_release(handle_nm);
 
-    for (color=0; color< mesh->info.ncolors; color++)
+    for (color=1; color<=mesh->info.ncolors; color++)
     {
-      ret = starpu_task_insert(&movtri_codelet,
-                               STARPU_RW, vector_mesh,
-                               STARPU_RW, vector_met,
-                               STARPU_REDUX, handle_nm,
-                               STARPU_VALUE, &maxit_mov, sizeof(maxit_mov),
-                               STARPU_VALUE, &improve, sizeof(improve),
-                               STARPU_VALUE, &color, sizeof(color),
-                               0);
+      /* Call movtri-like function that compute dependencies and submit movtri
+       * task for partition \a color. Possible improvement: in fact we don't
+       * need to recompute deps as those ones previously computed are still
+       * valid so we can try to get it from previous call of starpu_movtri. */
+      int ier = MMG2D_starpu_movtri(mesh,&hash2,&handle_mesh,&handle_met,handle_per_colors,
+                                    &handle_nm,maxit_mov,improve,color);
 
-      STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_submit");
-
+      if ( ier < 1 ) {
+        fprintf(stderr,"  ## Unable to submit movtri task to starPU. Exit program.\n");
+        return 0;
+      }
     }
     starpu_data_acquire(handle_nm,STARPU_RW);
+    MMG5_DEL_MEM(mesh,hash2.item);
+
 #else
     nm = MMG2D_movtri(mesh,met,maxit_mov,improve,MMG_NOCOLOR);
 #endif
@@ -903,13 +1031,21 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
   }
 
 #ifdef USE_STARPU
+
+  for (color=0; color<=mesh->info.ncolors; color++) {
+    starpu_data_unregister(handle_per_colors[color]);
+  }
+
+  MMG5_SAFE_FREE(colors);
+  MMG5_SAFE_FREE(handle_per_colors);
+
   starpu_data_release(handle_ns);
   starpu_data_release(handle_nc);
   starpu_data_release(handle_nsw);
   starpu_data_release(handle_nm);
 
-  starpu_data_unregister(vector_mesh);
-  starpu_data_unregister(vector_met);
+  starpu_data_unregister(handle_mesh);
+  starpu_data_unregister(handle_met);
   starpu_data_unregister(handle_ns);
   starpu_data_unregister(handle_nc);
   starpu_data_unregister(handle_nsw);
@@ -1119,6 +1255,7 @@ int MMG2D_movtri(MMG5_pMesh mesh,MMG5_pSol met,int maxit,int8_t improve, int col
 int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
 
 #ifdef USE_STARPU
+
   /* Stage 0: mesh coloration with metis*/
   int status;
   int ret;
@@ -1128,18 +1265,6 @@ int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
 
   status = MMG2D_part_meshElts(mesh);
 
-  /* StarPU configuration: set the sceduling policy */
-  struct starpu_conf conf;
-  starpu_conf_init(&conf);
-  conf.sched_policy_name = "eager";
-
-  /* StarPU initialization method */
-  ret = starpu_init(&conf);
-  if (ret == -ENODEV) return 0;
-  STARPU_CHECK_RETURN_VALUE(ret, "starpu_init");
-
-  /* STARPU task profiling info */
-  starpu_profiling_status_set(STARPU_PROFILING_ENABLE);
 #endif
 
   /* Stage 1: creation of a geometric mesh */
@@ -1182,11 +1307,6 @@ int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
     fprintf(stderr,"  ## Unable to make fine improvements. Exit program.\n");
     return 0;
   }
-
-#ifdef USE_STARPU
-  /* Terminate StarPU */
-  starpu_shutdown();
-#endif
 
   return 1;
 }

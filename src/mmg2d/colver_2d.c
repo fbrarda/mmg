@@ -45,7 +45,13 @@ int MMG2D_chkcol(MMG5_pMesh mesh, MMG5_pSol met,int k,int8_t i,int *list,int8_t 
   int            ip1,ip2,ipb,l,ll,lj,jel,kel,ilist,*adja;
   uint8_t        i1,i2,j,jj,j2,voy,open;
 
-  pt0 = &mesh->tria[0];
+#ifdef USE_STARPU
+  int zero_idx = -starpu_worker_get_id();
+#else
+  int zero_idx = 0;
+#endif
+
+  pt0 = &mesh->tria[zero_idx];
   pt = &mesh->tria[k];
 
   i1 = MMG5_inxt2[i];
@@ -211,7 +217,7 @@ int MMG2D_chkcol(MMG5_pMesh mesh, MMG5_pSol met,int k,int8_t i,int *list,int8_t 
     j   = list[1] % 3;
     jj  = MMG5_inxt2[j];
     j2  = MMG5_iprv2[j];
-    pt0 = &mesh->tria[0];
+    pt0 = &mesh->tria[zero_idx];
     pt1 = &mesh->tria[jel];
     memcpy(pt0,pt1,sizeof(MMG5_Tria));
     pt0->v[j] = ip2;
@@ -250,7 +256,7 @@ int MMG2D_chkcol(MMG5_pMesh mesh, MMG5_pSol met,int k,int8_t i,int *list,int8_t 
 
     /* Check quality and geometric approximation: elements with two trias in the
      * ball should be removed */
-    pt0 = &mesh->tria[0];
+    pt0 = &mesh->tria[zero_idx];
     memcpy(pt0,pt1,sizeof(MMG5_Tria));
     pt0->v[j] = ip2;
 

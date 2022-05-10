@@ -431,8 +431,15 @@ int MMG2D_Free_structures_var(va_list argptr)
   if ( (*mesh)->adjq )
     MMG5_DEL_MEM((*mesh),(*mesh)->adjq);
 
-  if ( (*mesh)->tria )
+  if ( (*mesh)->tria ) {
+#ifdef USE_STARPU
+    int nbadd_pos = starpu_worker_get_count();
+#else
+    int nbadd_pos = 0;
+#endif
+    (*mesh)->tria -= nbadd_pos;
     MMG5_DEL_MEM((*mesh),(*mesh)->tria);
+  }
 
   if ( (*mesh)->quadra )
     MMG5_DEL_MEM((*mesh),(*mesh)->quadra);

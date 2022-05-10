@@ -28,6 +28,11 @@
 #include <stdarg.h>
 #include <stddef.h>
 
+#ifdef USE_STARPU
+#include <pthread.h>
+#include <starpu.h>
+#endif
+
 #include "mmgcmakedefines.h"
 #include "mmgversion.h"
 
@@ -577,6 +582,25 @@ typedef struct {
   MMG5_hedge  *item;
 } MMG5_Hash;
 
+#ifdef USE_STARPU
+/**
+ * \struct MMG5_hpoint
+ * \brief Used to hash points
+ */
+typedef struct {
+  int   data,nxt;
+} MMG5_hpoint;
+
+/**
+ * \struct MMG5_HashP
+ * \brief Hash table for points
+ */
+typedef struct {
+  int         siz,max,nxt;
+  MMG5_hpoint  *item;
+} MMG5_HashP;
+#endif
+
 /* Global hash table used by task-based algo to allow each task to see nodes inserted by other ones */
 typedef MMG5_Hash * MMG5_pHash;
 
@@ -636,6 +660,9 @@ typedef struct {
   MMG5_Info      info; /*!< \ref MMG5_Info structure */
   char           *namein; /*!< Input mesh name */
   char           *nameout; /*!< Output mesh name */
+#ifdef USE_STARPU
+  pthread_mutex_t lock; /*!> To lock access to the mesh */
+#endif
 
 } MMG5_Mesh;
 typedef MMG5_Mesh  * MMG5_pMesh;

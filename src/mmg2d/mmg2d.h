@@ -68,19 +68,31 @@ extern "C" {
 #define MMG2D_LOPTL      1.4
 #define MMG2D_LOPTS     0.71
 
+#ifdef USE_STARPU
+#define MMG2D_NPMAX   500000
+#define MMG2D_NEDMAX  500000
+#define MMG2D_NEMAX   1000000
+
+#else
+// Algiane: I don't know why we have so small values here....
 #define MMG2D_NPMAX   50000
 #define MMG2D_NEDMAX  100000
 #define MMG2D_NEMAX   100000
+#endif
 
 #ifdef USE_STARPU
 
+#define MMG_NDEPSMAX 64
+
+#define MMG_POINTBUF 4
+
 /** For each given color: test if the element has the same color */
-#define MMG2D_EOK(pt,color1)       (pt && ((pt)->v[0] > 0) && ((pt)->color1==color1))  /**< Element OK */
+#define MMG2D_EOK(pt,color) ( (pt && ((pt)->v[0] > 0) ) && ((pt)->color1==color))  /**< Element OK */
 
 #else
 
 /** Ignore colors */
-#define MMG2D_EOK(pt,color1) MG_EOK(pt)
+#define MMG2D_EOK(pt,color) MG_EOK(pt)
 #define MMG_NOCOLOR 0
 
 #endif
@@ -143,10 +155,36 @@ static const int MMG2D_iopp[3][2] = {{1,2},{0,2},{0,1}};
 static const unsigned int MMG2D_idir[5] = {0,1,2,0,1};
 static const unsigned int MMG2D_inxt[5] = {1,2,0,1,2};
 
+#ifdef USE_STARPU
+/** We can't allow realloc with shared mem parallelization as threads may want
+ * to acces to the mesh while it is reallocated (and it is impossible to
+ * efficiently proctect against concurrency access) */
+#define MMG2D_POINT_REALLOC(mesh,sol,ip,wantedGap,law,o,tag ) do        \
+  {                                                                     \
+    static int warn = 0;                                                \
+                                                                        \
+    MMG5_LOCK(&mesh->lock);                                             \
+                                                                        \
+    if ( !warn ) {                                                      \
+      fprintf(stderr,"  ## Error: Point reallocation not possible using" \
+              " shared memory parallelization.\n");                     \
+      warn = 1;                                                         \
+    }                                                                   \
+    MMG5_UNLOCK(&mesh->lock);                                           \
+    law;                                                                \
+  }while(0)
 
+#define MMG2D_TRIA_REALLOC(mesh,jel,wantedGap,law ) do                  \
+  {                                                                     \
+    fprintf(stderr,"  ## Error: Triangle reallocation not possible using" \
+            " shared memory parallelization.\n");                       \
+    law;                                                                \
+  }while(0)
+
+#else
 /** Reallocation of point table and sol table and creation
     of point ip with coordinates o and tag tag*/
-#define MMG2D_POINT_REALLOC(mesh,sol,ip,wantedGap,law,o,tag ) do       \
+#define MMG2D_POINT_REALLOC(mesh,sol,ip,wantedGap,law,o,tag ) do        \
   {                                                                     \
     int klink;                                                          \
                                                                         \
@@ -171,18 +209,18 @@ static const unsigned int MMG2D_inxt[5] = {1,2,0,1,2};
     }                                                                   \
                                                                         \
     /* We try again to add the point */                                 \
-    ip = MMG2D_newPt(mesh,o,tag);                                      \
+    ip = MMG2D_newPt(mesh,o,tag);                                       \
     if ( !ip ) {law;}                                                   \
   }while(0)
 
 /** Reallocation of tria table and creation
     of tria jel */
-#define MMG2D_TRIA_REALLOC(mesh,jel,wantedGap,law ) do                 \
+#define MMG2D_TRIA_REALLOC(mesh,jel,wantedGap,law ) do                  \
   {                                                                     \
    int klink,oldSiz;                                                    \
                                                                         \
    oldSiz = mesh->ntmax;                                                \
-   MMG5_TAB_RECALLOC(mesh,mesh->tria,mesh->ntmax,wantedGap,MMG5_Tria,  \
+   MMG5_TAB_RECALLOC(mesh,mesh->tria,mesh->ntmax,wantedGap,MMG5_Tria,   \
                       "larger tria table",law);                         \
                                                                         \
    mesh->nenil = mesh->nt+1;                                            \
@@ -191,16 +229,17 @@ static const unsigned int MMG2D_inxt[5] = {1,2,0,1,2};
                                                                         \
    if ( mesh->adja ) {                                                  \
      /* adja table */                                                   \
-     MMG5_ADD_MEM(mesh,3*(mesh->ntmax-oldSiz)*sizeof(int),             \
+     MMG5_ADD_MEM(mesh,3*(mesh->ntmax-oldSiz)*sizeof(int),              \
                    "larger adja table",law);                            \
-     MMG5_SAFE_RECALLOC(mesh->adja,3*oldSiz+5,3*mesh->ntmax+5,int      \
+     MMG5_SAFE_RECALLOC(mesh->adja,3*oldSiz+5,3*mesh->ntmax+5,int       \
                          ,"larger adja table",law);                     \
    }                                                                    \
                                                                         \
    /* We try again to add the point */                                  \
-   jel = MMG2D_newElt(mesh);                                           \
+   jel = MMG2D_newElt(mesh);                                            \
    if ( !jel ) {law;}                                                   \
    }while(0)
+#endif
 
 /* Prototypes */
 /*zaldy*/
