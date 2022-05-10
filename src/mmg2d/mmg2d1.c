@@ -184,15 +184,15 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
 
       for (color=1; color<=mesh->info.ncolors; color++)
       {
-        ret = starpu_task_insert(&colelt_codelet,
-                                 STARPU_RW, handle_mesh,
-                                 STARPU_RW, handle_met,
-                                 STARPU_REDUX, handle_nc,
-                                 STARPU_VALUE, &typchk, sizeof(typchk),
-                                 STARPU_VALUE, &color, sizeof(color),
-                                 0);
-
-        STARPU_CHECK_RETURN_VALUE(ret, "starpu_task_insert:colelt_codelet");
+        /* Call colelt-like function that compute dependencies (from points hash
+         * table) and submit movtri task for partition \a color. */
+        int ier = MMG2D_starpu_colelt(mesh,&hash2,&handle_mesh,&handle_met,
+                                      handle_per_colors,
+                                      &handle_nc,typchk,color);
+        if ( ier < 1 ) {
+          fprintf(stderr,"  ## Unable to submit swpmsh task to starPU. Exit program.\n");
+          return 0;
+        }
       }
 
       MMG5_DEL_MEM(mesh,hash2.item);
