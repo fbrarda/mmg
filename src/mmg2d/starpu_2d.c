@@ -576,8 +576,10 @@ int MMG2D_starpu_anaelt ( MMG5_pMesh mesh,starpu_data_handle_t *handle_mesh,
   struct starpu_data_descr *task_handles;
   MMG5_SAFE_CALLOC(task_handles,ndeps+1,struct starpu_data_descr,return 0);
 
+  /* For now, currunt color is not listed as a dependency; add it */
   task_handles[0].handle = handle_per_colors[color];
   task_handles[0].mode   = STARPU_W|STARPU_COMMUTE;
+  /* Now, list the other deps */
   for ( i=1; i<=ndeps; i++ ) {
     task_handles[i].handle = handle_per_colors[deps[i]];
     task_handles[i].mode   = STARPU_W|STARPU_COMMUTE;
@@ -643,8 +645,8 @@ int MMG2D_starpu_colelt ( MMG5_pMesh mesh,MMG5_HashP *hash,
   struct starpu_data_descr *task_handles;
   MMG5_SAFE_CALLOC(task_handles,ndeps+1,struct starpu_data_descr,return 0);
 
-  task_handles[0].handle = handle_per_colors[color];
-  task_handles[0].mode   = STARPU_W|STARPU_COMMUTE;
+  /* This time, current color is already listed in computed deps so we don't
+   * need the 0 slot of the deps array */
   for ( i=1; i<=ndeps; i++ ) {
     task_handles[i].handle = handle_per_colors[deps[i]];
     task_handles[i].mode   = STARPU_W|STARPU_COMMUTE;
@@ -656,7 +658,7 @@ int MMG2D_starpu_colelt ( MMG5_pMesh mesh,MMG5_HashP *hash,
                                STARPU_R, *handle_mesh,
                                STARPU_R, *handle_met,
                                STARPU_REDUX, *handle_nc,
-                               STARPU_DATA_MODE_ARRAY, task_handles, ndeps+1,
+                               STARPU_DATA_MODE_ARRAY, task_handles+1, ndeps,
                                STARPU_VALUE, &typchk, sizeof(typchk),
                                STARPU_VALUE, &color, sizeof(color),
                                0);
@@ -705,8 +707,10 @@ int MMG2D_starpu_adpspl ( MMG5_pMesh mesh,starpu_data_handle_t *handle_mesh,
   struct starpu_data_descr *task_handles;
   MMG5_SAFE_CALLOC(task_handles,ndeps+1,struct starpu_data_descr,return 0);
 
+  /* For now, currunt color is not listed as a dependency: add it */
   task_handles[0].handle = handle_per_colors[color];
   task_handles[0].mode   = STARPU_W|STARPU_COMMUTE;
+  /* Now, list the other deps */
   for ( i=1; i<=ndeps; i++ ) {
     task_handles[i].handle = handle_per_colors[deps[i]];
     task_handles[i].mode   = STARPU_W|STARPU_COMMUTE;
@@ -957,8 +961,8 @@ int MMG2D_starpu_adpcol ( MMG5_pMesh mesh,MMG5_HashP *hash,
   struct starpu_data_descr *task_handles;
   MMG5_SAFE_CALLOC(task_handles,ndeps+1,struct starpu_data_descr,return 0);
 
-  task_handles[0].handle = handle_per_colors[color];
-  task_handles[0].mode   = STARPU_W|STARPU_COMMUTE;
+  /* This time, current color is already listed in computed deps so we don't
+   * need the 0 slot of the deps array */
   for ( i=1; i<=ndeps; i++ ) {
     task_handles[i].handle = handle_per_colors[deps[i]];
     task_handles[i].mode   = STARPU_W|STARPU_COMMUTE;
@@ -970,7 +974,7 @@ int MMG2D_starpu_adpcol ( MMG5_pMesh mesh,MMG5_HashP *hash,
                                STARPU_R, *handle_mesh,
                                STARPU_R, *handle_met,
                                STARPU_REDUX, *handle_nc,
-                               STARPU_DATA_MODE_ARRAY, task_handles, ndeps+1,
+                               STARPU_DATA_MODE_ARRAY, task_handles+1, ndeps,
                                STARPU_VALUE, &color, sizeof(color),
                                0);
 
@@ -1021,8 +1025,8 @@ int MMG2D_starpu_swpmsh ( MMG5_pMesh mesh,MMG5_HashP *hash,
   struct starpu_data_descr *task_handles;
   MMG5_SAFE_CALLOC(task_handles,ndeps+1,struct starpu_data_descr,return 0);
 
-  task_handles[0].handle = handle_per_colors[color];
-  task_handles[0].mode   = STARPU_W|STARPU_COMMUTE;
+  /* This time, current color is already listed in computed deps so we don't
+   * need the 0 slot of the deps array */
   for ( i=1; i<=ndeps; i++ ) {
     task_handles[i].handle = handle_per_colors[deps[i]];
     task_handles[i].mode   = STARPU_W|STARPU_COMMUTE;
@@ -1034,7 +1038,7 @@ int MMG2D_starpu_swpmsh ( MMG5_pMesh mesh,MMG5_HashP *hash,
                                STARPU_RW, *handle_mesh,
                                STARPU_RW, *handle_met,
                                STARPU_REDUX, *handle_nsw,
-                               STARPU_DATA_MODE_ARRAY, task_handles, ndeps+1,
+                               STARPU_DATA_MODE_ARRAY, task_handles+1, ndeps,
                                STARPU_VALUE, &typchk, sizeof(typchk),
                                STARPU_VALUE, &color, sizeof(color),
                                0);
@@ -1086,8 +1090,8 @@ int MMG2D_starpu_movtri ( MMG5_pMesh mesh,MMG5_HashP *hash,
   struct starpu_data_descr *task_handles;
   MMG5_SAFE_CALLOC(task_handles,ndeps+1,struct starpu_data_descr,return 0);
 
-  task_handles[0].handle = handle_per_colors[color];
-  task_handles[0].mode   = STARPU_W|STARPU_COMMUTE;
+  /* This time, current color is already listed in computed deps so we don't
+   * need the 0 slot of the deps array */
   for ( i=1; i<=ndeps; i++ ) {
     task_handles[i].handle = handle_per_colors[deps[i]];
     task_handles[i].mode   = STARPU_W|STARPU_COMMUTE;
@@ -1099,7 +1103,7 @@ int MMG2D_starpu_movtri ( MMG5_pMesh mesh,MMG5_HashP *hash,
                                STARPU_R, *handle_mesh,
                                STARPU_R, *handle_met,
                                STARPU_REDUX, *handle_nm,
-                               STARPU_DATA_MODE_ARRAY, task_handles, ndeps+1,
+                               STARPU_DATA_MODE_ARRAY, task_handles+1, ndeps,
                                STARPU_VALUE, &maxit_mov, sizeof(maxit_mov),
                                STARPU_VALUE, &improve, sizeof(improve),
                                STARPU_VALUE, &color, sizeof(color),
