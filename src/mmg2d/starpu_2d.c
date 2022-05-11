@@ -655,8 +655,8 @@ int MMG2D_starpu_colelt ( MMG5_pMesh mesh,MMG5_HashP *hash,
 
   /** Step 3: Insert starpu task */
   int ret = starpu_task_insert(&colelt_codelet,
-                               STARPU_R, *handle_mesh,
-                               STARPU_R, *handle_met,
+                               STARPU_RW, *handle_mesh,
+                               STARPU_RW, *handle_met,
                                STARPU_REDUX, *handle_nc,
                                STARPU_DATA_MODE_ARRAY, task_handles+1, ndeps,
                                STARPU_VALUE, &typchk, sizeof(typchk),
@@ -971,8 +971,8 @@ int MMG2D_starpu_adpcol ( MMG5_pMesh mesh,MMG5_HashP *hash,
 
   /** Step 3: Insert starpu task */
   int ret = starpu_task_insert(&adpcol_codelet,
-                               STARPU_R, *handle_mesh,
-                               STARPU_R, *handle_met,
+                               STARPU_RW, *handle_mesh,
+                               STARPU_RW, *handle_met,
                                STARPU_REDUX, *handle_nc,
                                STARPU_DATA_MODE_ARRAY, task_handles+1, ndeps,
                                STARPU_VALUE, &color, sizeof(color),
