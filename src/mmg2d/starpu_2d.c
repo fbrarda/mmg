@@ -257,7 +257,7 @@ struct starpu_codelet colelt_codelet =
   .cpu_funcs = {MMG2D_colelt_task},
   .cpu_funcs_name = {"MMG2D_colelt_task"},
   .nbuffers = STARPU_VARIABLE_NBUFFERS,
-  .modes = {STARPU_R, STARPU_R, STARPU_REDUX,STARPU_DATA_MODE_ARRAY},
+  .modes = {STARPU_RW, STARPU_RW, STARPU_REDUX,STARPU_DATA_MODE_ARRAY},
   .where = STARPU_CPU,
   .name = "colelt"
 };
@@ -387,7 +387,7 @@ struct starpu_codelet adpcol_codelet =
   .cpu_funcs = {MMG2D_adpcol_task},
   .cpu_funcs_name = {"MMG2D_adpcol_task"},
   .nbuffers = STARPU_VARIABLE_NBUFFERS,
-  .modes = {STARPU_R, STARPU_R, STARPU_REDUX,STARPU_DATA_MODE_ARRAY},
+  .modes = {STARPU_RW, STARPU_RW, STARPU_REDUX,STARPU_DATA_MODE_ARRAY},
   .where = STARPU_CPU,
   .name = "adpcol"
 };
