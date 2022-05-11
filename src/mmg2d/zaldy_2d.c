@@ -42,7 +42,7 @@ int MMG2D_newPt(MMG5_pMesh mesh,double c[2],int16_t tag) {
 #warning concurrency access lead to reset npnil (use of point curpt) while trying to access it, as a 0 npnil means that we don't have anymore memory, it raises a realloc issue
   // For now, we solve this using locks. These locks have to be removed once the
   // list will be parallelized
-  MMG5_LOCK(&mesh->lock);
+  MMG5_LOCK(&mesh->lock); // Comment locks to use correctly the parallel newPt
 
   curpt = mesh->npnil;
   if ( mesh->npnil > mesh->np )  mesh->np = mesh->npnil;
