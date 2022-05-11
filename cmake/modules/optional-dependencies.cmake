@@ -168,13 +168,13 @@ IF (NOT WIN32)
 
   IF ( NOT DEFINED USE_STARPU OR USE_STARPU STREQUAL ""  )
     # Variable is not provided by user
-    FIND_PACKAGE(STARPU QUIET)
+    FIND_PACKAGE(STARPU 1.3 QUIET)
 
   ELSE ()
 
     IF ( USE_STARPU )
       # User wants to use starPU
-      FIND_PACKAGE(STARPU)
+      FIND_PACKAGE(STARPU 1.3)
       IF ( NOT STARPU_FOUND )
         MESSAGE ( FATAL_ERROR "StarPU library not found:"
           "If you have already installed StarPU and want to use it, "
