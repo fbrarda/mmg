@@ -270,12 +270,7 @@ MACRO ( ADD_AND_INSTALL_EXECUTABLE
      message(STATUS "[mmg:${exec_name}] add include starPU directories ${STARPU_INCLUDE_DIRS}")
      INCLUDE_DIRECTORIES ( AFTER ${STARPU_INCLUDE_DIRS} )
    ENDIF()
-
-   IF ( FXT_FOUND )
-     message(STATUS "[mmg:${exec_name}] add include FXT directories ${FXT_INCLUDE_DIRS}")
-     INCLUDE_DIRECTORIES ( AFTER ${FXT_INCLUDE_DIRS} )
-   ENDIF()
-
+   
    IF ( METIS_FOUND )
      message(STATUS "[mmg:${exec_name}] add include METIS directories ${METIS_INCLUDE_DIRS}")
      INCLUDE_DIRECTORIES ( AFTER ${METIS_INCLUDE_DIRS} )
@@ -294,12 +289,7 @@ MACRO ( ADD_AND_INSTALL_EXECUTABLE
      message(STATUS "[mmg:${exec_name}] add include starPU directories ${STARPU_INCLUDE_DIRS}")
      TARGET_INCLUDE_DIRECTORIES ( ${exec_name} BEFORE  PUBLIC ${STARPU_INCLUDE_DIRS} )
    ENDIF()
-
-   IF ( FXT_FOUND )
-     message(STATUS "[mmg:${exec_name}] add include FXT directories ${FXT_INCLUDE_DIRS}")
-     TARGET_INCLUDE_DIRECTORIES ( ${exec_name} BEFORE  PUBLIC  ${FXT_INCLUDE_DIRS} )
-   ENDIF()
-
+   
    IF ( METIS_FOUND )
      message(STATUS "[mmg:${exec_name}] add include METIS directories ${METIS_INCLUDE_DIRS}")
      TARGET_INCLUDE_DIRECTORIES ( ${exec_name} BEFORE  PUBLIC ${METIS_INCLUDE_DIRS} )
