@@ -80,7 +80,7 @@ struct starpu_codelet accumulate_codelet =
 {
   .cpu_funcs = {accumulate_cpu},
   .cpu_funcs_name = {"redux_sum_func"},
-  .modes = {STARPU_RW|STARPU_COMMUTE, STARPU_R},
+  .modes = {STARPU_RW, STARPU_R},
   .nbuffers = 2,
   .name = "redux_sum"
 };
@@ -135,7 +135,7 @@ struct starpu_codelet min_codelet =
 {
   .cpu_funcs = {min_cpu},
   .cpu_funcs_name = {"redux_min_func"},
-  .modes = {STARPU_RW|STARPU_COMMUTE, STARPU_R},
+  .modes = {STARPU_RW, STARPU_R},
   .nbuffers = 2,
   .name = "redux_min"
 };
