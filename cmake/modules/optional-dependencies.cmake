@@ -160,15 +160,21 @@ IF (NOT WIN32)
   SET ( USE_STARPU "" CACHE STRING "StarPU scheduler for shared memory parallelization (ON, OFF or <empty>)" )
   SET_PROPERTY(CACHE USE_STARPU PROPERTY STRINGS "ON" "OFF" " ")
 
+  IF ( STARPU_DIR )
+    set(ENV{PKG_CONFIG_PATH} "${STARPU_DIR}/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}")
+    message(STATUS "Prepend ${STARPU_DIR}/lib/pkgconfig to the value of"
+      " PKG_CONFIG_PATH environment variable")
+  ENDIF()
+
   IF ( NOT DEFINED USE_STARPU OR USE_STARPU STREQUAL ""  )
     # Variable is not provided by user
-    FIND_PACKAGE(STARPU QUIET)
+    FIND_PACKAGE(STARPU 1.3 QUIET)
 
   ELSE ()
 
     IF ( USE_STARPU )
       # User wants to use starPU
-      FIND_PACKAGE(STARPU)
+      FIND_PACKAGE(STARPU 1.3)
       IF ( NOT STARPU_FOUND )
         MESSAGE ( FATAL_ERROR "StarPU library not found:"
           "If you have already installed StarPU and want to use it, "

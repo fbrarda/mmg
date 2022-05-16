@@ -68,7 +68,6 @@ IF ( MmgTargetsExported )
     ${PROJECT_SOURCE_DIR}/cmake/modules/FindSCOTCH.cmake
     ${PROJECT_SOURCE_DIR}/cmake/modules/FindElas.cmake
     ${PROJECT_SOURCE_DIR}/cmake/modules/FindSTARPU.cmake
-    ${PROJECT_SOURCE_DIR}/cmake/modules/FindFXT.cmake
     ${PROJECT_SOURCE_DIR}/cmake/modules/FindMETIS.cmake
     DESTINATION ${MMG_CMAKE_INSTALL_DIR} )
 ENDIF()
