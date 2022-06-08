@@ -498,6 +498,7 @@ int MMG2D_mmg2d2(MMG5_pMesh mesh,MMG5_pSol sol) {
   double    c[2],dd;
   int       j,k,kk,ip1,ip2,ip3,ip4,jel,kel,nt,iadr,*adja;
   int       *numper;
+  int       color1 = 0;
 
   mesh->base = 0;
   /* If triangles already exist, delete them */
@@ -600,7 +601,7 @@ int MMG2D_mmg2d2(MMG5_pMesh mesh,MMG5_pSol sol) {
   assert ( ip4 == mesh->np );
 
   /* Create the first two triangles in the mesh and the adjacency relations */
-  jel  = MMG2D_newElt(mesh);
+  jel  = MMG2D_newElt(mesh,color1);
   if ( !jel ) {
     MMG2D_TRIA_REALLOC(mesh,jel,mesh->gap,
                        fprintf(stderr,"\n  ## Error: %s: unable to allocate a"
@@ -614,7 +615,7 @@ int MMG2D_mmg2d2(MMG5_pMesh mesh,MMG5_pSol sol) {
   pt->v[2] = ip2;
   pt->base = mesh->base;
 
-  kel  = MMG2D_newElt(mesh);
+  kel  = MMG2D_newElt(mesh,color1);
   if ( !kel ) {
     MMG2D_TRIA_REALLOC(mesh,kel,mesh->gap,
                        fprintf(stderr,"\n  ## Error: %s: unable to allocate"

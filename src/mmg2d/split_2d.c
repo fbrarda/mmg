@@ -249,7 +249,13 @@ int MMG2D_split1b(MMG5_pMesh mesh,int k,int8_t i,int ip) {
   int                *adja,iel,jel,kel,mel;
   int8_t             i1,i2,m,j,j1,j2;
 
-  iel = MMG2D_newElt(mesh);
+  pt = &mesh->tria[k];
+#ifdef USE_STARPU
+  int color1 = pt->color1;
+#else
+  int color1 = 0;
+#endif
+  iel = MMG2D_newElt(mesh,color1);
   if ( !iel ) {
     MMG2D_TRIA_REALLOC(mesh,iel,mesh->gap,
                         printf("  ## Error: unable to allocate a new element.\n");
@@ -257,7 +263,6 @@ int MMG2D_split1b(MMG5_pMesh mesh,int k,int8_t i,int ip) {
                         printf("  Exit program.\n");return 0);
   }
 
-  pt = &mesh->tria[k];
   pt->flag = 0;
   pt->base = mesh->base;
 
@@ -291,7 +296,7 @@ int MMG2D_split1b(MMG5_pMesh mesh,int k,int8_t i,int ip) {
     mesh->adja[3*(mel-1)+1+m] = 3*iel+i1;
 
   if ( jel ) {
-    kel = MMG2D_newElt(mesh);
+    kel = MMG2D_newElt(mesh,color1);
     if ( !kel ) {
       MMG2D_TRIA_REALLOC(mesh,kel,mesh->gap,
                           printf("  ## Error: unable to allocate a new element.\n");
@@ -403,6 +408,11 @@ int MMG2D_split1(MMG5_pMesh mesh, MMG5_pSol sol, int k, int vx[3]) {
   uint8_t      tau[3];
 
   pt = &mesh->tria[k];
+#ifdef USE_STARPU
+  int color1 = pt->color1;
+#else
+  int color1 = 0;
+#endif
 
   /* Set permutation from the reference configuration (case 1: edge 0 is splitted) to the actual one */
   tau[0] = 0; tau[1] = 1; tau[2] = 2;
@@ -425,7 +435,7 @@ int MMG2D_split1(MMG5_pMesh mesh, MMG5_pSol sol, int k, int vx[3]) {
   if ( pt->edg[tau[0]] > 0 )
     p0->ref = pt->edg[tau[0]];
 
-  iel = MMG2D_newElt(mesh);
+  iel = MMG2D_newElt(mesh,color1);
   if ( !iel ) {
     MMG2D_TRIA_REALLOC(mesh,iel,mesh->gap,
                         printf("  ## Error: unable to allocate a new element.\n");
@@ -524,6 +534,11 @@ int MMG2D_split2(MMG5_pMesh mesh, MMG5_pSol sol, int k, int vx[3]) {
   uint8_t     tau[3];
 
   pt = &mesh->tria[k];
+#ifdef USE_STARPU
+  int color1 = pt->color1;
+#else
+  int color1 = 0;
+#endif
 
   /* Set permutation from the reference configuration (case 6: edges 1,2 are splitted) to the actual one */
   tau[0] = 0; tau[1] = 1; tau[2] = 2;
@@ -550,7 +565,7 @@ int MMG2D_split2(MMG5_pMesh mesh, MMG5_pSol sol, int k, int vx[3]) {
   if ( pt->edg[tau[2]] > 0 )
     p2->ref = pt->edg[tau[2]];
 
-  iel = MMG2D_newElt(mesh);
+  iel = MMG2D_newElt(mesh,color1);
   if ( !iel ) {
     MMG2D_TRIA_REALLOC(mesh,iel,mesh->gap,
                         printf("  ## Error: unable to allocate a new element.\n");
@@ -559,7 +574,7 @@ int MMG2D_split2(MMG5_pMesh mesh, MMG5_pSol sol, int k, int vx[3]) {
     pt = &mesh->tria[k];
   }
 
-  jel = MMG2D_newElt(mesh);
+  jel = MMG2D_newElt(mesh,color1);
   if ( !jel ) {
     MMG2D_TRIA_REALLOC(mesh,jel,mesh->gap,
                         printf("  ## Error: unable to allocate a new element.\n");
@@ -655,6 +670,11 @@ int MMG2D_split3(MMG5_pMesh mesh, MMG5_pSol sol, int k, int vx[3]) {
 
   pt = &mesh->tria[k];
   pt->flag = 0;
+#ifdef USE_STARPU
+  int color1 = pt->color1;
+#else
+  int color1 = 0;
+#endif
 
   /* Update of point references */
   p0 = &mesh->point[vx[0]];
@@ -670,7 +690,7 @@ int MMG2D_split3(MMG5_pMesh mesh, MMG5_pSol sol, int k, int vx[3]) {
   if ( pt->edg[2] > 0 )
     p2->ref = pt->edg[2];
 
-  iel = MMG2D_newElt(mesh);
+  iel = MMG2D_newElt(mesh,color1);
   if ( !iel ) {
     MMG2D_TRIA_REALLOC(mesh,iel,mesh->gap,
                         printf("  ## Error: unable to allocate a new element.\n");
@@ -680,7 +700,7 @@ int MMG2D_split3(MMG5_pMesh mesh, MMG5_pSol sol, int k, int vx[3]) {
     pt = &mesh->tria[k];
   }
 
-  jel = MMG2D_newElt(mesh);
+  jel = MMG2D_newElt(mesh,color1);
 
   if ( !jel ) {
     MMG2D_TRIA_REALLOC(mesh,jel,mesh->gap,
@@ -690,7 +710,7 @@ int MMG2D_split3(MMG5_pMesh mesh, MMG5_pSol sol, int k, int vx[3]) {
     pt = &mesh->tria[k];
   }
 
-  kel = MMG2D_newElt(mesh);
+  kel = MMG2D_newElt(mesh,color1);
 
   if ( !kel ) {
     MMG2D_TRIA_REALLOC(mesh,kel,mesh->gap,
@@ -747,13 +767,15 @@ int MMG2D_splitbar(MMG5_pMesh mesh,int k,int ip) {
   int8_t             j2,j0;
   double             cal,calseuil;
 
+  pt  = &mesh->tria[k];
 #ifdef USE_STARPU
   int zero_idx = -starpu_worker_get_id();
+  int color1 = pt->color1;
 #else
   int zero_idx = 0;
+  int color1 = 0; 
 #endif
 
-  pt  = &mesh->tria[k];
   pt0 = &mesh->tria[zero_idx];
   ppt = &mesh->point[ip];
   ip0 = pt->v[0];
@@ -781,14 +803,14 @@ int MMG2D_splitbar(MMG5_pMesh mesh,int k,int ip) {
       return 0;
   }
 
-  iel1 = MMG2D_newElt(mesh);
+  iel1 = MMG2D_newElt(mesh,color1);
   if ( !iel1 ) {
     MMG2D_TRIA_REALLOC(mesh,iel1,mesh->gap,
                         printf("  ## Error: unable to allocate a new element.\n");
                         MMG5_INCREASE_MEM_MESSAGE();
                         printf("  Exit program.\n");return 0);
   }
-  iel2 = MMG2D_newElt(mesh);
+  iel2 = MMG2D_newElt(mesh,color1);
   if ( !iel2 ) {
     MMG2D_TRIA_REALLOC(mesh,iel2,mesh->gap,
                         printf("  ## Error: unable to allocate a new element.\n");

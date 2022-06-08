@@ -391,10 +391,19 @@ int MMG2D_restart(MMG5_pMesh mesh){
     MMG5_ADD_MEM(mesh,(mesh->ntmax+1)*sizeof(MMG5_Tria),
                  "initial triangles",return 0);
     MMG5_SAFE_CALLOC(mesh->tria,mesh->ntmax+1,MMG5_Tria,return 0);
-    mesh->nenil = mesh->nt + 1;
-    for ( k=mesh->nenil; k<mesh->ntmax-1; k++) {
-      mesh->tria[k].v[2] = k+1;
+#ifdef USE_STARPU
+    for(int i=0; i<starpu_worker_get_count(); i++) {
+      mesh->nenil[i] = mesh->nt + i*(mesh->nemax4t + 1);
+      for ( k=mesh->nenil[i]; k<mesh->nemax4t-1; k++) {
+        mesh->tria[k].v[2] = k+1;
+      }
     }
+#else
+      mesh->nenil[0] = mesh->nt + 1;
+      for ( k=mesh->nenil[0]; k<mesh->ntmax-1; k++) {
+        mesh->tria[k].v[2] = k+1;
+      }
+#endif
   }
   if ( mesh->na && !mesh->edge ) {
     /* If we call the library more than one time and if we free the triangles
@@ -402,11 +411,21 @@ int MMG2D_restart(MMG5_pMesh mesh){
     MMG5_ADD_MEM(mesh,(mesh->namax+1)*sizeof(MMG5_Edge),
                  "initial edges",return 0);
     MMG5_SAFE_CALLOC(mesh->edge,mesh->namax+1,MMG5_Edge,return 0);
-    if ( mesh->na < mesh->namax ) {
-      mesh->nanil = mesh->na + 1;
+#ifdef USE_STARPU
+    for(int i=0; i<starpu_worker_get_count(); i++) {
+      if ( mesh->na < mesh->namax ) {
+        mesh->nanil[i] = mesh->na + i*(mesh->namax4t + 1);
+      }
+      else
+        mesh->nanil[i] = 0;
     }
-    else
-      mesh->nanil = 0;
+#else
+    if ( mesh->na < mesh->namax ) {
+        mesh->nanil[0] = mesh->na + 1;
+      }
+      else
+        mesh->nanil[0] = 0;
+#endif
   }
 
   return 1;

@@ -836,25 +836,47 @@ int MMG2D_pack(MMG5_pMesh mesh,MMG5_pSol sol,MMG5_pSol met) {
   for(k=1 ; k<=mesh->np ; k++)
     mesh->point[k].tmp = 0;
 
-  if(mesh->np < mesh->npmax - 3) {
-    mesh->npnil = mesh->np + 1;
-    for (k=mesh->npnil; k<mesh->npmax-1; k++)
-      mesh->point[k].tmp  = k+1;
-  }
-  else {
-    mesh->npnil = 0;
-  }
+#ifdef USE_STARPU
+  for(i=0; i<starpu_worker_get_count(); i++) {
+    if(mesh->np < mesh->npmax - 3) {
+      mesh->npnil[i] = mesh->np + i*(mesh->npmax4t + 1);
+      for (k=mesh->npnil[i]; k<mesh->npmax4t-1; k++)
+        mesh->point[k].tmp  = k+1;
+    }
+    else {
+      mesh->npnil[i] = 0;
+    }
 
-  /** Reset garbage collector */
-  if ( mesh->nt < mesh->ntmax - 3 ) {
-    mesh->nenil = mesh->nt + 1;
-    for (k=mesh->nenil; k<mesh->ntmax-1; k++)
-      mesh->tria[k].v[2] = k+1;
+    /** Reset garbage collector */
+    if ( mesh->nt < mesh->ntmax - 3 ) {
+      mesh->nenil[i] = mesh->nt + i*(mesh->nemax4t + 1);
+      for (k=mesh->nenil[i]; k<mesh->nemax4t-1; k++)
+        mesh->tria[k].v[2] = k+1;
+    }
+    else {
+      mesh->nenil[i] = 0;
+    }
   }
-  else {
-    mesh->nenil = 0;
-  }
+#else
+    if(mesh->np < mesh->npmax - 3) {
+      mesh->npnil[0] = mesh->np + 1;
+      for (k=mesh->npnil[0]; k<mesh->npmax-1; k++)
+        mesh->point[k].tmp  = k+1;
+    }
+    else {
+      mesh->npnil[0] = 0;
+    }
 
+    /** Reset garbage collector */
+    if ( mesh->nt < mesh->ntmax - 3 ) {
+      mesh->nenil[0] = mesh->nt + 1;
+      for (k=mesh->nenil[0]; k<mesh->ntmax-1; k++)
+        mesh->tria[k].v[2] = k+1;
+    }
+    else {
+      mesh->nenil[0] = 0;
+    }
+#endif
   if ( mesh->info.imprim > 0 ) {
     fprintf(stdout,"     NUMBER OF VERTICES       %8d   CORNERS %8d\n",mesh->np,nc);
     fprintf(stdout,"     NUMBER OF TRIANGLES      %8d\n",mesh->nt);

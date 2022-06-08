@@ -197,7 +197,7 @@ static int MMG5_spllag(MMG5_pMesh mesh,MMG5_pSol disp,MMG5_pSol met,int itdeg, i
                      mesh->memCur -= (mesh->npmax - oldnpmax)*sizeof(MMG5_Point);
                      mesh->npmax = oldnpmax;
                      mesh->np = mesh->npmax-1;
-                     mesh->npnil = 0;
+                     mesh->npnil[0] = 0;
                      break);
         MMG5_SAFE_REALLOC(disp->m,disp->size*(disp->npmax+1),
                           disp->size*(mesh->npmax+1),
@@ -206,7 +206,7 @@ static int MMG5_spllag(MMG5_pMesh mesh,MMG5_pSol disp,MMG5_pSol met,int itdeg, i
                           mesh->memCur -= (mesh->npmax - oldnpmax)*sizeof(MMG5_Point);
                           mesh->npmax = oldnpmax;
                           mesh->np = mesh->npmax-1;
-                          mesh->npnil = 0;
+                          mesh->npnil[0] = 0;
                           break);
       }
       disp->npmax = mesh->npmax;

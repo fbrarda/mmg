@@ -255,6 +255,11 @@ int MMG2D_delone(MMG5_pMesh mesh,MMG5_pSol sol,int ip,int *list,int ilist) {
   MMG5_Hash       hedg;
   static int8_t   mmgWarn0=0,mmgWarn1=0;
 
+#ifdef USE_STARPU
+  int color1 = mesh->point[1].color1;
+#else 
+  int color1 = 0;
+#endif 
   /* Reset tagdel field */
   for (k=1; k<ilist; k++)
     mesh->point[k].tagdel = 0;
@@ -317,7 +322,7 @@ int MMG2D_delone(MMG5_pMesh mesh,MMG5_pSol sol,int ip,int *list,int ilist) {
   /* Allocate memory for "size" new triangles */
   ielnum[0] = size;
   for (k=1; k<=size; k++) {
-    ielnum[k] = MMG2D_newElt(mesh);
+    ielnum[k] = MMG2D_newElt(mesh,color1);
     if ( !ielnum[k] ) {
       MMG2D_TRIA_REALLOC(mesh,ielnum[k],mesh->gap,
                           fprintf(stderr,"\n  ## Error: %s: unable to allocate"

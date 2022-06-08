@@ -40,12 +40,12 @@ int MMG3D_newPt(MMG5_pMesh mesh,double c[3],int16_t tag,int src) {
   MMG5_pPoint  ppt;
   int     curpt;
 
-  if ( !mesh->npnil )  return 0;
-  curpt = mesh->npnil;
-  if ( mesh->npnil > mesh->np )  mesh->np = mesh->npnil;
+  if ( !mesh->npnil[0] )  return 0;
+  curpt = mesh->npnil[0];
+  if ( mesh->npnil[0] > mesh->np )  mesh->np = mesh->npnil[0];
   ppt   = &mesh->point[curpt];
   memcpy(ppt->c,c,3*sizeof(double));
-  mesh->npnil = ppt->tmp;
+  mesh->npnil[0] = ppt->tmp;
   ppt->tmp    = 0;
 
   ppt->ref = 0;
@@ -87,8 +87,8 @@ void MMG3D_delPt(MMG5_pMesh mesh,int ip) {
   }
   memset(ppt,0,sizeof(MMG5_Point));
   ppt->tag    = MG_NUL;
-  ppt->tmp    = mesh->npnil;
-  mesh->npnil = ip;
+  ppt->tmp    = mesh->npnil[0];
+  mesh->npnil[0] = ip;
   if ( ip == mesh->np ) {
     while ( !MG_VOK((&mesh->point[mesh->np])) )  mesh->np--;
   }
@@ -98,11 +98,11 @@ void MMG3D_delPt(MMG5_pMesh mesh,int ip) {
 int MMG3D_newElt(MMG5_pMesh mesh) {
   int     curiel;
 
-  if ( !mesh->nenil )  return 0;
-  curiel = mesh->nenil;
+  if ( !mesh->nenil[0] )  return 0;
+  curiel = mesh->nenil[0];
 
-  if ( mesh->nenil > mesh->ne )  mesh->ne = mesh->nenil;
-  mesh->nenil = mesh->tetra[curiel].v[3];
+  if ( mesh->nenil[0] > mesh->ne )  mesh->ne = mesh->nenil[0];
+  mesh->nenil[0] = mesh->tetra[curiel].v[3];
   mesh->tetra[curiel].v[3] = 0;
 
 #ifdef USE_STARPU
@@ -133,11 +133,11 @@ int MMG3D_delElt(MMG5_pMesh mesh,int iel) {
     return 0;
   }
   memset(pt,0,sizeof(MMG5_Tetra));
-  pt->v[3] = mesh->nenil;
+  pt->v[3] = mesh->nenil[0];
   iadr = 4*(iel-1) + 1;
   if ( mesh->adja )
     memset(&mesh->adja[iadr],0,4*sizeof(int));
-  mesh->nenil = iel;
+  mesh->nenil[0] = iel;
   if ( iel == mesh->ne ) {
     while ( !MG_EOK((&mesh->tetra[mesh->ne])) )  mesh->ne--;
   }
@@ -293,16 +293,19 @@ int MMG3D_setMeshSize_alloc( MMG5_pMesh mesh ) {
     MMG5_SAFE_CALLOC(mesh->edge,(mesh->na+1),MMG5_Edge,return 0);
   }
 
-  /* keep track of empty links */
-  mesh->npnil = mesh->np + 1;
-  mesh->nenil = mesh->ne + 1;
+  MMG5_SAFE_CALLOC(mesh->npnil,1,int,return MMG5_STRONGFAILURE);
+  MMG5_SAFE_CALLOC(mesh->nenil,1,int,return MMG5_STRONGFAILURE);
 
-  for (k=mesh->npnil; k<mesh->npmax-1; k++) {
+  /* keep track of empty links */
+  mesh->npnil[0] = mesh->np + 1;
+  mesh->nenil[0] = mesh->ne + 1;
+
+  for (k=mesh->npnil[0]; k<mesh->npmax-1; k++) {
     /* link */
     mesh->point[k].tmp  = k+1;
   }
 
-  for (k=mesh->nenil; k<mesh->nemax-1; k++)
+  for (k=mesh->nenil[0]; k<mesh->nemax-1; k++)
     mesh->tetra[k].v[3] = k+1;
 
   return 1;

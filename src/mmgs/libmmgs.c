@@ -268,12 +268,12 @@ int MMGS_packMesh(MMG5_pMesh mesh,MMG5_pSol sol,MMG5_pSol met) {
   for(k=1 ; k<=mesh->np ; k++)
     mesh->point[k].tmp = 0;
 
-  mesh->npnil = mesh->np + 1;
-  for(k=mesh->npnil; k<mesh->npmax-1; k++)
+  mesh->npnil[0] = mesh->np + 1;
+  for(k=mesh->npnil[0]; k<mesh->npmax-1; k++)
     mesh->point[k].tmp  = k+1;
 
-  mesh->nenil = mesh->nt + 1;
-  for(k=mesh->nenil; k<mesh->ntmax-1; k++)
+  mesh->nenil[0] = mesh->nt + 1;
+  for(k=mesh->nenil[0]; k<mesh->ntmax-1; k++)
     mesh->tria[k].v[2] = k+1;
 
   /* to could save the mesh, the adjacency have to be correct */

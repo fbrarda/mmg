@@ -192,8 +192,8 @@ static const unsigned int MMG2D_inxt[5] = {1,2,0,1,2};
     MMG5_TAB_RECALLOC(mesh,mesh->point,mesh->npmax,wantedGap,MMG5_Point, \
                        "larger point table",law);                       \
                                                                         \
-    mesh->npnil = mesh->np+1;                                           \
-    for (klink=mesh->npnil; klink<mesh->npmax-1; klink++)               \
+    mesh->npnil[0] = mesh->np+1;                                           \
+    for (klink=mesh->npnil[0]; klink<mesh->npmax-1; klink++)               \
       mesh->point[klink].tmp  = klink+1;                                \
                                                                         \
     /* solution */                                                      \
@@ -223,8 +223,8 @@ static const unsigned int MMG2D_inxt[5] = {1,2,0,1,2};
    MMG5_TAB_RECALLOC(mesh,mesh->tria,mesh->ntmax,wantedGap,MMG5_Tria,   \
                       "larger tria table",law);                         \
                                                                         \
-   mesh->nenil = mesh->nt+1;                                            \
-   for (klink=mesh->nenil; klink<mesh->ntmax-1; klink++)                \
+   mesh->nenil[0] = mesh->nt+1;                                            \
+   for (klink=mesh->nenil[0]; klink<mesh->ntmax-1; klink++)                \
      mesh->tria[klink].v[2]  = klink+1;                                 \
                                                                         \
    if ( mesh->adja ) {                                                  \
@@ -236,7 +236,8 @@ static const unsigned int MMG2D_inxt[5] = {1,2,0,1,2};
    }                                                                    \
                                                                         \
    /* We try again to add the point */                                  \
-   jel = MMG2D_newElt(mesh);                                            \
+   int color = 0;                                                       \
+   jel = MMG2D_newElt(mesh,color);                                      \
    if ( !jel ) {law;}                                                   \
    }while(0)
 #endif
@@ -246,7 +247,7 @@ static const unsigned int MMG2D_inxt[5] = {1,2,0,1,2};
 int MMG2D_newPt(MMG5_pMesh mesh,double c[2],int16_t tag);
 void MMG2D_delPt(MMG5_pMesh mesh,int ip) ;
 void MMG5_delEdge(MMG5_pMesh mesh,int iel);
-int MMG2D_newElt(MMG5_pMesh mesh);
+int MMG2D_newElt(MMG5_pMesh mesh, int color);
 int  MMG2D_delElt(MMG5_pMesh mesh,int iel);
 int MMG5_getnElt(MMG5_pMesh mesh,int n);
 int MMG2D_zaldy(MMG5_pMesh mesh);

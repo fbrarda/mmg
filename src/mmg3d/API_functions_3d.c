@@ -2085,8 +2085,8 @@ int MMG3D_Add_vertex(MMG5_pMesh mesh,double c0,double c1,double c2,int ref) {
                                " a new point\n",__func__);
                        MMG5_INCREASE_MEM_MESSAGE();return 0);
 
-    mesh->npnil = mesh->np+1;
-    for (klink=mesh->npnil; klink<mesh->npmax-1; klink++)
+    mesh->npnil[0] = mesh->np+1;
+    for (klink=mesh->npnil[0]; klink<mesh->npmax-1; klink++)
       mesh->point[klink].tmp  = klink+1;
 
     /* We try again to add the point */

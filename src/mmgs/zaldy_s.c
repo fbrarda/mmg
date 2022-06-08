@@ -40,16 +40,16 @@ int MMGS_newPt(MMG5_pMesh mesh,double c[3],double n[3]) {
   MMG5_pPoint  ppt;
   int     curpt;
 
-  if ( !mesh->npnil )  return 0;
+  if ( !mesh->npnil[0] )  return 0;
 
-  curpt = mesh->npnil;
-  if ( mesh->npnil > mesh->np )  mesh->np = mesh->npnil;
+  curpt = mesh->npnil[0];
+  if ( mesh->npnil[0] > mesh->np )  mesh->np = mesh->npnil[0];
   ppt   = &mesh->point[curpt];
   memcpy(ppt->c,c,3*sizeof(double));
   if ( n )
     memcpy(ppt->n,n,3*sizeof(double));
   ppt->tag   &= ~MG_NUL;
-  mesh->npnil = ppt->tmp;
+  mesh->npnil[0] = ppt->tmp;
   ppt->tmp    = 0;
 
   return curpt;
@@ -61,8 +61,8 @@ void MMGS_delPt(MMG5_pMesh mesh,int ip) {
   ppt = &mesh->point[ip];
   memset(ppt,0,sizeof(MMG5_Point));
   ppt->tag    = MG_NUL;
-  ppt->tmp    = mesh->npnil;
-  mesh->npnil = ip;
+  ppt->tmp    = mesh->npnil[0];
+  mesh->npnil[0] = ip;
   if ( ip == mesh->np ) {
     while ( !MG_VOK((&mesh->point[mesh->np])) )  mesh->np--;
   }
@@ -71,11 +71,11 @@ void MMGS_delPt(MMG5_pMesh mesh,int ip) {
 int MMGS_newElt(MMG5_pMesh mesh) {
   int     curiel;
 
-  if ( !mesh->nenil )  return 0;
-  curiel = mesh->nenil;
+  if ( !mesh->nenil[0] )  return 0;
+  curiel = mesh->nenil[0];
 
-  if ( mesh->nenil > mesh->nt )  mesh->nt = mesh->nenil;
-  mesh->nenil = mesh->tria[curiel].v[2];
+  if ( mesh->nenil[0] > mesh->nt )  mesh->nt = mesh->nenil[0];
+  mesh->nenil[0] = mesh->tria[curiel].v[2];
   mesh->tria[curiel].v[2] = 0;
 
   return curiel;
@@ -99,10 +99,10 @@ int MMGS_delElt(MMG5_pMesh mesh,int iel) {
     return 0;
   }
   memset(pt,0,sizeof(MMG5_Tria));
-  pt->v[2] = mesh->nenil;
+  pt->v[2] = mesh->nenil[0];
   if ( mesh->adja )
     memset(&mesh->adja[3*(iel-1)+1],0,3*sizeof(int));
-  mesh->nenil = iel;
+  mesh->nenil[0] = iel;
   if ( iel == mesh->nt ) {
     while ( !MG_EOK((&mesh->tria[mesh->nt])) )  mesh->nt--;
   }
@@ -218,13 +218,20 @@ int MMGS_setMeshSize_alloc( MMG5_pMesh mesh ) {
   }
 
   /* keep track of empty links */
-  mesh->npnil = mesh->np + 1;
-  mesh->nenil = mesh->nt + 1;
+/*  MMG5_ADD_MEM(mesh,sizeof(mesh->nenil),"nenil allocation",return 0);
+  MMG5_SAFE_CALLOC(mesh->edge,1,mesh->npnil,return 0);
+  MMG5_ADD_MEM(mesh,sizeof(mesh->npnil),"npnil allocation",return 0);
+  MMG5_SAFE_CALLOC(mesh->edge,1,mesh->npnil,return 0);
+*/
+  MMG5_SAFE_CALLOC(mesh->npnil,1,int,return MMG5_STRONGFAILURE);
+  MMG5_SAFE_CALLOC(mesh->nenil,1,int,return MMG5_STRONGFAILURE);
+  mesh->npnil[0] = mesh->np + 1;
+  mesh->nenil[0] = mesh->nt + 1;
 
-  for (k=mesh->npnil; k<mesh->npmax-1; k++)
+  for (k=mesh->npnil[0]; k<mesh->npmax-1; k++)
     mesh->point[k].tmp  = k+1;
 
-  for (k=mesh->nenil; k<mesh->ntmax-1; k++)
+  for (k=mesh->nenil[0]; k<mesh->ntmax-1; k++)
     mesh->tria[k].v[2] = k+1;
 
   return 1;

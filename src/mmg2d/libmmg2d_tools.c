@@ -548,7 +548,13 @@ void MMG2D_Free_triangles(MMG5_pMesh mesh) {
 
   mesh->nt = 0;
   mesh->nti = 0;
-  mesh->nenil = 0;
+#ifdef USE_STARPU
+  for(int i=0; i<starpu_worker_get_count(); i++) {
+    mesh->nenil[i] = 0;
+  }
+#else
+  mesh->nenil[0] = 0;
+#endif
 
   return;
 }
@@ -563,8 +569,13 @@ void MMG2D_Free_edges(MMG5_pMesh mesh) {
 
   mesh->na = 0;
   mesh->nai = 0;
-  mesh->nanil = 0;
-
+#ifdef USE_STARPU
+  for(int i=0; i<starpu_worker_get_count(); i++) {
+    mesh->nanil[i] = 0;
+  }
+#else
+  mesh->nanil[0] = 0;
+#endif
   mesh->xp = 0;
 
   return;

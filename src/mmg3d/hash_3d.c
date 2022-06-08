@@ -66,11 +66,11 @@ int MMG5_paktet(MMG5_pMesh mesh) {
   assert(mesh->ne<=mesh->nemax);
 
   if ( mesh->ne == mesh->nemax )
-    mesh->nenil = 0;
+    mesh->nenil[0] = 0;
   else {
-    mesh->nenil = mesh->ne + 1;
+    mesh->nenil[0] = mesh->ne + 1;
 
-    for(k=mesh->nenil; k<=mesh->nemax-1; k++){
+    for(k=mesh->nenil[0]; k<=mesh->nemax-1; k++){
       mesh->tetra[k].v[3] = k+1;
     }
 

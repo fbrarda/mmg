@@ -54,8 +54,8 @@ extern "C" {
   MMG5_TAB_RECALLOC(mesh,mesh->point,mesh->npmax,wantedGap,MMG5_Point,  \
                     "larger point table",law);                          \
                                                                         \
-  mesh->npnil = mesh->np+1;                                             \
-  for (klink=mesh->npnil; klink<mesh->npmax-1; klink++)                 \
+  mesh->npnil[0] = mesh->np+1;                                             \
+  for (klink=mesh->npnil[0]; klink<mesh->npmax-1; klink++)                 \
     mesh->point[klink].tmp  = klink+1;                                  \
                                                                         \
   /* solution */                                                        \
@@ -67,7 +67,7 @@ extern "C" {
                    mesh->memCur -= (mesh->npmax - oldnpmax)*sizeof(MMG5_Point); \
                    mesh->npmax = oldnpmax;                              \
                    mesh->np = mesh->npmax-1;                            \
-                   mesh->npnil = 0;                                     \
+                   mesh->npnil[0] = 0;                                     \
                    law);                                                \
       MMG5_SAFE_REALLOC(sol->m,sol->size*(sol->npmax+1),                \
                         sol->size*(mesh->npmax+1),                      \
@@ -76,7 +76,7 @@ extern "C" {
                         mesh->memCur -= (mesh->npmax - oldnpmax)*sizeof(MMG5_Point); \
                         mesh->npmax = oldnpmax;                         \
                         mesh->np = mesh->npmax-1;                       \
-                        mesh->npnil = 0;                                \
+                        mesh->npnil[0] = 0;                                \
                         law);                                           \
     }                                                                   \
     sol->npmax = mesh->npmax;                                           \
@@ -98,8 +98,8 @@ extern "C" {
     MMG5_TAB_RECALLOC(mesh,mesh->tetra,mesh->nemax,wantedGap,MMG5_Tetra, \
                        "larger tetra table",law);                       \
                                                                         \
-    mesh->nenil = mesh->ne+1;                                           \
-    for (klink=mesh->nenil; klink<mesh->nemax-1; klink++)               \
+    mesh->nenil[0] = mesh->ne+1;                                           \
+    for (klink=mesh->nenil[0]; klink<mesh->nemax-1; klink++)               \
       mesh->tetra[klink].v[3]  = klink+1;                               \
                                                                         \
     if ( mesh->adja ) {                                                 \

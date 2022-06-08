@@ -325,25 +325,25 @@ int MMG5_mmgsRenumbering(int boxVertNbr, MMG5_pMesh mesh, MMG5_pSol sol,
   mesh->np = npreal;
 
   if ( mesh->np == mesh->npmax )
-    mesh->npnil = 0;
+    mesh->npnil[0] = 0;
   else
-    mesh->npnil = mesh->np + 1;
+    mesh->npnil[0] = mesh->np + 1;
 
   if ( mesh->nt == mesh->ntmax )
-    mesh->nenil = 0;
+    mesh->nenil[0] = 0;
   else
-    mesh->nenil = mesh->nt + 1;
+    mesh->nenil[0] = mesh->nt + 1;
 
-  if ( mesh->npnil ) {
-    for (k=mesh->npnil; k<mesh->npmax-1; k++) {
+  if ( mesh->npnil[0] ) {
+    for (k=mesh->npnil[0]; k<mesh->npmax-1; k++) {
       mesh->point[k].tmp  = k+1;
     }
     mesh->point[mesh->npmax-1].tmp = 0;
     mesh->point[mesh->npmax  ].tmp = 0;
   }
 
-  if ( mesh->nenil ) {
-    for (k=mesh->nenil; k<mesh->ntmax-1; k++) {
+  if ( mesh->nenil[0] ) {
+    for (k=mesh->nenil[0]; k<mesh->ntmax-1; k++) {
       mesh->tria[k].v[2] = k+1;
     }
     mesh->tria[mesh->ntmax-1].v[2] = 0;

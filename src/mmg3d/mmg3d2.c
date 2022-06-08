@@ -1137,7 +1137,7 @@ static int MMG3D_cuttet_ls(MMG5_pMesh mesh, MMG5_pSol sol,MMG5_pSol met){
                          mesh->memCur -= (mesh->npmax - oldnpmax)*sizeof(MMG5_Point);
                          mesh->npmax = oldnpmax;
                          mesh->np = mesh->npmax-1;
-                         mesh->npnil = 0;
+                         mesh->npnil[0] = 0;
                          return 0);
             MMG5_SAFE_REALLOC(met->m,met->size*(met->npmax+1),
                               met->size*(mesh->npmax+1),
@@ -1146,7 +1146,7 @@ static int MMG3D_cuttet_ls(MMG5_pMesh mesh, MMG5_pSol sol,MMG5_pSol met){
                               mesh->memCur -= (mesh->npmax - oldnpmax)*sizeof(MMG5_Point);
                               mesh->npmax = oldnpmax;
                               mesh->np = mesh->npmax-1;
-                              mesh->npnil = 0;
+                              mesh->npnil[0] = 0;
                               return 0);
           }
           met->npmax = mesh->npmax;

@@ -261,6 +261,12 @@ typedef struct {
   int      src; /*!< Source point in input mesh */
 #endif
   int      ref; /*!< Reference of point */
+#ifdef USE_STARPU
+  int      color1; /*!< Color1 assigned by Metis */
+  int      nxt; /*!< Position of the next point of the chain (color-based) */
+  int      prv; /*!< Position of the previous point of the chain (color-based) */
+  int      idx; /*!< Index to keep memory of the position in the linked list */
+#endif
   int      xp; /*!< Surface point number */
   int      tmp; /*!< Index of point in the saved mesh (we don't count
                   the unused points)*/
@@ -271,6 +277,7 @@ typedef struct {
   int8_t   tagdel; /*!< Tag for delaunay */
 } MMG5_Point;
 typedef MMG5_Point * MMG5_pPoint;
+
 
 /**
  * \struct MMG5_xPoint
@@ -320,6 +327,9 @@ typedef struct {
   int      ref; /*!< Reference of the triangle */
 #ifdef USE_STARPU
   int      color1; /*!< Color1 assigned by Metis */
+  int      nxt; /*!< Position of the next element of the chain (color-based) */
+  int      prv; /*!< Position of the previous element of the chain (color-based) */
+  int      idx; /*!< Index to keep memory of the position in the linked list */
 #endif
   int      id_task; /*!< id_task */
   int      base;
@@ -626,9 +636,17 @@ typedef struct {
   int       mark; /*!< Flag for delaunay (to know if an entity has
                     been treated) */
   int       xp,xt,xpr; /*!< Number of surfaces points, triangles/tetrahedra and prisms */
-  int       npnil; /*!< Index of first unused point */
-  int       nenil; /*!< Index of first unused element */
-  int       nanil; /*!< Index of first unused edge (2d only)*/
+#ifdef USE_STARPU
+  int      npmax4t,nemax4t,namax4t; /*!< Maximum number of pts/els/tria per thread*/
+  int      *res; /*!< Tag for left space of the division in the arrays (available cells)/(#threads) */
+  int      *initlltria; /*!< Array that stores the first position of each color */
+  int      *initlltria; /*!< Array that stores the first position of each color */
+  int      *lastllpoint; /*!< Array that stores the last position of each color */
+  int      *lastllpoint; /*!< Array that stores the last position of each color */
+#endif
+  int      *npnil; /*!< Index of first unused point */
+  int      *nenil; /*!< Index of first unused element */
+  int      *nanil; /*!< Index of first unused edge (2d only)*/
   int      *adja; /*!< Table of tetrahedron adjacency: if
                     \f$adja[4*(i-1)+1+j]=4*k+l\f$ then the \f$i^{th}\f$ and
                     \f$k^th\f$ tetrahedra are adjacent and share their
