@@ -61,8 +61,10 @@ int MMG2D_chkspl(MMG5_pMesh mesh,MMG5_pSol met,int k,int8_t i) {
 
 #ifdef USE_STARPU
   int zero_idx = -starpu_worker_get_id();
+  int color1 = mesh->tria[k].color1;  
 #else
   int zero_idx = 0;
+  int color1 = 0;
 #endif
 
   pt  = &mesh->tria[k];
@@ -86,7 +88,7 @@ int MMG2D_chkspl(MMG5_pMesh mesh,MMG5_pSol met,int k,int8_t i) {
 
   /* If the splitted edge is not geometric, the new point is simply its midpoint */
   if ( !MG_EDG(pt->tag[i]) ) {
-    ip = MMG2D_newPt(mesh,mid,0);
+    ip = MMG2D_newPt(mesh,mid,0,color1);
     if ( !ip ) {
       /* reallocation of point table */
       MMG2D_POINT_REALLOC(mesh,met,ip,mesh->gap,
@@ -145,7 +147,7 @@ int MMG2D_chkspl(MMG5_pMesh mesh,MMG5_pSol met,int k,int8_t i) {
     ier = MMG2D_bezierCurv(mesh,k,i,s,o,no);
     if ( !ier ) return 0;
 
-    ip  = MMG2D_newPt(mesh,o,pt->tag[i]);
+    ip  = MMG2D_newPt(mesh,o,pt->tag[i],color1);
     if ( !ip ) {
       /* reallocation of point table */
       MMG2D_POINT_REALLOC(mesh,met,ip,mesh->gap,
@@ -767,15 +769,15 @@ int MMG2D_splitbar(MMG5_pMesh mesh,int k,int ip) {
   int8_t             j2,j0;
   double             cal,calseuil;
 
-  pt  = &mesh->tria[k];
 #ifdef USE_STARPU
   int zero_idx = -starpu_worker_get_id();
-  int color1 = pt->color1;
+  int color1 = mesh->tria[k].color1;
 #else
   int zero_idx = 0;
   int color1 = 0; 
 #endif
 
+  pt  = &mesh->tria[k];
   pt0 = &mesh->tria[zero_idx];
   ppt = &mesh->point[ip];
   ip0 = pt->v[0];

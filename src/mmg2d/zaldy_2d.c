@@ -35,7 +35,7 @@
 
 
 /* Create a new vertex in the mesh, and return its number */
-int MMG2D_newPt(MMG5_pMesh mesh,double c[2],int16_t tag) {
+int MMG2D_newPt(MMG5_pMesh mesh,double c[2],int16_t tag, int color) {
   MMG5_pPoint  ppt;
   int     curpt;
 
@@ -45,21 +45,30 @@ int MMG2D_newPt(MMG5_pMesh mesh,double c[2],int16_t tag) {
  // MMG5_LOCK(&mesh->lock); // Comment locks to use correctly the parallel newPt
 
 #ifdef USE_STARPU
+  int prev_id = mesh->lastllpoint[color];
   if ( !mesh->npnil[starpu_worker_get_id()] ) {
     return 0;
   }
   curpt = mesh->npnil[starpu_worker_get_id()];
-  if ( mesh->npnil[starpu_worker_get_id()] > mesh->np ) {
-  	MMG5_LOCK(&mesh->lock);
- 	mesh->np++; 
-  	MMG5_UNLOCK(&mesh->lock);
-  }
   ppt   = &mesh->point[curpt];
   memcpy(ppt->c,c,2*sizeof(double));
   ppt->tag   &= ~MG_NUL;
-  mesh->npnil[starpu_worker_get_id()] = ppt->tmp;
+  // is this needed?
+  //mesh->npnil[starpu_worker_get_id()] = ppt->tmp;
+  mesh->npnil[starpu_worker_get_id()] = curpt + 1;
   ppt->tmp    = 0;
   ppt->tag = tag;
+  ppt->idx = curpt;
+  ppt->nxt = 0;
+  ppt->prv = prev_id;
+  ppt->color1 = color;
+  mesh->point[prev_id].nxt = curpt;
+  
+//  if ( mesh->npnil[starpu_worker_get_id()] > mesh->np ) {
+//  	MMG5_LOCK(&mesh->lock);
+// 	mesh->np++; 
+//  	MMG5_UNLOCK(&mesh->lock);
+//  }
 #else
   if ( !mesh->npnil[0] ) {
     return 0;
@@ -87,13 +96,18 @@ void MMG2D_delPt(MMG5_pMesh mesh,int ip) {
   memset(ppt,0,sizeof(MMG5_Point));
   ppt->tag    = MG_NUL;
 #ifdef USE_STARPU
-  ppt->tmp    = mesh->npnil[starpu_worker_get_id()];
+  ppt->tmp    = mesh->npnil[starpu_worker_get_id()]; //useful?
   mesh->npnil[starpu_worker_get_id()] = ip;
-  MMG5_LOCK(&mesh->lock);
-  if ( ip == mesh->np ) {
-    mesh->np--;
-  }
-  MMG5_UNLOCK(&mesh->lock);
+  ppt->color1 = MG_NUL; //needed?
+  int id_prv = mesh->point[ip].prv;
+  int id_nxt = mesh->point[ip].nxt;
+  mesh->point[id_prv].nxt = id_nxt;
+  mesh->point[id_nxt].prv = id_prv;
+//  MMG5_LOCK(&mesh->lock);
+//  if ( ip == mesh->np ) {
+//    mesh->np--;
+//  }
+//  MMG5_UNLOCK(&mesh->lock);
 #else
   ppt->tmp    = mesh->npnil[0];
   mesh->npnil[0] = ip;
@@ -135,16 +149,21 @@ int MMG2D_newElt(MMG5_pMesh mesh, int color) {
 
 
 #ifdef USE_STARPU
+  int prev_id = mesh->lastlltria[color];
   if ( !mesh->nenil[starpu_worker_get_id()] ) {
     return 0;
   }
   curiel = mesh->nenil[starpu_worker_get_id()];
   mesh->nenil[starpu_worker_get_id()] = mesh->tria[curiel].v[2];
-  mesh->tria[curiel].v[2] = 0; 
+  mesh->tria[curiel].v[2] = 0; // can be deleted? 
   mesh->tria[curiel].ref = 0;
-
+  mesh->tria[curiel].idx = curiel;
   mesh->tria[curiel].color1 = color;
-/*
+  mesh->tria[curiel].prv = prev_id;
+  mesh->tria[curiel].nxt = 0;
+  mesh->tria[prev_id].nxt = curiel; 
+  mesh->nenil[starpu_worker_get_id()] = curiel + 1; 
+  /*
   if ( !mesh->nenil[starpu_worker_get_id()] ) {
     return 0;
   }
@@ -164,7 +183,7 @@ int MMG2D_newElt(MMG5_pMesh mesh, int color) {
   if ( !mesh->nenil[0] ) {
     return 0;
   }
-  curiel = mesh->nenil[starpu_worker_get_id()];
+  curiel = mesh->nenil[0];
   if ( mesh->nenil[0] > mesh->nt )  mesh->nt = mesh->nenil[0];
   mesh->nenil[0] = mesh->tria[curiel].v[2];
   mesh->tria[curiel].v[2] = 0;
@@ -200,11 +219,17 @@ int MMG2D_delElt(MMG5_pMesh mesh,int iel) {
     memset(&mesh->adja[iadr],0,3*sizeof(int));
 
   mesh->nenil[starpu_worker_get_id()] = iel;
-  MMG5_LOCK(&mesh->lock);
-  if ( iel == mesh->nt ) {  
-    mesh->nt--;
-  }
-  MMG5_UNLOCK(&mesh->lock);
+  pt->color1 = MG_NUL; //needed?
+  int id_prv = mesh->tria[iel].prv;
+  int id_nxt = mesh->tria[iel].nxt;
+  mesh->tria[id_prv].nxt = id_nxt;
+  mesh->tria[id_nxt].prv = id_prv;
+
+//  MMG5_LOCK(&mesh->lock);
+//  if ( iel == mesh->nt ) {  
+//    mesh->nt--;
+//  }
+//  MMG5_UNLOCK(&mesh->lock);
 
 #else
   pt->v[2] = mesh->nenil[0];
@@ -424,8 +449,8 @@ int MMG2D_setMeshSize_alloc( MMG5_pMesh mesh ) {
   MMG5_SAFE_CALLOC(mesh->nanil,starpu_worker_get_count(),int,return MMG5_STRONGFAILURE);
 
   for(int i=0; i<starpu_worker_get_count(); i++) {
-    mesh->npnil[i] = mesh->np + i*(mesh->npmax4t + 1);
-    mesh->nenil[i] = mesh->nt + i*(mesh->nemax4t + 1);
+    mesh->npnil[i] = mesh->np + i*mesh->npmax4t + 1;
+    mesh->nenil[i] = mesh->nt + i*mesh->nemax4t + 1;
     mesh->nanil[i] = 0;
 
     for (k=mesh->npnil[i]; k<mesh->npmax4t-1; k++) {

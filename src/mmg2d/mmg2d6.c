@@ -821,6 +821,7 @@ int MMG2D_cuttri_ls(MMG5_pMesh mesh, MMG5_pSol sol, MMG5_pSol met){
   double       v0,v1,s,c[2];
   int          k,ip0,ip1,nb,np,nt,ns,refint,refext,vx[3];
   int8_t       i,i0,i1,ier;
+  int          color1 = 0;
 
   /* Reset flag field for points */
   for (k=1; k<=mesh->np; k++)
@@ -893,7 +894,7 @@ int MMG2D_cuttri_ls(MMG5_pMesh mesh, MMG5_pSol sol, MMG5_pSol met){
       c[0] = p0->c[0] + s*(p1->c[0]-p0->c[0]);
       c[1] = p0->c[1] + s*(p1->c[1]-p0->c[1]);
 
-      np = MMG2D_newPt(mesh,c,0);
+      np = MMG2D_newPt(mesh,c,0,color1);
       if ( !np ) {
        /* reallocation of point table */
         MMG2D_POINT_REALLOC(mesh,met,np,mesh->gap,

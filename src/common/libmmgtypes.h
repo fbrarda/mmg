@@ -640,8 +640,8 @@ typedef struct {
   int      npmax4t,nemax4t,namax4t; /*!< Maximum number of pts/els/tria per thread*/
   int      *res; /*!< Tag for left space of the division in the arrays (available cells)/(#threads) */
   int      *initlltria; /*!< Array that stores the first position of each color */
-  int      *initlltria; /*!< Array that stores the first position of each color */
-  int      *lastllpoint; /*!< Array that stores the last position of each color */
+  int      *initllpoint; /*!< Array that stores the first position of each color */
+  int      *lastlltria; /*!< Array that stores the last position of each color */
   int      *lastllpoint; /*!< Array that stores the last position of each color */
 #endif
   int      *npnil; /*!< Index of first unused point */

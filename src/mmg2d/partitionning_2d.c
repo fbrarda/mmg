@@ -147,10 +147,10 @@ int MMG2D_part_meshElts( MMG5_pMesh mesh )
     /* Mesh partitionning succeed */
      for (i=mesh->nt-1; i>=0; i--) {
        MMG5_pTria pt = &mesh->tria[i+1];
-       if (!mesh->initlltria[part[i]]) 
+       if (!mesh->initlltria[part[i]]){ 
 	       pt->nxt = 0;
        	       mesh->lastlltria[part[i]] = i+1;
-       else
+       } else
 	       pt->nxt = mesh->initlltria[part[i]];
        mesh->initlltria[part[i]] = i+1;
        pt->color1 = part[i]+1;
@@ -158,18 +158,34 @@ int MMG2D_part_meshElts( MMG5_pMesh mesh )
        for (int j=0; j<3; j++) {
          MMG5_pPoint ppt =&mesh->point[pt->v[j]];
 	 if (ppt->color1) continue;
-         if (!mesh->initllpoint[part[i]])
+         if (!mesh->initllpoint[part[i]]){
            ppt->nxt = 0;
        	   mesh->lastllpoint[part[i]] = pt->v[j];
-         else
+	 } else
            ppt->nxt = mesh->initllpoint[part[i]];
          mesh->initllpoint[part[i]] = pt->v[j];
          ppt->color1 = part[i]+1;
          ppt->idx = pt->v[j];
        } 
      }
-//     for (i=1; i<=mesh->info.ncolors; i++) 
-//	     printf("colorarray(%d) = %d\n",i-1,mesh->initll[i-1]);
+     for (i=0; i<mesh->info.ncolors; i++) {
+       MMG5_pPoint ppt = &mesh->point[mesh->initllpoint[i]];
+       MMG5_pTria  pt = &mesh->tria[mesh->initlltria[i]];
+       ppt->prv = 0;
+       pt->prv = 0;
+       while (ppt->nxt){
+         int prv = ppt->idx;
+	 ppt = &mesh->point[ppt->nxt];
+	 ppt->prv = prv;
+       }
+       while (pt->nxt){
+         int prv = pt->idx;
+	 pt = &mesh->tria[pt->nxt];
+	 pt->prv = prv;
+	// printf("previous = %d\n current = %d\n next = %d\n",pt->prv,pt->idx,pt->nxt);
+       }
+      // printf("New color");
+     }
   }
 
   /* Use environment variable to choose to save partition as it is a

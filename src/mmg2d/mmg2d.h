@@ -209,7 +209,7 @@ static const unsigned int MMG2D_inxt[5] = {1,2,0,1,2};
     }                                                                   \
                                                                         \
     /* We try again to add the point */                                 \
-    ip = MMG2D_newPt(mesh,o,tag);                                       \
+    ip = MMG2D_newPt(mesh,o,tag,mesh->point[klink].color1);                                       \
     if ( !ip ) {law;}                                                   \
   }while(0)
 
@@ -244,7 +244,7 @@ static const unsigned int MMG2D_inxt[5] = {1,2,0,1,2};
 
 /* Prototypes */
 /*zaldy*/
-int MMG2D_newPt(MMG5_pMesh mesh,double c[2],int16_t tag);
+int MMG2D_newPt(MMG5_pMesh mesh,double c[2],int16_t tag,int color);
 void MMG2D_delPt(MMG5_pMesh mesh,int ip) ;
 void MMG5_delEdge(MMG5_pMesh mesh,int iel);
 int MMG2D_newElt(MMG5_pMesh mesh, int color);

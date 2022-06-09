@@ -312,6 +312,11 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
   /* Step 1: travel mesh, check edges, and tag those to be split; create the new vertices in hash */
   for (k=1; k<=mesh->nt; k++) {
     pt = &mesh->tria[k];
+#ifdef USE_STARPU
+    int color1 = pt->color1;
+#else
+    int color1 =0;
+#endif 
     if ( !MMG2D_EOK(pt,color1) || (pt->ref < 0) ) continue;
     if ( MG_SIN(pt->tag[0]) || MG_SIN(pt->tag[1]) || MG_SIN(pt->tag[2]) )  continue;
 
@@ -362,7 +367,7 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
         MG_CLR(pt->flag,i);
         continue;
       }
-      ip = MMG2D_newPt(mesh,o,pt->tag[i]);
+      ip = MMG2D_newPt(mesh,o,pt->tag[i],color1);
       if ( !ip ) {
         /* reallocation of point table */
         MMG2D_POINT_REALLOC(mesh,met,ip,mesh->gap,
