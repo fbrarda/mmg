@@ -58,7 +58,7 @@ IF ( VTK_FOUND )
     ${COMMON_SOURCE_DIR}/vtkparser.cpp )
 ENDIF ( )
 
-IF ( NOT STARPU_FOUND )
+IF ( (NOT STARPU_FOUND) OR USE_STARPU MATCHES OFF )
   LIST(REMOVE_ITEM mmg_library_files
     ${MMG2D_SOURCE_DIR}/partitionning_2d.c
     ${MMG2D_SOURCE_DIR}/starpu_2d.c
