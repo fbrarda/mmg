@@ -179,7 +179,7 @@ MACRO ( ADD_AND_INSTALL_LIBRARY
     endif()
   endif( )
 
-  if ( STARPU_FOUND )
+  if ( STARPU_FOUND AND USE_STARPU )
     message(STATUS "[mmg:${target_name}] add include StarPU directories ${STARPU_INCLUDE_DIRS}")
     IF ( CMAKE_VERSION VERSION_LESS 2.8.12 )
       INCLUDE_DIRECTORIES ( AFTER ${STARPU_INCLUDE_DIRS} )
