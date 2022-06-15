@@ -185,7 +185,7 @@ IF (NOT WIN32)
 
   ENDIF ( )
 
-  IF ( STARPU_FOUND )
+  IF ( STARPU_FOUND AND USE_STARPU )
 
     MESSAGE(STATUS
       "Compilation with starPU: ${STARPU_LIBRARIES}")
