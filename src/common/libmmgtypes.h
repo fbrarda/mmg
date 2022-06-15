@@ -261,12 +261,10 @@ typedef struct {
   int      src; /*!< Source point in input mesh */
 #endif
   int      ref; /*!< Reference of point */
-#ifdef USE_STARPU
   int      color1; /*!< Color1 assigned by Metis */
   int      nxt; /*!< Position of the next point of the chain (color-based) */
   int      prv; /*!< Position of the previous point of the chain (color-based) */
   int      idx; /*!< Index to keep memory of the position in the linked list */
-#endif
   int      xp; /*!< Surface point number */
   int      tmp; /*!< Index of point in the saved mesh (we don't count
                   the unused points)*/
@@ -325,12 +323,10 @@ typedef struct {
   double   qual;   /*Quality of the triangle*/
   int      v[3]; /*!< Vertices of the triangle */
   int      ref; /*!< Reference of the triangle */
-#ifdef USE_STARPU
   int      color1; /*!< Color1 assigned by Metis */
   int      nxt; /*!< Position of the next element of the chain (color-based) */
   int      prv; /*!< Position of the previous element of the chain (color-based) */
   int      idx; /*!< Index to keep memory of the position in the linked list */
-#endif
   int      id_task; /*!< id_task */
   int      base;
   int      cc; /*!< used to store the tetra + tetra face indices
@@ -639,11 +635,11 @@ typedef struct {
 #ifdef USE_STARPU
   int      npmax4t,nemax4t,namax4t; /*!< Maximum number of pts/els/tria per thread*/
   int      *res; /*!< Tag for left space of the division in the arrays (available cells)/(#threads) */
+#endif
   int      *initlltria; /*!< Array that stores the first position of each color */
   int      *initllpoint; /*!< Array that stores the first position of each color */
   int      *lastlltria; /*!< Array that stores the last position of each color */
   int      *lastllpoint; /*!< Array that stores the last position of each color */
-#endif
   int      *npnil; /*!< Index of first unused point */
   int      *nenil; /*!< Index of first unused element */
   int      *nanil; /*!< Index of first unused edge (2d only)*/

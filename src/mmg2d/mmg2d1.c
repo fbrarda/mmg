@@ -307,7 +307,9 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
 
   s = 0.5;
   ns = 0;
+#ifndef USE_STARPU
   npinit = mesh->np;
+#endif
 
   /* Step 1: travel mesh, check edges, and tag those to be split; create the new vertices in hash */
   for (k=1; k<=mesh->nt; k++) {
@@ -370,6 +372,7 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
       ip = MMG2D_newPt(mesh,o,pt->tag[i],color1);
       if ( !ip ) {
         /* reallocation of point table */
+#ifndef USE_STARPU
         MMG2D_POINT_REALLOC(mesh,met,ip,mesh->gap,
                             fprintf(stderr,"\n  ## Error: %s: unable to"
                                     " allocate a new point.\n",__func__);
@@ -378,6 +381,7 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
                               MMG2D_delPt(mesh,mesh->np);
                             } while ( mesh->np>npinit );return -1;,
                             o,pt->tag[i]);
+#endif
       }
       ppt = &mesh->point[ip];
       if ( MG_EDG(pt->tag[i]) ) {
@@ -432,9 +436,19 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
   }
 
   /* Step 3: Simulate splitting and delete points leading to an invalid configuration */
+#ifdef USE_STARPU
+  for (k=1; k<=mesh->info.ncolors; k++) {
+    MMG5_pPoint ppt = &mesh->point[mesh->initllpoint[k-1]];
+    do {
+      ppt->flag = 0;
+      if (!ppt->nxt) continue;
+      ppt = &mesh->point[ppt->nxt];
+    } while(ppt->nxt);
+  }
+#else 
   for (k=1; k<=mesh->np; k++)
     mesh->point[k].flag = 0;
-
+#endif
   it = 1;
   nc = 0;
   do {
@@ -1193,9 +1207,19 @@ int MMG2D_movtri(MMG5_pMesh mesh,MMG5_pSol met,int maxit,int8_t improve, int col
   it = nnm = 0;
   base = 0;
 
+#ifdef USE_STARPU
+  for (k=1; k<=mesh->info.ncolors; k++) {
+    MMG5_pPoint ppt = &mesh->point[mesh->initllpoint[k-1]];
+    do {
+      ppt->flag = base;
+      if (!ppt->nxt) continue;
+      ppt = &mesh->point[ppt->nxt];
+    } while(ppt->nxt);
+  }
+#else 
   for (k=1; k<=mesh->np; k++)
     mesh->point[k].flag = base;
-
+#endif
   do {
     base++;
     nm = ns = 0;
@@ -1259,6 +1283,12 @@ int MMG2D_movtri(MMG5_pMesh mesh,MMG5_pSol met,int maxit,int8_t improve, int col
  **/
 int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
 
+  /* Memory allocation useful for both configuration (USE_STARPU or not)*/
+  MMG5_SAFE_CALLOC(mesh->initlltria,mesh->info.ncolors,int,return 0);
+  MMG5_SAFE_CALLOC(mesh->lastlltria,mesh->info.ncolors,int,return 0);
+  MMG5_SAFE_CALLOC(mesh->initllpoint,mesh->info.ncolors,int,return 0);
+  MMG5_SAFE_CALLOC(mesh->lastllpoint,mesh->info.ncolors,int,return 0);
+
 #ifdef USE_STARPU
 
   /* Stage 0: mesh coloration with metis*/
@@ -1269,7 +1299,70 @@ int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
     fprintf(stdout,"  ** MESH PARTITIONNING\n");
 
   status = MMG2D_part_meshElts(mesh);
+#else
+  /* If USE_STARPU is not defined, every chain/field is defined here. */ 
+  MMG5_pTria   pt;
+  MMG5_pPoint  ppt;
+  int i;
+  
+  // triangles
+  for (i=mesh->nt-1; i>=0; i--) {
+    pt = &mesh->tria[i+1];
+    if (!mesh->initlltria[0]){
+            pt->nxt = 0;
+            mesh->lastlltria[0] = i+1;
+    } else
+            pt->nxt = mesh->initlltria[0];
+    mesh->initlltria[0] = i+1;
+    pt->color1 = 1;
+    pt->idx = i+1;
+    // vertices
+    for (int j=0; j<3; j++) {
+      ppt =&mesh->point[pt->v[j]];
+      if (ppt->color1) continue;
+      if (!mesh->initllpoint[0]) {
+        ppt->nxt = 0;
+        mesh->lastllpoint[0] = pt->v[j];
+      } else
+        ppt->nxt = mesh->initllpoint[0];
+      mesh->initllpoint[0] = pt->v[j];
+      ppt->color1 = 1;
+      ppt->idx = pt->v[j];
+    }
+  }
+  for (i=1; i<=mesh->info.ncolors; i++) {
+    MMG5_pPoint ppt = &mesh->point[mesh->initllpoint[i-1]];
+    MMG5_pTria  pt = &mesh->tria[mesh->initlltria[i-1]];
+    ppt->prv = 0;
+    pt->prv = 0;
+    while (ppt->nxt){
+      int prv = ppt->idx;
+      ppt = &mesh->point[ppt->nxt];
+      ppt->prv = prv;
+    }
+    while (pt->nxt){
+      int prv = pt->idx;
+      pt = &mesh->tria[pt->nxt];
+      pt->prv = prv;
+      printf("previous = %d\n current = %d\n next = %d\n",pt->prv,pt->idx,pt->nxt);
+    }
+   // printf("New color");
+  }
 
+  for (k=1; k<=mesh->ncolors; k++) {
+    ppt = &mesh->initllpoint[k-1];
+    pt = &mesh->initlltria[k-1];
+    do {
+      ppt->color1 = 1;
+      if (!ppt->nxt) continue;
+      ppt = &mesh->point[ppt->nxt];
+    } while(ppt->nxt);
+    do {
+      pt->color1 = 1;
+      if (!pt->nxt) continue;
+      pt = &mesh->tria[pt->nxt];
+    } while(pt->nxt);
+  }
 #endif
 
   /* Stage 1: creation of a geometric mesh */
