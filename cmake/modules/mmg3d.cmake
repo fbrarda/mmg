@@ -82,7 +82,7 @@ IF ( VTK_FOUND )
     ${COMMON_SOURCE_DIR}/vtkparser.cpp)
 ENDIF ( )
 
-IF ( NOT STARPU_FOUND )
+IF ( (NOT STARPU_FOUND) OR USE_STARPU MATCHES OFF )
   LIST(REMOVE_ITEM mmg3d_library_files
     ${MMG3D_SOURCE_DIR}/partitionning_3d.c
     ${COMMON_SOURCE_DIR}/partitionning.c
