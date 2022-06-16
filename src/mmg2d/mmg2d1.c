@@ -436,7 +436,6 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
   }
 
   /* Step 3: Simulate splitting and delete points leading to an invalid configuration */
-#ifdef USE_STARPU
   for (k=1; k<=mesh->info.ncolors; k++) {
     MMG5_pPoint ppt = &mesh->point[mesh->initllpoint[k-1]];
     do {
@@ -445,10 +444,7 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
       ppt = &mesh->point[ppt->nxt];
     } while(ppt->nxt);
   }
-#else 
-  for (k=1; k<=mesh->np; k++)
-    mesh->point[k].flag = 0;
-#endif
+  
   it = 1;
   nc = 0;
   do {
@@ -1207,7 +1203,6 @@ int MMG2D_movtri(MMG5_pMesh mesh,MMG5_pSol met,int maxit,int8_t improve, int col
   it = nnm = 0;
   base = 0;
 
-#ifdef USE_STARPU
   for (k=1; k<=mesh->info.ncolors; k++) {
     MMG5_pPoint ppt = &mesh->point[mesh->initllpoint[k-1]];
     do {
@@ -1216,10 +1211,7 @@ int MMG2D_movtri(MMG5_pMesh mesh,MMG5_pSol met,int maxit,int8_t improve, int col
       ppt = &mesh->point[ppt->nxt];
     } while(ppt->nxt);
   }
-#else 
-  for (k=1; k<=mesh->np; k++)
-    mesh->point[k].flag = base;
-#endif
+  
   do {
     base++;
     nm = ns = 0;
@@ -1335,34 +1327,21 @@ int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
     MMG5_pTria  pt = &mesh->tria[mesh->initlltria[i-1]];
     ppt->prv = 0;
     pt->prv = 0;
+    //printf(" previous = %d\n current = %d, color =%d\n next = %d\n",ppt->prv,ppt->idx,ppt->color1,ppt->nxt);
     while (ppt->nxt){
       int prv = ppt->idx;
       ppt = &mesh->point[ppt->nxt];
       ppt->prv = prv;
+   //   printf(" previous = %d\n current = %d, color =%d\n next = %d\n",ppt->prv,ppt->idx,ppt->color1,ppt->nxt);
     }
     while (pt->nxt){
       int prv = pt->idx;
       pt = &mesh->tria[pt->nxt];
       pt->prv = prv;
-      printf("previous = %d\n current = %d\n next = %d\n",pt->prv,pt->idx,pt->nxt);
     }
    // printf("New color");
   }
 
-  for (k=1; k<=mesh->ncolors; k++) {
-    ppt = &mesh->initllpoint[k-1];
-    pt = &mesh->initlltria[k-1];
-    do {
-      ppt->color1 = 1;
-      if (!ppt->nxt) continue;
-      ppt = &mesh->point[ppt->nxt];
-    } while(ppt->nxt);
-    do {
-      pt->color1 = 1;
-      if (!pt->nxt) continue;
-      pt = &mesh->tria[pt->nxt];
-    } while(pt->nxt);
-  }
 #endif
 
   /* Stage 1: creation of a geometric mesh */
@@ -1405,6 +1384,26 @@ int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
     fprintf(stderr,"  ## Unable to make fine improvements. Exit program.\n");
     return 0;
   }
+  
+  /* Stage 4: Restore the variables mesh->np,nt,ne */
+  /* TODO: Maybe this part can be moved somewhere else */
+  int k,np=0,nt=0;
+  for (k=1; k<=mesh->info.ncolors; k++) {
+    MMG5_pPoint ppt = &mesh->point[mesh->initllpoint[k-1]];
+    MMG5_pTria pt = &mesh->tria[mesh->initllpoint[k-1]];
+    do {
+      np++;
+      if (!ppt->nxt) continue;
+      ppt = &mesh->point[ppt->nxt];
+    } while(ppt->nxt);
+    do {
+      nt++;
+      if (!pt->nxt) continue;
+      pt = &mesh->tria[pt->nxt];
+    } while(pt->nxt);
+  }
+  mesh->np = np;
+  mesh->nt = nt;
 
   return 1;
 }

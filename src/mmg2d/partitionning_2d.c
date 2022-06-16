@@ -175,6 +175,7 @@ int MMG2D_part_meshElts( MMG5_pMesh mesh )
          int prv = ppt->idx;
 	 ppt = &mesh->point[ppt->nxt];
 	 ppt->prv = prv;
+//	 printf(" previous = %d\n current = %d, color =%d\n next = %d\n",ppt->prv,ppt->idx,ppt->color1,ppt->nxt);
        }
        while (pt->nxt){
          int prv = pt->idx;
