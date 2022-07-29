@@ -142,7 +142,7 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
        * loop. */
       MMG5_DEL_MEM(mesh,mesh->adja);
       mesh->adja = 0;
-
+      
       starpu_data_acquire(handle_ns, STARPU_RW);
 
 #else
@@ -155,6 +155,14 @@ int MMG2D_anatri(MMG5_pMesh mesh,MMG5_pSol met,int typchk) {
       }
       /* Memory free */
       MMG5_DEL_MEM(mesh,hash.item);
+
+      /* Recreate the variables nt and np */
+      mesh->nt = 0;
+      mesh->np = 0;
+      for (int i=1; i<=mesh->info.ncolors; i++) {
+        mesh->np += mesh->np4t[i-1];
+        mesh->nt += mesh->ne4t[i-1];
+      }
 
       /* Recreate adjacencies */
       if ( !MMG2D_hashTria(mesh) ) {
@@ -301,7 +309,7 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
   MMG5_pTria      pt;
   MMG5_pPoint     ppt,p1,p2;
   double          len,s,o[2],no[2];
-  int             ns,nc,npinit,ni,k,nt,ip1,ip2,ip,it,vx[3];
+  int             ns,nc,npinit,ni,k,k1,nt,ip1,ip2,ip,it,vx[3];
   int8_t          i,ic,i1,i2,ier;
   static int8_t   mmgWarn0=0;
 
@@ -311,14 +319,22 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
   npinit = mesh->np;
 #endif
 
-  /* Step 1: travel mesh, check edges, and tag those to be split; create the new vertices in hash */
-  for (k=1; k<=mesh->nt; k++) {
-    pt = &mesh->tria[k];
 #ifdef USE_STARPU
-    int color1 = pt->color1;
+    int color2 = color1;
 #else
-    int color1 =0;
-#endif 
+    int color2 = 1;
+#endif
+  /* Step 1: travel mesh, check edges, and tag those to be split; create the new vertices in hash */
+//  for (k=1; k<=mesh->nt; k++)
+  k = mesh->initlltria[color2-1];
+  pt = &mesh->tria[k];
+  k1 = pt->nxt;
+  do {
+    if ( pt->nxt!=k1) {
+      if ( k1 ) break;
+      pt = &mesh->tria[pt->nxt];
+    } else k1 = mesh->tria[k1].nxt;
+
     if ( !MMG2D_EOK(pt,color1) || (pt->ref < 0) ) continue;
     if ( MG_SIN(pt->tag[0]) || MG_SIN(pt->tag[1]) || MG_SIN(pt->tag[2]) )  continue;
 
@@ -369,7 +385,7 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
         MG_CLR(pt->flag,i);
         continue;
       }
-      ip = MMG2D_newPt(mesh,o,pt->tag[i],color1);
+      ip = MMG2D_newPt(mesh,o,pt->tag[i],color2);
       if ( !ip ) {
         /* reallocation of point table */
 #ifndef USE_STARPU
@@ -405,14 +421,21 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
       pthread_mutex_unlock(&lock);
 #endif
     }
-  }
+  } while(pt->nxt);
   if ( !ns ) {
     return ns;
   }
 
   /* Step 2: Make flags at triangles consistent between themselves (check if adjacent triangle is split) */
-  for (k=1; k<=mesh->nt; k++) {
-    pt = &mesh->tria[k];
+//  for (k=1; k<=mesh->nt; k++) {
+  k = mesh->initlltria[color2-1];
+  pt = &mesh->tria[k];
+  k1 = pt->nxt;
+  do {
+    if ( pt->nxt!=k1) {
+      if ( k1 ) break;
+      pt = &mesh->tria[pt->nxt];
+    } else k1 = mesh->tria[k1].nxt;
     if ( !MMG2D_EOK(pt,color1) || pt->ref < 0 ) continue;
     else if ( pt->flag == 7 ) continue;
     nc = 0;
@@ -429,11 +452,13 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
       }
     }
     if ( nc > 0 ) ns++;
-  }
-  if ( mesh->info.ddebug && ns ) {
-    fprintf(stdout,"     %d analyzed  %d proposed\n",mesh->nt,ns);
-    fflush(stdout);
-  }
+  } while(pt->nxt);
+
+  // Francesco: Take care of mesh->nt - not available within this frame (even when USE_STARPU is not defined
+//  if ( mesh->info.ddebug && ns ) {
+//    fprintf(stdout,"     %d analyzed  %d proposed\n",mesh->nt,ns);
+//    fflush(stdout);
+//  }
 
   /* Step 3: Simulate splitting and delete points leading to an invalid configuration */
   for (k=1; k<=mesh->info.ncolors; k++) {
@@ -444,13 +469,21 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
       ppt = &mesh->point[ppt->nxt];
     } while(ppt->nxt);
   }
-  
+
   it = 1;
   nc = 0;
   do {
     ni = 0;
-    for ( k=1; k<= mesh->nt; k++) {
-      pt = &mesh->tria[k];
+    k = mesh->initlltria[color2-1];
+    pt = &mesh->tria[k];
+    k1 = pt->nxt;
+    do {
+      if ( pt->nxt!=k1) {
+        if ( k1 ) break;
+        pt = &mesh->tria[pt->nxt];
+      } else k1 = mesh->tria[k1].nxt;
+    // for ( k=1; k<= mesh->nt; k++) {
+    //   pt = &mesh->tria[k];
       if ( !MMG2D_EOK(pt,color1) || pt->ref < 0 ) continue;
       else if ( pt->flag == 0 ) continue;
 
@@ -500,7 +533,7 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
           }
         }
       }
-    }
+    } while(pt->nxt);
     nc += ni;
   }
   while ( ni >0 && ++it <20 );
@@ -513,9 +546,17 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
   /* step 4: effective splitting */
   ns = 0;
   nt = mesh->nt;
-  for (k=1; k<=nt; k++) {
-    pt = &mesh->tria[k];
-
+  // for (k=1; k<=nt; k++) {
+  k = mesh->initlltria[color2-1];
+  pt = &mesh->tria[k];
+  k1 = pt->nxt;
+  do {
+    if ( pt->nxt!=k1) {
+      if ( k1 ) break;
+      pt = &mesh->tria[pt->nxt];
+    } else k1 = mesh->tria[k1].nxt;
+   // pt = &mesh->tria[k];
+    printf("MMG5_hashGet %d\n",MMG5_hashGet(hash,4,1));
     if ( !MMG2D_EOK(pt,color1) || pt->ref < 0 )  continue;
     else if ( pt->flag == 0 )  continue;
 
@@ -548,7 +589,10 @@ int MMG2D_anaelt(MMG5_pMesh mesh,MMG5_pSol met, MMG5_Hash *hash, int typchk,int 
       ns++;
     }
     if ( !ier ) return -1;
-  }
+   // if (!pt->nxt) continue;
+   // k = pt->nxt;
+   // pt = &mesh->tria[k];
+  } while(pt->nxt);
 
 
   if ( (mesh->info.ddebug || abs(mesh->info.imprim) > 5) && ns > 0 ) {
@@ -652,14 +696,27 @@ int MMG2D_colelt(MMG5_pMesh mesh,MMG5_pSol met,int typchk,int color1) {
   MMG5_pTria   pt;
   MMG5_pPoint  p1,p2;
   double       ux,uy,ll,hmin2;
-  int          list[MMG2D_LONMAX+2],ilist,nc,k;
+  int          list[MMG2D_LONMAX+2],ilist,nc,k,k1;
   uint8_t      i,i1,i2,open;
 
+#ifdef USE_STARPU
+  int color2 = color1;
+#else
+  int color2 = 1;
+#endif
   nc = 0;
   hmin2 = mesh->info.hmin * mesh->info.hmin;
 
-  for (k=1; k<=mesh->nt; k++) {
-    pt = &mesh->tria[k];
+  k = mesh->initlltria[color2-1];
+  pt = &mesh->tria[k];
+  k1 = pt->nxt;
+  do {
+    if ( pt->nxt!=k1) {
+      if ( k1 ) break;
+      pt = &mesh->tria[pt->nxt];
+    } else k1 = mesh->tria[k1].nxt;
+//  for (k=1; k<=mesh->nt; k++) {
+//    pt = &mesh->tria[k];
     if ( !MMG2D_EOK(pt,color1) || pt->ref < 0 ) continue;
 
     /* Travel 3 edges of the triangle and decide whether to collapse p1->p2, based on length criterion */
@@ -713,7 +770,10 @@ int MMG2D_colelt(MMG5_pMesh mesh,MMG5_pSol met,int typchk,int color1) {
         break;
       }
     }
-  }
+ //   if (!pt->nxt) continue;
+ //   k = pt->nxt;
+ //   pt = &mesh->tria[k];
+  } while(pt->nxt);
 
   if ( nc > 0 && (abs(mesh->info.imprim) > 5 || mesh->info.ddebug) ) {
 #ifdef USE_STARPU
@@ -728,17 +788,30 @@ int MMG2D_colelt(MMG5_pMesh mesh,MMG5_pSol met,int typchk,int color1) {
 
 int MMG2D_swpmsh(MMG5_pMesh mesh,MMG5_pSol met,int typchk, int color1) {
   MMG5_pTria pt;
-  int        it,maxit,ns,nns,k;
+  int        it,maxit,ns,nns,k,k1;
   uint8_t    i;
 
+#ifdef USE_STARPU
+  int color2 = color1;
+#else
+  int color2 = 1;
+#endif
   it = nns = 0;
   maxit = 2;
   mesh->base++;
 
   do {
     ns = 0;
-    for (k=1; k<=mesh->nt; k++) {
-      pt = &mesh->tria[k];
+    k = mesh->initlltria[color2-1];
+    pt = &mesh->tria[k];
+    k1 = pt->nxt;
+    do {
+      if ( pt->nxt!=k1) {
+        if ( k1 ) break;
+        pt = &mesh->tria[pt->nxt];
+      } else k1 = mesh->tria[k1].nxt;
+  //  for (k=1; k<=mesh->nt; k++) {
+  //    pt = &mesh->tria[k];
       if ( !MMG2D_EOK(pt,color1) || pt->ref < 0 ) continue;
 
       for (i=0; i<3; i++) {
@@ -748,7 +821,10 @@ int MMG2D_swpmsh(MMG5_pMesh mesh,MMG5_pSol met,int typchk, int color1) {
           break;
         }
       }
-    }
+ //     if (!pt->nxt) continue;
+ //     k = pt->nxt;
+ //     pt = &mesh->tria[k];
+    } while(pt->nxt);
     nns += ns;
   }
   while ( ns > 0 && ++it<maxit );
@@ -1084,15 +1160,28 @@ int MMG2D_adptri(MMG5_pMesh mesh,MMG5_pSol met) {
 int MMG2D_adpspl(MMG5_pMesh mesh,MMG5_pSol met, int color1) {
   MMG5_pTria         pt;
   double             lmax,len;
-  int                k,ns,nt,ip,ier;
+  int                k,k1,ns,nt,ip,ier;
   int8_t             i,i1,i2,imax;
 
+#ifdef USE_STARPU
+  int color2 = color1;
+#else
+  int color2 = 1;
+#endif
   ns = 0;
 
   /*loop until nt to avoid the split of new triangle*/
   nt = mesh->nt;
-  for (k=1; k<=nt; k++) {
-    pt = &mesh->tria[k];
+  k = mesh->initlltria[color2-1];
+  pt = &mesh->tria[k];
+  k1 = pt->nxt;
+  do {
+    if ( pt->nxt!=k1) {
+      if ( k1 ) break;
+      pt = &mesh->tria[pt->nxt];
+    } else k1 = mesh->tria[k1].nxt;
+//  for (k=1; k<=nt; k++) {
+//    pt = &mesh->tria[k];
     if ( !MMG2D_EOK(pt,color1) || pt->ref < 0 ) continue;
 
     imax = -1;
@@ -1131,7 +1220,10 @@ int MMG2D_adpspl(MMG5_pMesh mesh,MMG5_pSol met, int color1) {
       }
       ns += ier;
     }
-  }
+//    if (!pt->nxt) continue;
+//    k = pt->nxt;
+//    pt = &mesh->tria[k];
+  } while(pt->nxt);
 
   return ns;
 }
@@ -1141,12 +1233,25 @@ int MMG2D_adpcol(MMG5_pMesh mesh,MMG5_pSol met, int color1) {
   MMG5_pTria        pt;
   MMG5_pPoint       p1,p2;
   double            len;
-  int               k,nc,ilist,list[MMG2D_LONMAX+2];
+  int               k,k1,nc,ilist,list[MMG2D_LONMAX+2];
   int8_t            i,i1,i2,open;
 
+#ifdef USE_STARPU
+  int color2 = color1;
+#else
+  int color2 = 1;
+#endif
   nc = 0;
-  for (k=1; k<=mesh->nt; k++) {
-    pt = &mesh->tria[k];
+  k = mesh->initlltria[color2-1];
+  pt = &mesh->tria[k];
+  k1 = pt->nxt;
+  do {
+    if ( pt->nxt!=k1) {
+      if ( k1 ) break;
+      pt = &mesh->tria[pt->nxt];
+    } else k1 = mesh->tria[k1].nxt;
+//  for (k=1; k<=mesh->nt; k++) {
+//    pt = &mesh->tria[k];
     if ( !MMG2D_EOK(pt,color1) || pt->ref < 0 ) continue;
 
     /* Check edge length, and attempt collapse */
@@ -1188,7 +1293,10 @@ int MMG2D_adpcol(MMG5_pMesh mesh,MMG5_pSol met, int color1) {
         break;
       }
     }
-  }
+//    if (!pt->nxt) continue;
+//    k = pt->nxt;
+//    pt = &mesh->tria[k];
+  } while(pt->nxt);
 
   return nc;
 }
@@ -1197,9 +1305,14 @@ int MMG2D_adpcol(MMG5_pMesh mesh,MMG5_pSol met, int color1) {
 int MMG2D_movtri(MMG5_pMesh mesh,MMG5_pSol met,int maxit,int8_t improve, int color1) {
   MMG5_pTria           pt;
   MMG5_pPoint          p0;
-  int                  base,k,nnm,nm,ns,it,ilist,list[MMG2D_LONMAX+2];
+  int                  base,k,k1,nnm,nm,ns,it,ilist,list[MMG2D_LONMAX+2];
   int8_t               i,ier;
 
+#ifdef USE_STARPU
+  int color2 = color1;
+#else
+  int color2 = 1;
+#endif
   it = nnm = 0;
   base = 0;
 
@@ -1211,12 +1324,20 @@ int MMG2D_movtri(MMG5_pMesh mesh,MMG5_pSol met,int maxit,int8_t improve, int col
       ppt = &mesh->point[ppt->nxt];
     } while(ppt->nxt);
   }
-  
+
   do {
     base++;
     nm = ns = 0;
-    for (k=1; k<=mesh->nt; k++) {
-      pt = &mesh->tria[k];
+    k = mesh->initlltria[color2-1];
+    pt = &mesh->tria[k];
+    k1 = pt->nxt;
+    do {
+      if ( pt->nxt!=k1) {
+        if ( k1 ) break;
+        pt = &mesh->tria[pt->nxt];
+      } else k1 = mesh->tria[k1].nxt;
+//    for (k=1; k<=mesh->nt; k++) {
+//      pt = &mesh->tria[k];
 
       if ( !MMG2D_EOK(pt,color1) || pt->ref < 0 )  continue;
 
@@ -1242,7 +1363,10 @@ int MMG2D_movtri(MMG5_pMesh mesh,MMG5_pSol met,int maxit,int8_t improve, int col
           p0->flag = base;
         }
       }
-    }
+//      if (!pt->nxt) continue;
+//      k = pt->nxt;
+//      pt = &mesh->tria[k];
+    } while(pt->nxt);
     nnm += nm;
     if ( mesh->info.ddebug ) {
 #ifdef USE_STARPU
@@ -1280,6 +1404,8 @@ int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
   MMG5_SAFE_CALLOC(mesh->lastlltria,mesh->info.ncolors,int,return 0);
   MMG5_SAFE_CALLOC(mesh->initllpoint,mesh->info.ncolors,int,return 0);
   MMG5_SAFE_CALLOC(mesh->lastllpoint,mesh->info.ncolors,int,return 0);
+  MMG5_SAFE_CALLOC(mesh->np4t,mesh->info.ncolors,int,return 0);
+  MMG5_SAFE_CALLOC(mesh->ne4t,mesh->info.ncolors,int,return 0);
 
 #ifdef USE_STARPU
 
@@ -1292,56 +1418,13 @@ int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
 
   status = MMG2D_part_meshElts(mesh);
 #else
-  /* If USE_STARPU is not defined, every chain/field is defined here. */ 
-  MMG5_pTria   pt;
-  MMG5_pPoint  ppt;
-  int i;
-  
-  // triangles
-  for (i=mesh->nt-1; i>=0; i--) {
-    pt = &mesh->tria[i+1];
-    if (!mesh->initlltria[0]){
-            pt->nxt = 0;
-            mesh->lastlltria[0] = i+1;
-    } else
-            pt->nxt = mesh->initlltria[0];
-    mesh->initlltria[0] = i+1;
-    pt->color1 = 1;
-    pt->idx = i+1;
-    // vertices
-    for (int j=0; j<3; j++) {
-      ppt =&mesh->point[pt->v[j]];
-      if (ppt->color1) continue;
-      if (!mesh->initllpoint[0]) {
-        ppt->nxt = 0;
-        mesh->lastllpoint[0] = pt->v[j];
-      } else
-        ppt->nxt = mesh->initllpoint[0];
-      mesh->initllpoint[0] = pt->v[j];
-      ppt->color1 = 1;
-      ppt->idx = pt->v[j];
-    }
+  int *part;
+  MMG5_SAFE_CALLOC(part,mesh->nt,int,return 0);
+  if ( !MMG2D_linkInit(mesh,part) ) {
+    fprintf(stderr,"\n  ## Error: %s: Linked list not initialized correctly. Exit program.\n",
+            __func__);
+    return 0;
   }
-  for (i=1; i<=mesh->info.ncolors; i++) {
-    MMG5_pPoint ppt = &mesh->point[mesh->initllpoint[i-1]];
-    MMG5_pTria  pt = &mesh->tria[mesh->initlltria[i-1]];
-    ppt->prv = 0;
-    pt->prv = 0;
-    //printf(" previous = %d\n current = %d, color =%d\n next = %d\n",ppt->prv,ppt->idx,ppt->color1,ppt->nxt);
-    while (ppt->nxt){
-      int prv = ppt->idx;
-      ppt = &mesh->point[ppt->nxt];
-      ppt->prv = prv;
-   //   printf(" previous = %d\n current = %d, color =%d\n next = %d\n",ppt->prv,ppt->idx,ppt->color1,ppt->nxt);
-    }
-    while (pt->nxt){
-      int prv = pt->idx;
-      pt = &mesh->tria[pt->nxt];
-      pt->prv = prv;
-    }
-   // printf("New color");
-  }
-
 #endif
 
   /* Stage 1: creation of a geometric mesh */
@@ -1384,26 +1467,26 @@ int MMG2D_mmg2d1n(MMG5_pMesh mesh,MMG5_pSol met) {
     fprintf(stderr,"  ## Unable to make fine improvements. Exit program.\n");
     return 0;
   }
-  
+
   /* Stage 4: Restore the variables mesh->np,nt,ne */
   /* TODO: Maybe this part can be moved somewhere else */
-  int k,np=0,nt=0;
-  for (k=1; k<=mesh->info.ncolors; k++) {
-    MMG5_pPoint ppt = &mesh->point[mesh->initllpoint[k-1]];
-    MMG5_pTria pt = &mesh->tria[mesh->initllpoint[k-1]];
-    do {
-      np++;
-      if (!ppt->nxt) continue;
-      ppt = &mesh->point[ppt->nxt];
-    } while(ppt->nxt);
-    do {
-      nt++;
-      if (!pt->nxt) continue;
-      pt = &mesh->tria[pt->nxt];
-    } while(pt->nxt);
-  }
-  mesh->np = np;
-  mesh->nt = nt;
-
+//  int k,np=0,nt=0;
+//  for (k=1; k<=mesh->info.ncolors; k++) {
+//    MMG5_pPoint ppt = &mesh->point[mesh->initllpoint[k-1]];
+//    MMG5_pTria pt = &mesh->tria[mesh->initllpoint[k-1]];
+//    do {
+//      np++;
+//      if (!ppt->nxt) continue;
+//      ppt = &mesh->point[ppt->nxt];
+//    } while(ppt->nxt);
+//    do {
+//      nt++;
+//      if (!pt->nxt) continue;
+//      pt = &mesh->tria[pt->nxt];
+//    } while(pt->nxt);
+//  }
+//  mesh->np = np;
+//  mesh->nt = nt;
+//
   return 1;
 }

@@ -37,7 +37,7 @@
 /* Create a new vertex in the mesh, and return its number */
 int MMG2D_newPt(MMG5_pMesh mesh,double c[2],int16_t tag, int color) {
   MMG5_pPoint  ppt;
-  int     curpt;
+  int          curpt;
 
 // warning concurrency access lead to reset npnil (use of point curpt) while trying to access it, as a 0 npnil means that we don't have anymore memory, it raises a realloc issue
   // For now, we solve this using locks. These locks have to be removed once the
@@ -45,44 +45,45 @@ int MMG2D_newPt(MMG5_pMesh mesh,double c[2],int16_t tag, int color) {
  // MMG5_LOCK(&mesh->lock); // Comment locks to use correctly the parallel newPt
 
 #ifdef USE_STARPU
+  int worker_id = starpu_worker_get_id();
+  int max = mesh->np+mesh->npmax4t*(worker_id+1);
+#else
+  int worker_id = 0;
+  int max = mesh->npmax;
+#endif
+  
   int prev_id = mesh->lastllpoint[color];
-  if ( !mesh->npnil[starpu_worker_get_id()] ) {
+  if ( !mesh->npnil[worker_id] ) {
     return 0;
   }
-  curpt = mesh->npnil[starpu_worker_get_id()];
-  ppt   = &mesh->point[curpt];
+  curpt = mesh->npnil[worker_id];
+  if ( curpt > max) return 0;
+  ppt = &mesh->point[curpt];
   memcpy(ppt->c,c,2*sizeof(double));
-  ppt->tag   &= ~MG_NUL;
+  ppt->tag &= ~MG_NUL;
   // is this needed?
   //mesh->npnil[starpu_worker_get_id()] = ppt->tmp;
-  mesh->npnil[starpu_worker_get_id()] = curpt + 1;
-  ppt->tmp    = 0;
+  mesh->npnil[worker_id] = curpt + 1;
+  ppt->tmp = 0;
   ppt->tag = tag;
-  ppt->idx = curpt;
   ppt->nxt = 0;
   ppt->prv = prev_id;
-  ppt->color1 = color;
   mesh->point[prev_id].nxt = curpt;
-  
-//  if ( mesh->npnil[starpu_worker_get_id()] > mesh->np ) {
-//  	MMG5_LOCK(&mesh->lock);
-// 	mesh->np++; 
-//  	MMG5_UNLOCK(&mesh->lock);
+  mesh->np4t[worker_id]++;
+
+//#else
+//  if ( !mesh->npnil[0] ) {
+//    return 0;
 //  }
-#else
-  if ( !mesh->npnil[0] ) {
-    return 0;
-  }
-  curpt = mesh->npnil[0];
-  if ( mesh->npnil[0] > mesh->np )  mesh->np = mesh->npnil[0]; 
-  ppt   = &mesh->point[curpt];
-  memcpy(ppt->c,c,2*sizeof(double));
-  ppt->tag   &= ~MG_NUL;
-  mesh->npnil[0] = ppt->tmp;
-  ppt->tmp    = 0;
-  ppt->tag = tag;
-#endif
- //MMG5_UNLOCK(&mesh->lock);
+//  curpt = mesh->npnil[0];
+//  if ( mesh->npnil[0] > mesh->np )  mesh->np = mesh->npnil[0];
+//  ppt = &mesh->point[curpt];
+//  memcpy(ppt->c,c,2*sizeof(double));
+//  ppt->tag &= ~MG_NUL;
+//  mesh->npnil[0] = ppt->tmp;
+//  ppt->tmp = 0;
+//  ppt->tag = tag;
+//#endif
 
   return curpt;
 }
@@ -92,27 +93,26 @@ void MMG2D_delPt(MMG5_pMesh mesh,int ip) {
   MMG5_pPoint   ppt;
 
   ppt = &mesh->point[ip];
-
   memset(ppt,0,sizeof(MMG5_Point));
-  ppt->tag    = MG_NUL;
+  ppt->tag = MG_NUL;
 #ifdef USE_STARPU
-  ppt->tmp    = mesh->npnil[starpu_worker_get_id()]; //useful?
-  mesh->npnil[starpu_worker_get_id()] = ip;
-  ppt->color1 = MG_NUL; //needed?
+  int worker_id = starpu_worker_get_id();
+#else
+  int worker_id = 0;
+#endif
+
+  ppt->tmp = mesh->npnil[worker_id]; //useful?
+  mesh->npnil[worker_id] = ip;
   int id_prv = mesh->point[ip].prv;
   int id_nxt = mesh->point[ip].nxt;
   mesh->point[id_prv].nxt = id_nxt;
   mesh->point[id_nxt].prv = id_prv;
-//  MMG5_LOCK(&mesh->lock);
-//  if ( ip == mesh->np ) {
-//    mesh->np--;
-//  }
-//  MMG5_UNLOCK(&mesh->lock);
-#else
-  ppt->tmp    = mesh->npnil[0];
-  mesh->npnil[0] = ip;
-  if ( ip == mesh->np )  mesh->np--;
-#endif
+  mesh->np4t[worker_id]--;
+// #else
+//  ppt->tmp = mesh->npnil[0];
+//  mesh->npnil[0] = ip;
+//  if ( ip == mesh->np )  mesh->np--;
+// #endif
 }
 
 void MMG5_delEdge(MMG5_pMesh mesh,int iel) {
@@ -124,19 +124,9 @@ void MMG5_delEdge(MMG5_pMesh mesh,int iel) {
     return;
   }
   memset(pt,0,sizeof(MMG5_Edge));
-#ifdef USE_STARPU
-  pt->b = mesh->nanil[starpu_worker_get_id()];
-  mesh->nanil[starpu_worker_get_id()] = iel;
-  MMG5_LOCK(&mesh->lock); 
-  if ( iel == mesh->na ) {
-    mesh->na--;
-  }
-  MMG5_UNLOCK(&mesh->lock);
-#else
   pt->b = mesh->nanil[0];
   mesh->nanil[0] = iel;
   if ( iel == mesh->na )  mesh->na--;
-#endif
 }
 
 /* Create a new triangle in the mesh and return its address */
@@ -147,62 +137,50 @@ int MMG2D_newElt(MMG5_pMesh mesh, int color) {
   // For now, we solve this using locks. These locks have to be removed once the
   // list will be parallelized
 
-
 #ifdef USE_STARPU
+  int worker_id = starpu_worker_get_id();
+  int max = mesh->nt+mesh->nemax4t*(worker_id+1);
+#else
+  int worker_id = 0;
+  int max = mesh->ntmax;
+#endif
+
   int prev_id = mesh->lastlltria[color];
-  if ( !mesh->nenil[starpu_worker_get_id()] ) {
+  if ( !mesh->nenil[worker_id] ) {
     return 0;
   }
-  curiel = mesh->nenil[starpu_worker_get_id()];
-  mesh->nenil[starpu_worker_get_id()] = mesh->tria[curiel].v[2];
-  mesh->tria[curiel].v[2] = 0; // can be deleted? 
+  curiel = mesh->nenil[worker_id];
+  if ( curiel > max) return 0;
+  mesh->nenil[worker_id] = mesh->tria[curiel].v[2];
+  mesh->tria[curiel].v[2] = 0; // can be deleted?
   mesh->tria[curiel].ref = 0;
-  mesh->tria[curiel].idx = curiel;
   mesh->tria[curiel].color1 = color;
   mesh->tria[curiel].prv = prev_id;
   mesh->tria[curiel].nxt = 0;
-  mesh->tria[prev_id].nxt = curiel; 
-  mesh->nenil[starpu_worker_get_id()] = curiel + 1; 
-  /*
-  if ( !mesh->nenil[starpu_worker_get_id()] ) {
-    return 0;
-  }
-  curiel = mesh->nenil[starpu_worker_get_id()];
-  if ( mesh->nenil[starpu_worker_get_id()] > mesh->nt ) {
-    MMG5_LOCK(&mesh->lock);
-    mesh->nt++;
-    MMG5_UNLOCK(&mesh->lock);
-  }
-  mesh->nenil[starpu_worker_get_id()] = mesh->tria[curiel].v[2];
-  mesh->tria[curiel].v[2] = 0;
-  mesh->tria[curiel].ref = 0;
-
-  mesh->tria[curiel].color1 = 0;
-*/
-#else
-  if ( !mesh->nenil[0] ) {
-    return 0;
-  }
-  curiel = mesh->nenil[0];
-  if ( mesh->nenil[0] > mesh->nt )  mesh->nt = mesh->nenil[0];
-  mesh->nenil[0] = mesh->tria[curiel].v[2];
-  mesh->tria[curiel].v[2] = 0;
-  mesh->tria[curiel].ref = 0;
-#endif
-
+  mesh->tria[prev_id].nxt = curiel;
+  mesh->nenil[worker_id] = curiel + 1;
+// #else
+//  if ( !mesh->nenil[0] ) {
+//    return 0;
+//  }
+//  curiel = mesh->nenil[0];
+//  if ( mesh->nenil[0] > mesh->nt )  mesh->nt = mesh->nenil[0];
+//  mesh->nenil[0] = mesh->tria[curiel].v[2];
+//  mesh->tria[curiel].v[2] = 0;
+//  mesh->tria[curiel].ref = 0;
+// #endif
   mesh->tria[curiel].base = 0;
   mesh->tria[curiel].edg[0] = 0;
   mesh->tria[curiel].edg[1] = 0;
   mesh->tria[curiel].edg[2] = 0;
-
-
+  mesh->ne4t[worker_id]++;
   return curiel;
 }
 
 /* Delete a triangle in the mesh and update the garbage collector accordingly */
 int MMG2D_delElt(MMG5_pMesh mesh,int iel) {
   MMG5_pTria    pt;
-  int      iadr;
+  int           iadr;
 
   pt = &mesh->tria[iel];
   if ( !MG_EOK(pt) ) {
@@ -210,37 +188,37 @@ int MMG2D_delElt(MMG5_pMesh mesh,int iel) {
     return 0;
   }
   memset(pt,0,sizeof(MMG5_Tria));
- 
+
 #ifdef USE_STARPU
-  pt->v[2] = mesh->nenil[starpu_worker_get_id()];
+  int worker_id = starpu_worker_get_id();
+#else
+  int worker_id = 0;
+#endif
+
+  pt->v[2] = mesh->nenil[worker_id];
   pt->qual = 0.0;
   iadr = (iel-1)*3 + 1;
   if ( mesh->adja )
     memset(&mesh->adja[iadr],0,3*sizeof(int));
-
-  mesh->nenil[starpu_worker_get_id()] = iel;
+  
+  mesh->nenil[worker_id] = iel;
   pt->color1 = MG_NUL; //needed?
   int id_prv = mesh->tria[iel].prv;
   int id_nxt = mesh->tria[iel].nxt;
   mesh->tria[id_prv].nxt = id_nxt;
   mesh->tria[id_nxt].prv = id_prv;
+  mesh->ne4t[worker_id]--;
 
-//  MMG5_LOCK(&mesh->lock);
-//  if ( iel == mesh->nt ) {  
-//    mesh->nt--;
-//  }
-//  MMG5_UNLOCK(&mesh->lock);
-
-#else
-  pt->v[2] = mesh->nenil[0];
-  pt->qual = 0.0;
-  iadr = (iel-1)*3 + 1;
-  if ( mesh->adja )
-    memset(&mesh->adja[iadr],0,3*sizeof(int));
-
-  mesh->nenil[0] = iel;
-  if ( iel == mesh->nt )  mesh->nt--;
-#endif
+//#else
+//  pt->v[2] = mesh->nenil[0];
+//  pt->qual = 0.0;
+//  iadr = (iel-1)*3 + 1;
+//  if ( mesh->adja )
+//    memset(&mesh->adja[iadr],0,3*sizeof(int));
+//
+//  mesh->nenil[0] = iel;
+//  if ( iel == mesh->nt )  mesh->nt--;
+//#endif
   return 1;
 }
 
@@ -258,6 +236,77 @@ int MMG5_getnElt(MMG5_pMesh mesh,int n) {
 
   return n == 0;
 }
+
+/**
+ * \param mesh pointer toward the mesh structure
+ *
+ * \return 0 if fail, 1 otherwise
+ *
+ * Initialize the linked lists of points and triangles based on their color.
+ * This routine works wheather StarPU is used or not.
+ *
+ */
+int MMG2D_linkInit(MMG5_pMesh mesh, int *part) {
+  int i,j,idx;
+  // triangles
+  for (i=mesh->nt-1; i>=0; i--) {
+    MMG5_pTria pt = &mesh->tria[i+1];
+    if (!mesh->initlltria[part[i]]){ // if it's true, it means we are in the last element of the color part[i]
+      pt->nxt = 0; // so we put its nxt field to 0
+      mesh->lastlltria[part[i]] = i+1; // and the element is saved as last element of the chain of the color part[i]
+    } else
+      pt->nxt = mesh->initlltria[part[i]]; // if pt is not the last element we put as nxt the element previously saved of the same color. 
+    mesh->initlltria[part[i]] = i+1; // we update the first element of the chain of color part[i].
+    pt->color1 = part[i]+1;
+    // vertices
+    for (j=0; j<3; j++) {
+      MMG5_pPoint ppt =&mesh->point[pt->v[j]];
+      if (ppt->flag) continue;  // Francesco: this may be cause of error (before there was the check on the color
+      if (!mesh->initllpoint[part[i]]){
+        ppt->nxt = 0;
+        mesh->lastllpoint[part[i]] = pt->v[j];
+      } else
+        ppt->nxt = mesh->initllpoint[part[i]];
+      mesh->initllpoint[part[i]] = pt->v[j];
+      ppt->flag++;
+      // ppt->color1 = part[i]+1;
+    }
+  }
+  for (i=0; i<mesh->np; i++)
+    mesh->point[i].flag = 0;
+  for (i=1; i<=mesh->info.ncolors; i++) {
+    MMG5_pPoint ppt = &mesh->point[mesh->initllpoint[i-1]];
+    MMG5_pTria  pt = &mesh->tria[mesh->initlltria[i-1]];
+    ppt->prv = 0;
+    pt->prv = 0;
+    while (ppt->nxt){
+      if (!ppt->prv) {
+        idx = mesh->initllpoint[i-1];
+      } else {
+        idx = mesh->point[ppt->prv].nxt;
+      }
+      mesh->np4t[i-1]++;
+      ppt = &mesh->point[ppt->nxt];
+      ppt->prv = idx;
+      // printf(" previous = %d\n current = %d, color =%d\n next = %d\n",ppt->prv,ppt->idx,ppt->color1,ppt->nxt);
+    }
+    mesh->np4t[i-1]++;
+    while (pt->nxt){
+      if (!pt->prv) {
+        idx = mesh->initlltria[i-1];
+      } else {
+        idx = mesh->tria[ppt->prv].nxt;
+      }
+      mesh->ne4t[i-1]++;
+      pt = &mesh->tria[pt->nxt];
+      pt->prv = idx;
+      // printf("previous = %d\n current = %d\n next = %d\n",pt->prv,pt->idx,pt->nxt);
+    }
+    mesh->ne4t[i-1]++;
+    // printf("New color");
+  }
+}
+
 
 /**
  * \param mesh pointer toward the mesh structure
@@ -392,7 +441,7 @@ int MMG2D_setMeshSize_alloc( MMG5_pMesh mesh ) {
   mesh->nemax4t = (mesh->ntmax-mesh->nt)/nbadd_pos;
   mesh->npmax4t = (mesh->npmax-mesh->np)/nbadd_pos;
   mesh->namax4t = (mesh->namax-mesh->na)/nbadd_pos;
-  
+
 #else
   int nbadd_pos = 0;
 #endif
@@ -422,7 +471,7 @@ int MMG2D_setMeshSize_alloc( MMG5_pMesh mesh ) {
     MMG5_ADD_MEM(mesh,(mesh->namax+1)*sizeof(MMG5_Edge),"initial edges",return 0);
     MMG5_SAFE_CALLOC(mesh->edge,(mesh->namax+1),MMG5_Edge,return 0);
   }
-  
+
 #ifndef USE_STARPU
   MMG5_SAFE_CALLOC(mesh->npnil,1,int,return MMG5_STRONGFAILURE);
   MMG5_SAFE_CALLOC(mesh->nenil,1,int,return MMG5_STRONGFAILURE);
@@ -442,7 +491,7 @@ int MMG2D_setMeshSize_alloc( MMG5_pMesh mesh ) {
   }
   for (k=mesh->nenil[0]; k<mesh->ntmax-1; k++)
     mesh->tria[k].v[2] = k+1;
-#else 
+#else
     /* keep track of empty links */
   MMG5_SAFE_CALLOC(mesh->npnil,starpu_worker_get_count(),int,return MMG5_STRONGFAILURE);
   MMG5_SAFE_CALLOC(mesh->nenil,starpu_worker_get_count(),int,return MMG5_STRONGFAILURE);

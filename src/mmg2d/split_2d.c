@@ -64,7 +64,7 @@ int MMG2D_chkspl(MMG5_pMesh mesh,MMG5_pSol met,int k,int8_t i) {
   int color1 = mesh->tria[k].color1;  
 #else
   int zero_idx = 0;
-  int color1 = 0;
+  int color1 = 1;
 #endif
 
   pt  = &mesh->tria[k];
@@ -255,7 +255,7 @@ int MMG2D_split1b(MMG5_pMesh mesh,int k,int8_t i,int ip) {
 #ifdef USE_STARPU
   int color1 = pt->color1;
 #else
-  int color1 = 0;
+  int color1 = 1;
 #endif
   iel = MMG2D_newElt(mesh,color1);
   if ( !iel ) {
@@ -413,7 +413,7 @@ int MMG2D_split1(MMG5_pMesh mesh, MMG5_pSol sol, int k, int vx[3]) {
 #ifdef USE_STARPU
   int color1 = pt->color1;
 #else
-  int color1 = 0;
+  int color1 = 1;
 #endif
 
   /* Set permutation from the reference configuration (case 1: edge 0 is splitted) to the actual one */
@@ -539,7 +539,7 @@ int MMG2D_split2(MMG5_pMesh mesh, MMG5_pSol sol, int k, int vx[3]) {
 #ifdef USE_STARPU
   int color1 = pt->color1;
 #else
-  int color1 = 0;
+  int color1 = 1;
 #endif
 
   /* Set permutation from the reference configuration (case 6: edges 1,2 are splitted) to the actual one */
@@ -675,7 +675,7 @@ int MMG2D_split3(MMG5_pMesh mesh, MMG5_pSol sol, int k, int vx[3]) {
 #ifdef USE_STARPU
   int color1 = pt->color1;
 #else
-  int color1 = 0;
+  int color1 = 1;
 #endif
 
   /* Update of point references */
@@ -774,7 +774,7 @@ int MMG2D_splitbar(MMG5_pMesh mesh,int k,int ip) {
   int color1 = mesh->tria[k].color1;
 #else
   int zero_idx = 0;
-  int color1 = 0; 
+  int color1 = 1; 
 #endif
 
   pt  = &mesh->tria[k];

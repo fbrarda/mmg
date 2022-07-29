@@ -179,7 +179,7 @@ struct starpu_codelet anaelt_codelet =
   .cpu_funcs = {MMG2D_anaelt_task},
   .cpu_funcs_name = {"MMG2D_anaelt_task"},
   .nbuffers = STARPU_VARIABLE_NBUFFERS,
-  .modes = {STARPU_RW, STARPU_RW, STARPU_RW,STARPU_REDUX,STARPU_DATA_MODE_ARRAY},
+  .modes = {STARPU_RW, STARPU_RW, STARPU_RW,STARPU_REDUX},//,STARPU_DATA_MODE_ARRAY},
   .where = STARPU_CPU,
   .name = "anaelt"
 };
@@ -593,7 +593,7 @@ int MMG2D_starpu_anaelt ( MMG5_pMesh mesh,starpu_data_handle_t *handle_mesh,
                                STARPU_RW, *handle_met,
                                STARPU_RW, *handle_hash,
                                STARPU_REDUX, *handle_ns,
-                               STARPU_DATA_MODE_ARRAY, task_handles, ndeps+1,
+                               //STARPU_DATA_MODE_ARRAY, task_handles, ndeps+1,
                                STARPU_VALUE, &typchk, sizeof(typchk),
                                STARPU_VALUE, &color, sizeof(color),
                                0);

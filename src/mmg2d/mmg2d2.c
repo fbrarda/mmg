@@ -498,7 +498,7 @@ int MMG2D_mmg2d2(MMG5_pMesh mesh,MMG5_pSol sol) {
   double    c[2],dd;
   int       j,k,kk,ip1,ip2,ip3,ip4,jel,kel,nt,iadr,*adja;
   int       *numper;
-  int       color1 = 0;
+  int       color1 = 1;
 
   mesh->base = 0;
   /* If triangles already exist, delete them */

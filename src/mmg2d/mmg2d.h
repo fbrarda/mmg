@@ -192,9 +192,9 @@ static const unsigned int MMG2D_inxt[5] = {1,2,0,1,2};
     MMG5_TAB_RECALLOC(mesh,mesh->point,mesh->npmax,wantedGap,MMG5_Point, \
                        "larger point table",law);                       \
                                                                         \
-    mesh->npnil[0] = mesh->np+1;                                           \
-    for (klink=mesh->npnil[0]; klink<mesh->npmax-1; klink++)               \
-      mesh->point[klink].tmp  = klink+1;                                \
+    mesh->npnil[0] = mesh->np+1;                                        \
+    for (klink=mesh->npnil[0]; klink<mesh->npmax-1; klink++)            \
+      mesh->point[klink].tmp = klink+1;                                 \
                                                                         \
     /* solution */                                                      \
     if ( sol ) {                                                        \
@@ -209,7 +209,7 @@ static const unsigned int MMG2D_inxt[5] = {1,2,0,1,2};
     }                                                                   \
                                                                         \
     /* We try again to add the point */                                 \
-    ip = MMG2D_newPt(mesh,o,tag,mesh->point[klink].color1);                                       \
+    ip = MMG2D_newPt(mesh,o,tag,0);                                     \
     if ( !ip ) {law;}                                                   \
   }while(0)
 
@@ -250,6 +250,7 @@ void MMG5_delEdge(MMG5_pMesh mesh,int iel);
 int MMG2D_newElt(MMG5_pMesh mesh, int color);
 int  MMG2D_delElt(MMG5_pMesh mesh,int iel);
 int MMG5_getnElt(MMG5_pMesh mesh,int n);
+int MMG2D_linkInit(MMG5_pMesh mesh, int *part);
 int MMG2D_zaldy(MMG5_pMesh mesh);
 size_t MMG5_memSize(void);
 int MMG2D_memOption(MMG5_pMesh mesh);

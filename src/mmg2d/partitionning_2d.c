@@ -139,52 +139,11 @@ int MMG2D_part_meshElts( MMG5_pMesh mesh )
   int status = MMG5_part_meshElts( nelt,xadj,adjncy,npart,part);
 
   if ( status==1 ) {
-    int i;
-    /* Mesh partitionning succeed */
-    // triangles
-     for (i=mesh->nt-1; i>=0; i--) {
-       MMG5_pTria pt = &mesh->tria[i+1];
-       if (!mesh->initlltria[part[i]]){ 
-	       pt->nxt = 0;
-       	       mesh->lastlltria[part[i]] = i+1;
-       } else
-	       pt->nxt = mesh->initlltria[part[i]];
-       mesh->initlltria[part[i]] = i+1;
-       pt->color1 = part[i]+1;
-       pt->idx = i+1;
-       // vertices
-       for (int j=0; j<3; j++) {
-         MMG5_pPoint ppt =&mesh->point[pt->v[j]];
-	 if (ppt->color1) continue;
-         if (!mesh->initllpoint[part[i]]){
-           ppt->nxt = 0;
-       	   mesh->lastllpoint[part[i]] = pt->v[j];
-	 } else
-           ppt->nxt = mesh->initllpoint[part[i]];
-         mesh->initllpoint[part[i]] = pt->v[j];
-         ppt->color1 = part[i]+1;
-         ppt->idx = pt->v[j];
-       } 
-     }
-     for (i=1; i<=mesh->info.ncolors; i++) {
-       MMG5_pPoint ppt = &mesh->point[mesh->initllpoint[i-1]];
-       MMG5_pTria  pt = &mesh->tria[mesh->initlltria[i-1]];
-       ppt->prv = 0;
-       pt->prv = 0;
-       while (ppt->nxt){
-         int prv = ppt->idx;
-	 ppt = &mesh->point[ppt->nxt];
-	 ppt->prv = prv;
-//	 printf(" previous = %d\n current = %d, color =%d\n next = %d\n",ppt->prv,ppt->idx,ppt->color1,ppt->nxt);
-       }
-       while (pt->nxt){
-         int prv = pt->idx;
-	 pt = &mesh->tria[pt->nxt];
-	 pt->prv = prv;
-	// printf("previous = %d\n current = %d\n next = %d\n",pt->prv,pt->idx,pt->nxt);
-       }
-      // printf("New color");
-     }
+    if ( !MMG2D_linkInit(mesh,part) ) {
+      fprintf(stderr,"\n  ## Error: %s: Linked list not initialized correctly. Exit program.\n",
+              __func__);
+      return 0;
+    }
   }
 
   /* Use environment variable to choose to save partition as it is a

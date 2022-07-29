@@ -255,10 +255,11 @@ int MMG2D_delone(MMG5_pMesh mesh,MMG5_pSol sol,int ip,int *list,int ilist) {
   MMG5_Hash       hedg;
   static int8_t   mmgWarn0=0,mmgWarn1=0;
 
+  // Francesco: if we take care of the triangulation in // this has to be modified
 #ifdef USE_STARPU
-  int color1 = mesh->point[1].color1;
+  int color1 = 1; // mesh->point[1].color1;
 #else 
-  int color1 = 0;
+  int color1 = 1;
 #endif 
   /* Reset tagdel field */
   for (k=1; k<ilist; k++)
